@@ -240,12 +240,22 @@ class price {
                 case 'entity':
                     self::apply_entity_factor_from_form($fromform, $price);
                     break;
+                case 'bofield':
+                    self::apply_bofield_factor_from_form($value, $fromform, $price);
+                    break;
             }
         }
 
         /* Unit factor is not part of price formula but depends on the config setting educationalunitinminutes. */
         if (!empty($dayinfo) && get_config('booking', 'applyunitfactor')) {
             self::apply_unit_factor($dayinfo, $price);
+        }
+
+        $optiondates = dates_handler::get_existing_optiondates($fromform->optionid);
+
+        /* Course minutes factor is not part of price formula but can be enabled at the config setting applycourseminutesfactor. */
+        if (!empty($optiondates) && get_config('booking', 'applycourseminutesfactor')) {
+            self::apply_course_minutes_factor($optiondates, $price);
         }
 
         // If setting to round prices is turned on, then round to integer.
@@ -319,12 +329,23 @@ class price {
                 case 'entity':
                     self::apply_entity_factor_with_bookingoptionsettings($bookingoptionsettings, $price);
                     break;
+                case 'bofield':
+                    self::apply_bofield_factor_with_bookingoptionsettings($value, $bookingoptionsettings, $price);
+                    break;
             }
         }
 
         /* Unit factor is not part of price formula but depends on the config setting educationalunitinminutes. */
         if (!empty($dayinfo) && get_config('booking', 'applyunitfactor')) {
             self::apply_unit_factor($dayinfo, $price);
+        }
+
+
+        $optiondates = dates_handler::get_existing_optiondates($bookingoptionsettings->id);
+
+        /* Course minutes factor is not part of price formula but can be enabled at the config setting applycourseminutesfactor. */
+        if (!empty($optiondates) && get_config('booking', 'applycourseminutesfactor')) {
+            self::apply_course_minutes_factor($optiondates, $price);
         }
 
         // If setting to round prices is turned on, then round to integer.
@@ -379,6 +400,34 @@ class price {
         if ($durationminutes > 0 && !empty($unitlength)) {
             $multiplier = round($durationminutes / $unitlength, 1);
             $price = $price * $multiplier;
+        }
+    }
+
+    /**
+     * Applies the whole minutes of a course as  factor to the price formula.
+     *
+     * @param array $optiondates
+     * @param float $price
+     * @return void
+     */
+    private static function apply_course_minutes_factor(array $optiondates, float &$price) {
+
+        $from = new \DateTime();
+        $to = new \DateTime();
+
+        $minutes = 0;
+        foreach ($optiondates as $optiondate){
+            $from->setTimestamp($optiondate->starttimestamp);
+            $to->setTimestamp($optiondate->endtimestamp);
+            $diff = $from->diff($to);
+            $diffminutes = $diff->days * 24 * 60;
+            $diffminutes += $diff->h * 60;
+            $diffminutes += $diff->i;
+
+            $minutes += $diffminutes;
+        }
+        if ($minutes > 0){
+           $price *= $minutes;
         }
     }
 
@@ -445,6 +494,42 @@ class price {
      * Interprets the customfield part of the jsonobject and applies the multiplier to the price, if necessary.
      *
      * @param array $customfieldobjects
+     * @param stdClass $fromform
+     * @param float $price
+     * @return void
+     */
+    private static function apply_bofield_factor_from_form(array $bofields, stdClass $fromform, float &$price) {
+
+        // Now get all customfields set in formula.
+        foreach ($bofields as $bofield) {
+            $key = $bofield->name;
+            $value = strtolower($bofield->value);
+            if ($value == 'self'){
+                if(!empty($fromform->$key)){
+                    switch ($bofield->operator){
+                        case 'multiply':
+                            $price *= $fromform->$key;
+                            break;
+                        case 'divide':
+                            $price /= $fromform->$key;
+                            break;
+                        case 'add':
+                            $price += $fromform->$key;
+                            break;
+                        case 'subtract':
+                            $price -= $fromform->$key;
+                            break;
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Interprets the customfield part of the jsonobject and applies the multiplier to the price, if necessary.
+     *
+     * @param array $customfieldobjects
      * @param booking_option_settings $bookingoptionsettings
      * @param float $price
      * @return void
@@ -496,6 +581,43 @@ class price {
                 if ($entitiespricefactor = entitiesrelation_handler::get_pricefactor_by_entityid(
                     $bookingoptionsettings->entity['id'])) {
                     $price = $price * $entitiespricefactor;
+                }
+            }
+        }
+    }
+
+    /**
+     * Interprets the customfield part of the jsonobject and applies the multiplier to the price, if necessary.
+     *
+     * @param array $customfieldobjects
+     * @param stdClass $fromform
+     * @param float $price
+     * @return void
+     */
+    private static function apply_bofield_factor_with_bookingoptionsettings(array $bofields, booking_option_settings $bookingoptionsettings, float &$price) {
+
+        // Now get all customfields set in formula.
+        foreach ($bofields as $bofield) {
+            $key = $bofield->name;
+            $value = strtolower($bofield->value);
+            if ($value == 'self'){
+                if(!empty($bookingoptionsettings->$key)){
+                    if ($bookingoptionsettings->$key != 0) {
+                        switch ($bofield->operator) {
+                            case 'multiply':
+                                $price *= $bookingoptionsettings->$key;
+                                break;
+                            case 'divide':
+                                $price /= $bookingoptionsettings->$key;
+                                break;
+                            case 'add':
+                                $price += $bookingoptionsettings->$key;
+                                break;
+                            case 'subtract':
+                                $price -= $bookingoptionsettings->$key;
+                                break;
+                        }
+                    }
                 }
             }
         }
