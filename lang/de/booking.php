@@ -1872,6 +1872,8 @@ $string['applyunitfactor'] = 'Einheitenfaktor anwenden';
 $string['applyunitfactor_desc'] = 'Wenn diese Einstellung aktiviert ist, wird die Länge der oben gesetzten Unterrichtseinheiten (z.B. 45 min) zur Berechnung der Anzahl der Einheiten
  herangezogen und als Faktor für die Preisformel verwendet. Beispiel: Eine Buchungsoption hat die Terminserie "Mo, 15:00 - 16:30". Sie dauert also 2 UE von
  jeweils 45 min. Auf die Preisformel wird also der Einheitenfaktor von 2 angewendet. (Einheitenfaktor wird nur bei vorhandener Preisformel angewendet.)';
+$string['applycourseminutesfactor'] = 'Kursminutenfaktor anwenden';
+$string['applycourseminutesfactor_desc'] = 'Wenn diese Einstellung aktiviert ist, werden die gesamten Minuten (über alle Termine hinweg) eines Kurses herangezogen und als Faktor für die Preisformel verwendet.';
 $string['roundpricesafterformula'] = 'Preise runden (Preisformel)';
 $string['roundpricesafterformula_desc'] = 'Preise auf ganze Zahlen runden (mathematisch), nachdem die <strong>Preisformel</strong> angewandt wurde.';
 

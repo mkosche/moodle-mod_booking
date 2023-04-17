@@ -1988,6 +1988,8 @@ $string['applyunitfactor_desc'] = 'If this setting is active, the educational un
  to calculate the number of educational units. This number will be used as factor for the price formula.
  Example: A booking option has a date series like "Mon, 15:00 - 16:30". So it lasts 2 educational units (45 min each).
  So a unit factor of 2 will be applied to the price formula. (Unit factor will only be applied if a price formula is present.)';
+$string['applycourseminutesfactor'] = 'Apply course minutes factor';
+$string['applycourseminutesfactor_desc'] = 'If this setting is active, the number of minutes (over all dates) a course have will be used as factor for the price formula.';
 $string['roundpricesafterformula'] = 'Round prices (price formula)';
 $string['roundpricesafterformula_desc'] = 'If active, prices will be rounded to full numbers (no decimals) after the <strong>price formula</strong> has been applied.';
 
