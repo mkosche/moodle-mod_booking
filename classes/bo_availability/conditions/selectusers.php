@@ -107,7 +107,7 @@ class selectusers implements bo_condition {
             $isavailable = true;
         } else {
             // Users have been set in condition.
-            if (isloggedin()) {
+            if (isloggedin() && !isguestuser()) {
                 $userids = $this->customsettings->userids;
                 if (in_array("$userid", $userids)) {
                     $isavailable = true;
