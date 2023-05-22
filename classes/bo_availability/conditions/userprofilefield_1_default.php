@@ -105,7 +105,7 @@ class userprofilefield_1_default implements bo_condition {
             $isavailable = true;
         } else {
 
-            if (isloggedin()) {
+            if (isloggedin() && !isguestuser()) {
                 // Profilefield is set.
                 $user = singleton_service::get_instance_of_user($userid);
                 $profilefield = $this->customsettings->profilefield;

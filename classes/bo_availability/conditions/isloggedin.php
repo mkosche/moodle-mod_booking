@@ -79,7 +79,7 @@ class isloggedin implements bo_condition {
         // This is the return value. Not available to begin with.
         $isavailable = false;
 
-        if (isloggedin()) {
+        if (isloggedin() && !isgeustuser()) {
             $isavailable = true;
         }
 

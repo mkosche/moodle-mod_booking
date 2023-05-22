@@ -80,7 +80,7 @@ class isloggedinprice implements bo_condition {
         // This is the return value. Not available to begin with.
         $isavailable = false;
 
-        if (isloggedin()) {
+        if (isloggedin() && !isguestuser()) {
             $isavailable = true;
         } else {
             $priceitems = price::get_prices_from_cache_or_db('option', $settings->id);
