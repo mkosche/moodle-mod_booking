@@ -718,8 +718,7 @@ class dates_handler {
         }
 
         $minutes = (strtotime('today ' . $dayinfo['endtime']) - strtotime('today ' . $dayinfo['starttime'])) / 60;
-        $units = number_format($minutes / $unitlength, 1, $decimalseparator, $thousandsseparator);
-        $unitstring = get_string('units', 'mod_booking') . ": $units";
+        $unitstring = number_format($minutes / $unitlength, 1, $decimalseparator, $thousandsseparator);
 
         if (!empty($unitstring)) {
             return $unitstring;
