@@ -388,7 +388,19 @@ if ($mform->is_cancelled()) {
 
         $mform->set_data($defaultvalues);
     }
+    echo '<div class="container-fluid" data-spy="scroll" data-target="#bo-edit-scrollspy" data-offset="0"><div class="row"><div class="col-md-3">';
+    echo '<div id="bo-edit-scrollspy" class="list-group sticky-top">';
+
+    $is_first = true;
+    foreach ($mform->get_headers() as $header){
+        $active = $is_first ? 'active' : '';
+        echo '<a class="list-group-item list-group-item-action '.$active.'" href="#id_'.$header->_attributes["name"].'">'.$header->_text.'</a>';
+        $is_first = false;
+    }
+    echo '</div></div><div  class=" col-md-9">';
+    $mform->expand_all();
     $mform->display();
+    echo '</div></div></div>';
 }
 
 $PAGE->requires->js_call_amd(

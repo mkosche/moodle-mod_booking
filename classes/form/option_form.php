@@ -121,6 +121,10 @@ class option_form extends moodleform {
         // Header "General".
         $mform->addElement('header', 'general', get_string('general', 'form'));
 
+//        $renderer =& $mform->defaultRenderer();
+//        $highlightheadertemplate = str_replace('collapsible', 'card', $renderer->_headerTemplate);
+//        $renderer->setElementTemplate($highlightheadertemplate , 'general'); // Element name.
+
         // Option templates.
         $optiontemplates = ['' => ''];
         $alloptiontemplates = $DB->get_records('booking_options', ['bookingid' => 0], '', $fields = 'id, text', 0, 0);
@@ -996,6 +1000,22 @@ class option_form extends moodleform {
         }
 
         return $categorynames;
+    }
+
+    public function get_headers(){
+        return array_filter($this->_form->_elements, array($this,"is_header_object"));
+    }
+
+    private function is_header_object($var){
+        return $var->getType() == 'header';
+    }
+
+    public function expand_all(){
+        $headers = $this->get_headers();
+        foreach ($headers as $header){
+            $this->_form->setExpanded($header->_attributes['name'],true,true);
+        }
+
     }
 
     /**
