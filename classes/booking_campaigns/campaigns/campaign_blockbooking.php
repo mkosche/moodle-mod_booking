@@ -16,8 +16,10 @@
 
 namespace mod_booking\booking_campaigns\campaigns;
 
+use context_system;
 use mod_booking\booking_campaigns\booking_campaign;
 use mod_booking\booking_option_settings;
+use mod_booking\singleton_service;
 use mod_booking\task\purge_campaign_caches;
 use MoodleQuickForm;
 use stdClass;
@@ -27,13 +29,13 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/mod/booking/lib.php');
 
 /**
- * Campaign for booking options having a certain booking option customfield.
+ * Campaign for blocking booking options having a certain booking option customfield.
  * @package     mod_booking
  * @copyright   2023 Wunderbyte GmbH <info@wunderbyte.at>
  * @author      Bernhard Fischer
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class campaign_customfield implements booking_campaign {
+class campaign_blockbooking implements booking_campaign {
 
     /** @var int $id */
     public $id = 0;
@@ -42,10 +44,10 @@ class campaign_customfield implements booking_campaign {
     public $name = '';
 
     /** @var int $type */
-    public $type = CAMPAIGN_TYPE_CUSTOMFIELD;
+    public $type = CAMPAIGN_TYPE_BLOCKBOOKING;
 
     /** @var string $bookingcampaigntype */
-    public $bookingcampaigntype = 'campaign_customfield';
+    public $bookingcampaigntype = 'campaign_blockbooking';
 
     /** @var int $starttime */
     public $starttime = 0;
@@ -53,18 +55,24 @@ class campaign_customfield implements booking_campaign {
     /** @var int $endtime */
     public $endtime = 0;
 
-    /** @var float $pricefactor */
-    public $pricefactor = 1.0;
-
-    /** @var float $limitfactor */
-    public $limitfactor = 1.0;
+    /** @var float $percentageavailableplaces */
+    public $percentageavailableplaces = 50.0;
 
     // From JSON.
+    /** @var string $blockoperator */
+    public $blockoperator = '';
+
     /** @var string $fieldname */
     public $fieldname = '';
 
     /** @var string $fieldvalue */
     public $fieldvalue = '';
+
+    /** @var string $blockinglabel */
+    public $blockinglabel = '';
+
+    /** @var string $hascapability */
+    public $hascapability = '';
 
     /**
      * Load json data from DB into the object.
@@ -75,13 +83,15 @@ class campaign_customfield implements booking_campaign {
         $this->name = $record->name ?? '';
         $this->starttime = $record->starttime ?? 0;
         $this->endtime = $record->endtime ?? 0;
-        $this->pricefactor = $record->pricefactor ?? 1.0;
-        $this->limitfactor = $record->limitfactor ?? 1.0;
 
         // Set additional data stored in JSON.
         $jsonobj = json_decode($record->json);
         $this->fieldname = $jsonobj->fieldname;
         $this->fieldvalue = $jsonobj->fieldvalue;
+        $this->blockoperator = $jsonobj->blockoperator;
+        $this->blockinglabel = $jsonobj->blockinglabel;
+        $this->hascapability = $jsonobj->hascapability;
+        $this->percentageavailableplaces = $jsonobj->percentageavailableplaces ?? 50.0;
     }
 
     /**
@@ -163,14 +173,27 @@ class campaign_customfield implements booking_campaign {
         $mform->addHelpButton('endtime', 'campaignend', 'mod_booking');
 
         // Price factor (multiplier).
-        $mform->addElement('float', 'pricefactor', get_string('pricefactor', 'mod_booking'), null);
-        $mform->setDefault('pricefactor', 1);
-        $mform->addHelpButton('pricefactor', 'pricefactor', 'mod_booking');
+        $operators = [
+            'blockbelow' => get_string('blockbelow', 'mod_booking'),
+            'blockabove' => get_string('blockabove', 'mod_booking'),
+        ];
+
+        $mform->addElement('select', 'blockoperator', get_string('blockoperator', 'mod_booking'), $operators);
+        $mform->addHelpButton('blockoperator', 'blockoperator', 'mod_booking');
 
         // Limit factor (multiplier).
-        $mform->addElement('float', 'limitfactor', get_string('limitfactor', 'mod_booking'), null);
-        $mform->setDefault('limitfactor', 1);
-        $mform->addHelpButton('limitfactor', 'limitfactor', 'mod_booking');
+        $mform->addElement('float', 'percentageavailableplaces', get_string('percentageavailableplaces', 'mod_booking'), null);
+        $mform->setDefault('percentageavailableplaces', 50.0);
+        $mform->addHelpButton('percentageavailableplaces', 'percentageavailableplaces', 'mod_booking');
+
+        $mform->addElement(
+            'textarea',
+            'blockinglabel',
+            get_string('blockinglabel', 'mod_booking'),
+            'rows="2" cols="50"');
+        $mform->setType('blockinglabel', PARAM_TEXT);
+        $mform->addHelpButton('blockinglabel', 'blockinglabel', 'mod_booking');
+
     }
 
     /**
@@ -190,7 +213,7 @@ class campaign_customfield implements booking_campaign {
         global $DB;
 
         $record = new stdClass();
-        $record->type = CAMPAIGN_TYPE_CUSTOMFIELD;
+        $record->type = CAMPAIGN_TYPE_BLOCKBOOKING;
 
         if (!isset($data->json)) {
             $jsonobject = new stdClass();
@@ -200,13 +223,15 @@ class campaign_customfield implements booking_campaign {
 
         $jsonobject->fieldname = $data->fieldname;
         $jsonobject->fieldvalue = $data->fieldvalue;
+        $jsonobject->blockoperator = $data->blockoperator;
+        $jsonobject->blockinglabel = $data->blockinglabel;
+        $jsonobject->hascapability = $data->hascapability;
+        $jsonobject->percentageavailableplaces = $data->percentageavailableplaces;
         $record->json = json_encode($jsonobject);
 
         $record->name = $data->name;
         $record->starttime = $data->starttime;
         $record->endtime = $data->endtime;
-        $record->pricefactor = $data->pricefactor;
-        $record->limitfactor = $data->limitfactor;
 
         // We need to create two adhoc tasks to purge caches - one at start time and one at end time.
         $purgetaskstart = new purge_campaign_caches();
@@ -237,14 +262,16 @@ class campaign_customfield implements booking_campaign {
         $data->name = $record->name;
         $data->starttime = $record->starttime;
         $data->endtime = $record->endtime;
-        $data->pricefactor = $record->pricefactor;
-        $data->limitfactor = $record->limitfactor;
 
         if ($jsonboject = json_decode($record->json)) {
             switch ($record->type) {
-                case CAMPAIGN_TYPE_CUSTOMFIELD:
+                case CAMPAIGN_TYPE_BLOCKBOOKING:
                     $data->fieldname = $jsonboject->fieldname;
                     $data->fieldvalue = $jsonboject->fieldvalue;
+                    $data->blockoperator = $jsonboject->blockoperator;
+                    $data->blockinglabel = $jsonboject->blockinglabel;
+                    $data->hascapability = $jsonboject->hascapability;
+                    $data->percentageavailableplaces = $jsonboject->percentageavailableplaces;
                     break;
             }
         }
@@ -282,31 +309,21 @@ class campaign_customfield implements booking_campaign {
     }
 
     /**
-     * Function to apply the campaign price factor.
+     * Does not apply for this campaign type.
      * @param float $price the original price
      * @return float the new price
      */
     public function get_campaign_price(float $price):float {
-        $campaignprice = $price * $this->pricefactor;
-
-        $discountprecision = 2;
-
-        // If local_shopping_cart is present, we can actually turn rounding on and off.
-        if (class_exists('local_shopping_cart\shopping_cart')) {
-            $discountprecision = get_config('local_shopping_cart', 'rounddiscounts') ? 0 : 2;
-        }
-
-        return round($campaignprice, $discountprecision);
+        return $price;
     }
 
     /**
-     * Function to apply the campaign's booking limit factor.
+     * Does not apply for this campaign type.
      * @param int $limit the original booking limit
      * @return int the new booking limit
      */
     private function get_campaign_limit(int $limit):int {
-        $campaignlimit = $limit * $this->limitfactor;
-        return (int)round($campaignlimit, 0);
+        return (int)$limit;
     }
 
     /**
@@ -315,8 +332,12 @@ class campaign_customfield implements booking_campaign {
      * @param stdClass $dbrecord The record with the new data.
      */
     public function apply_logic(booking_option_settings &$settings, stdClass &$dbrecord) {
-        $dbrecord->maxanswers = $this->get_campaign_limit($settings->maxanswers);
-        $settings->maxanswers = $dbrecord->maxanswers;
+
+        // In this campaign, we add the class to the booking option settings.
+        // This is because we have to run the is_blocking function and need to cache the instantiated campaign class.
+        $settings->campaigns[] = $this;
+        $dbrecord->campaigns[] = $this;
+
     }
 
     /**
@@ -326,9 +347,31 @@ class campaign_customfield implements booking_campaign {
      */
     public function is_blocking(booking_option_settings $settings):array {
 
-        return [
-            'status' => false,
-            'message' => '',
-        ];
+        $ba = singleton_service::get_instance_of_booking_answers($settings);
+
+        $blocking = false;
+
+        switch ($this->blockoperator) {
+
+            case 'blockbelow':
+                $blocking = ($settings->maxanswers * $this->percentageavailableplaces * 0.01) > count($ba->usersonlist);
+                break;
+
+            case 'blockabove':
+                $blocking = ($settings->maxanswers * $this->percentageavailableplaces * 0.01) < count($ba->usersonlist);
+                break;
+        }
+
+        if (!$blocking) {
+            return [
+                'status' => false,
+                'label' => '',
+            ];
+        } else {
+            return [
+                'status' => true,
+                'label' => $this->blockinglabel,
+            ];
+        }
     }
 }

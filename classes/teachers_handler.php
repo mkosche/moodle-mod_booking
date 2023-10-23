@@ -94,10 +94,16 @@ class teachers_handler {
 
         $list = [];
         foreach ($settings->teachers as $teacher) {
+            $details = [
+                'id' => $teacher->userid,
+                'email' => $teacher->email,
+                'firstname' => $teacher->firstname,
+                'lastname' => $teacher->lastname,
+            ];
             $list[$teacher->userid] =
                 $OUTPUT->render_from_template(
                     'mod_booking/form-user-selector-suggestion',
-                    ['email' => [(array)$teacher]]);
+                    $details);
         }
 
         $options = [
@@ -105,6 +111,18 @@ class teachers_handler {
             'multiple' => true,
             'noselectionstring' => '',
             'ajax' => 'mod_booking/form_users_selector',
+            'valuehtmlcallback' => function($value) {
+                global $OUTPUT;
+                $user = singleton_service::get_instance_of_user((int)$value);
+                $details = [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                    'firstname' => $user->firstname,
+                    'lastname' => $user->lastname,
+                ];
+                return $OUTPUT->render_from_template(
+                        'mod_booking/form-user-selector-suggestion', $details);
+            },
         ];
         /* Important note: Currently, all users can be added as teachers for optiondates.
         In the future, there might be a user profile field defining users which are allowed
@@ -118,7 +136,7 @@ class teachers_handler {
         if (!empty($this->optionid) && $this->optionid > 0) {
             $optionsettings = singleton_service::get_instance_of_booking_option_settings($this->optionid);
             $optiondatesteachersreporturl = new moodle_url('/mod/booking/optiondates_teachers_report.php', [
-                'id' => $optionsettings->cmid,
+                'cmid' => $optionsettings->cmid,
                 'optionid' => $this->optionid,
             ]);
             $mform->addElement('static', 'info:teachersforoptiondates', '',

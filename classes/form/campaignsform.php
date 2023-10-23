@@ -51,7 +51,6 @@ class campaignsform extends dynamic_form {
         // If we open an existing campaign, we need to save the id right away.
         if (!empty($ajaxformdata['id'])) {
             $mform->addElement('hidden', 'id', $ajaxformdata['id']);
-            $this->prepare_ajaxformdata($ajaxformdata);
         }
 
         campaigns_info::add_campaigns_to_mform($mform, $ajaxformdata);
@@ -102,10 +101,28 @@ class campaignsform extends dynamic_form {
                 if ($data['fieldname'] == '0') {
                     $errors['fieldname'] = get_string('error:choosevalue', 'mod_booking');
                 }
-                if (empty($data['fieldvalue'])) {
-                    $errors['fieldvalue'] = get_string('error:choosevalue', 'mod_booking');
+                if ($data['pricefactor'] < 0 || $data['pricefactor'] > 1) {
+                    $errors['pricefactor'] = get_string('error:pricefactornotbetween0and1', 'mod_booking');
+                }
+                if ($data['limitfactor'] < 0 || $data['limitfactor'] > 2) {
+                    $errors['limitfactor'] = get_string('error:limitfactornotbetween1and2', 'mod_booking');
                 }
                 break;
+            case 'campaign_blockbooking':
+                if ($data['fieldname'] == '0') {
+                    $errors['fieldname'] = get_string('error:choosevalue', 'mod_booking');
+                }
+                if ($data['percentageavailableplaces'] <= 0 || $data['percentageavailableplaces'] >= 100) {
+                    $errors['percentageavailableplaces'] = get_string('error:percentageavailableplaces', 'mod_booking');
+                }
+                if (empty(trim(strip_tags($data['blockinglabel'])))) {
+                    $errors['blockinglabel'] = get_string('error:missingblockinglabel', 'mod_booking');
+                }
+                break;
+        }
+
+        if (empty($data['fieldvalue'])) {
+            $errors['fieldvalue'] = get_string('error:choosevalue', 'mod_booking');
         }
 
         if (empty($data['name'])) {
@@ -115,14 +132,6 @@ class campaignsform extends dynamic_form {
         if ($data['starttime'] >= $data['endtime']) {
             $errors['starttime'] = get_string('error:campaignstart', 'mod_booking');
             $errors['endtime'] = get_string('error:campaignend', 'mod_booking');
-        }
-
-        if ($data['pricefactor'] < 0 || $data['pricefactor'] > 1) {
-            $errors['pricefactor'] = get_string('error:pricefactornotbetween0and1', 'mod_booking');
-        }
-
-        if ($data['limitfactor'] < 1 || $data['limitfactor'] > 2) {
-            $errors['limitfactor'] = get_string('error:limitfactornotbetween1and2', 'mod_booking');
         }
 
         return $errors;
@@ -152,44 +161,5 @@ class campaignsform extends dynamic_form {
     protected function check_access_for_dynamic_submission(): void {
         // Perhaps we will need a specific campaigns capability.
         require_capability('moodle/site:config', context_system::instance());
-    }
-
-    /**
-     * Prepare the ajax form data with all the information...
-     * ... we need to load the form with the right handlers.
-     *
-     * @param array $ajaxformdata
-     * @return void
-     */
-    private function prepare_ajaxformdata(array &$ajaxformdata) {
-
-        global $DB;
-
-        if (!empty($ajaxformdata["bookingcampaigntype"])) {
-            switch ($ajaxformdata["bookingcampaigntype"]) {
-                case "campaign_customfield":
-                    $ajaxformdata["type"] = CAMPAIGN_TYPE_CUSTOMFIELD;
-                    break;
-            }
-        }
-
-        // If we have an ID, we retrieve the right campaign from DB.
-        if (!empty($ajaxformdata['id'])) {
-            if ($record = $DB->get_record('booking_campaigns', ['id' => $ajaxformdata['id']])) {
-
-                $ajaxformdata["name"] = $record->name;
-                $ajaxformdata["starttime"] = $record->starttime;
-                $ajaxformdata["endtime"] = $record->endtime;
-                $ajaxformdata["pricefactor"] = $record->pricefactor;
-                $ajaxformdata["limitfactor"] = $record->limitfactor;
-                $jsonboject = json_decode($record->json);
-                switch ($ajaxformdata["type"]) {
-                    case CAMPAIGN_TYPE_CUSTOMFIELD:
-                        $ajaxformdata["fieldname"] = $jsonboject->fieldname;
-                        $ajaxformdata["fieldvalue"] = $jsonboject->fieldvalue;
-                        break;
-                }
-            }
-        }
     }
 }

@@ -773,7 +773,7 @@ class booking {
 
                     $nrecid = $DB->insert_record('booking_options', $bookingoption, true, false);
 
-                    $newteacher = new \stdClass;
+                    $newteacher = new stdClass;
                     $newteacher->bookingid = $this->id;
                     $newteacher->userid = $USER->id;
                     $newteacher->optionid = $nrecid;
@@ -860,7 +860,7 @@ class booking {
      * @param int $bookingparam
      * @param string $additionalwhere
      * @param string $innerfrom
-     * @return void
+     * @return array
      */
     public static function get_options_filter_sql($limitfrom = 0,
                                                 $limitnum = 0,
@@ -1129,7 +1129,7 @@ class booking {
         // Encoding the whole URL makes migration to a new WWWROOT impossible.
 
         $encodedurl = base64_encode($moodleurl->out(false));
-        $encodedmoodleurl = new \moodle_url($CFG->wwwroot . '/mod/booking/bookingredirect.php', [
+        $encodedmoodleurl = new moodle_url($CFG->wwwroot . '/mod/booking/bookingredirect.php', [
             'encodedurl' => $encodedurl,
         ]);
 
@@ -1277,23 +1277,23 @@ class booking {
 
             case 'pgsql_native_moodle_database':
                 return "
-                FROM (SELECT bos2.*
-                FROM (
-                SELECT bos1.*, json_array_elements_text(bos1.availability1 -> 'courseids')::int bocourseid
-                FROM (
-                SELECT *, json_array_elements(availability::json) availability1
-                FROM {booking_options}) bos1
-                WHERE bos1.availability1 ->>'id' = '" . BO_COND_JSON_ENROLLEDINCOURSE . "'
-                ) bos2
-                LEFT JOIN {enrol} e
-                ON e.courseid = bos2.bocourseid
-                LEFT JOIN {cohort} c
-                ON e.customint1 = c.id
-                WHERE e.enrol = 'cohort'
-                AND bocourseid IN (" . implode(', ', $courses) . ")
-                ) bo
-            ";
-            break;
+                    FROM (SELECT bos2.*
+                    FROM (
+                    SELECT bos1.*, json_array_elements_text(bos1.availability1 -> 'courseids')::int bocourseid
+                    FROM (
+                    SELECT *, json_array_elements(availability::json) availability1
+                    FROM {booking_options}) bos1
+                    WHERE bos1.availability1 ->>'id' = '" . BO_COND_JSON_ENROLLEDINCOURSE . "'
+                    ) bos2
+                    LEFT JOIN {enrol} e
+                    ON e.courseid = bos2.bocourseid
+                    LEFT JOIN {cohort} c
+                    ON e.customint1 = c.id
+                    WHERE e.enrol = 'cohort'
+                    AND bocourseid IN (" . implode(', ', $courses) . ")
+                    ) bo
+                ";
+
             case 'mariadb_native_moodle_database':
 
                 $where = "";
@@ -1309,20 +1309,69 @@ class booking {
                 }
 
                 return "
-                FROM (
-                    SELECT bos1.*
-                FROM (
-                    SELECT *, JSON_EXTRACT(
-                        JSON_UNQUOTE(
-                            JSON_EXTRACT(availability, '$[*].id')), '$[0]') AS boavailid,
-                                JSON_EXTRACT(JSON_UNQUOTE(
-                                    JSON_EXTRACT(availability, '$[*].courseids')), '$[0]') AS boscourseids
-                    FROM m_booking_options
-                ) bos1
-                WHERE bos1.boavailid = '". BO_COND_JSON_ENROLLEDINCOURSE . "'"
-                . $where .
-                " ) bo";
+                    FROM (
+                        SELECT bos1.*
+                        FROM (
+                            SELECT *, JSON_EXTRACT(
+                                JSON_UNQUOTE(
+                                    JSON_EXTRACT(availability, '$[*].id')), '$[0]') AS boavailid,
+                                        JSON_EXTRACT(JSON_UNQUOTE(
+                                            JSON_EXTRACT(availability, '$[*].courseids')), '$[0]'
+                            ) AS boscourseids
+                            FROM m_booking_options
+                        ) bos1
+                        WHERE bos1.boavailid = '". BO_COND_JSON_ENROLLEDINCOURSE . "'"
+                    . $where . " ) bo";
         }
+    }
+
+    /**
+     * Return the sql for the event logs of booking component.
+     *
+     * @param string $component
+     * @param array $eventnames
+     *
+     * @return array
+     *
+     */
+    public static function return_sql_for_event_logs(
+            string $component = 'mod_booking',
+            array $eventnames = [],
+            int $objectid = 0) {
+        global $DB;
+
+        $select = "*";
+
+        $params = [];
+
+        $from = "(
+                    SELECT lsl.id as uniqueid, " .
+                    $DB->sql_concat("u.firstname", "' '", "u.lastname") . " as username,
+                    lsl.*
+                    FROM {logstore_standard_log} lsl
+                    LEFT JOIN {user} u
+                    ON u.id = lsl.userid
+                ) as s1";
+
+        $where = 'component = :component ';
+
+        if (!empty($eventnames)) {
+            list($inorequal, $params) = $DB->get_in_or_equal($eventnames, SQL_PARAMS_NAMED);
+
+            $where .= " AND eventname " . $inorequal;
+        }
+
+        if (!empty($objectid)) {
+
+            $where .= " AND objectid = :objectid ";
+            $params['objectid'] = $objectid;
+        }
+
+        $filter = '';
+
+        $params['component'] = $component;
+
+        return [$select, $from, $where, $filter, $params];
     }
 
     /**
@@ -1365,5 +1414,54 @@ class booking {
             }
         }
         return null;
+    }
+
+    /**
+     * Helper function to return an array containing all relevant instance update changes.
+     *
+     * @param $oldoption stdClass the original booking option object
+     * @param $newoption stdClass the new booking option object
+     * @return array an array containing the changes that have been made
+     */
+    public static function booking_instance_get_changes($oldoption, $newoption) {
+
+        $keystoexclude = [
+            'introformat',
+            'customtemplateid',
+            'timemodified',
+        ];
+
+        $keyslocalization = [
+            'name' => get_string('bookingname', 'mod_booking'),
+            'defaultoptionsort' => get_string('sortby'),
+            'optionsfield' => get_string('optionsfield', 'mod_booking'),
+        ];
+
+        $returnarry = [];
+
+        foreach ($newoption as $key => $value) {
+
+            if (in_array($key, $keystoexclude)) {
+                continue;
+            }
+
+            if (isset($oldoption->{$key})
+                && $oldoption->{$key} != $value) {
+
+                $localizedstring = $keyslocalization[$key] ?? get_string($key, 'mod_booking');
+                $returnarry[] = [
+                    'info' => $localizedstring . get_string('changeinfochanged', 'booking'),
+                    'fieldname' => 'bookinginstancetitle',
+                    'oldvalue' => $oldoption->{$key},
+                    'newvalue' => $value,
+                ];
+            }
+        }
+
+        if (count($returnarry) > 0) {
+            return $returnarry;
+        } else {
+            return [];
+        }
     }
 }

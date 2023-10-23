@@ -110,12 +110,8 @@ function editCampaignsModal(element) {
             if (!e.target.name) {
                 return;
             }
-            if (e.target.name == 'bookingcampaigntype') {
-                window.skipClientValidation = true;
-                let button = document.querySelector('[name="btn_bookingcampaigntype"]');
-                modalForm.processNoSubmitButton(button);
-            }
-            if (e.target.name == 'fieldname') {
+            if (e.target.name == 'bookingcampaigntype'
+                || e.target.name == 'fieldname') {
                 window.skipClientValidation = true;
                 let button = document.querySelector('[name="btn_bookingcampaigntype"]');
                 modalForm.processNoSubmitButton(button);

@@ -16,6 +16,7 @@
 
 namespace mod_booking;
 
+use cache_helper;
 use html_writer;
 use mod_booking\utils\wb_payment;
 use mod_booking\event\bookingoption_updated;
@@ -205,8 +206,6 @@ class booking_utils {
             return;
         }
 
-        $bo = singleton_service::get_instance_of_booking_option($cmid, $optionid);
-
         // If changes concern only the add to calendar_field, we don't want to send a mail.
         $index = null;
         $addtocalendar = 0;
@@ -220,9 +219,12 @@ class booking_utils {
             array_splice($changes, $key, 1);
         }
 
+        $bo = singleton_service::get_instance_of_booking_option($cmid, $optionid);
+        $bookingsettings = singleton_service::get_instance_of_booking_settings_by_cmid($cmid);
+        $sendmail = $bookingsettings->sendmail ?? false;
+
         // If we still have changes, we can send the confirmation mail.
-        if (count($changes) > 0
-                && $bo->booking->settings->sendmail) {
+        if (count($changes) > 0 && $sendmail) {
             $bookinganswers = $bo->get_all_users_booked();
             if (!empty($bookinganswers)) {
                 foreach ($bookinganswers as $bookinganswer) {
@@ -238,8 +240,19 @@ class booking_utils {
         // We trigger the event only if we have real changes OR if we set the calendar entry to 1.
         if (count($changes) > 0 || $addtocalendar == 1) {
             // Also, we need to trigger the bookingoption_updated event, in order to update calendar entries.
-            $event = bookingoption_updated::create(['context' => $context, 'objectid' => $optionid, 'userid' => $USER->id]);
+            $event = bookingoption_updated::create(
+                [
+                        'context' => $context,
+                        'objectid' => $optionid,
+                        'userid' => $USER->id,
+                        'other' => [
+                            'changes' => $changes ?? '',
+                        ],
+                ]
+            );
             $event->trigger();
+
+            cache_helper::purge_by_event('setbackeventlogtable');
         }
     }
 

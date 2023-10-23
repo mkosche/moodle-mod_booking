@@ -24,6 +24,7 @@
 
 use mod_booking\booking;
 use mod_booking\elective;
+use mod_booking\output\eventslist;
 use mod_booking\semester;
 use mod_booking\utils\wb_payment;
 
@@ -85,7 +86,7 @@ class mod_booking_mod_form extends moodleform_mod {
     }
 
     public function definition() {
-        global $CFG, $DB, $COURSE, $USER, $PAGE;
+        global $CFG, $DB, $COURSE, $USER, $PAGE, $OUTPUT;
 
         $systemcontext = context_system::instance();
         $coursecontext = context_course::instance($COURSE->id);
@@ -249,9 +250,9 @@ class mod_booking_mod_form extends moodleform_mod {
         $listoncoursepageoptions[0] = get_string('hidelistoncoursepage', 'booking');
         $listoncoursepageoptions[1] = get_string('showcoursenameandbutton', 'booking');
         $mform->addElement('select', 'showlistoncoursepage',
-            get_string('showlistoncoursepagelbl', 'booking'), $listoncoursepageoptions);
+            get_string('showlistoncoursepage', 'booking'), $listoncoursepageoptions);
         $mform->setDefault('showlistoncoursepage', 0); // List on course page is tuned off by default.
-        $mform->addHelpButton('showlistoncoursepage', 'showlistoncoursepagelbl', 'booking');
+        $mform->addHelpButton('showlistoncoursepage', 'showlistoncoursepage', 'booking');
         $mform->setType('showlistoncoursepage', PARAM_INT);
 
         $mform->addElement('textarea', 'coursepageshortinfo',
@@ -435,7 +436,7 @@ class mod_booking_mod_form extends moodleform_mod {
         $mform->addElement('advcheckbox', 'sendmail', get_string("activatemails", "mod_booking"));
 
         $mform->addElement('advcheckbox', 'copymail',
-                get_string("sendcopytobookingmanger", "booking"));
+                get_string("copymail", "booking"));
 
         $mform->addElement('advcheckbox', 'sendmailtobooker',
                 get_string('sendmailtobooker', 'booking'));
@@ -681,7 +682,7 @@ class mod_booking_mod_form extends moodleform_mod {
         $mform->setType('disablecancel', PARAM_INT);
         $mform->setDefault('disablecancel', (int) booking::get_value_of_json_by_key((int) $bookingid, "disablecancel"));
 
-        $mform->addElement('advcheckbox', 'cancancelbook', get_string('cancancelmyself', 'mod_booking'));
+        $mform->addElement('advcheckbox', 'cancancelbook', get_string('cancancelbook', 'mod_booking'));
         $mform->disabledIf('cancancelbook', 'disablecancel', 'eq', 1);
 
         $cancancelbookdaysstring = get_config('booking', 'cancelfromsemesterstart') ?
@@ -953,6 +954,15 @@ class mod_booking_mod_form extends moodleform_mod {
         $this->standard_coursemodule_elements();
         $this->add_action_buttons();
 
+        if (!empty($this->_cm->id)) {
+            $data = new eventslist (
+                $this->_cm->id,
+                ['\mod_booking\event\bookinginstance_updated']
+            );
+
+            $html = $OUTPUT->render_from_template('mod_booking/eventslist', $data);
+            $mform->addElement('static', 'eventslist', get_string('eventslist', 'mod_booking'), $html);
+        }
         $PAGE->requires->js_call_amd('mod_booking/bookinginstancetemplateselect', 'init');
     }
 

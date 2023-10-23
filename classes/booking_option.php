@@ -433,6 +433,7 @@ class booking_option {
 
         foreach ($params as $name => $value) {
             if (!is_null($value)) { // Since php 8.1.
+                $value = strval($value);
                 $text = str_replace('{' . $name . '}', $value, $text);
             }
         }
@@ -444,11 +445,11 @@ class booking_option {
      * Updates canbookusers and bookedusers does not check the status (booked or waitinglist)
      * Just gets the registered booking from database
      * Calculates the potential users (bookers able to book, but not yet booked)
-     *
-     * @param bool $bookanyone if true, any user can be booked (also not enrolled users)
      */
-    public function update_booked_users(bool $bookanyone = false) {
+    public function update_booked_users() {
         global $CFG, $DB, $USER;
+
+        $bookanyone = get_user_preferences('bookanyone', '0');
 
         if (empty($this->booking->canbookusers)) {
             $this->booking->get_canbook_userids();
@@ -589,10 +590,11 @@ class booking_option {
      * @param bool $cancelreservation
      * @param bool $bookingoptioncancel indicates if the function was called
      *     after the whole booking option was cancelled, false by default
+     * @param bool $syncwaitinglist set this to false, if you do not want to sync_waiting_list here (avoid recursions)
      * @return bool true if booking was deleted successfully, otherwise false
      */
     public function user_delete_response($userid, $cancelreservation = false,
-        $bookingoptioncancel = false) {
+        $bookingoptioncancel = false, $syncwaitinglist = true) {
 
         global $USER, $DB;
 
@@ -624,20 +626,20 @@ class booking_option {
             }
         }
 
+        // Purge caches BEFORE sync_waiting_list.
+        self::purge_cache_for_option($this->optionid);
+
         // If the whole option was cancelled, there is no need to sync anymore.
-        if (!$bookingoptioncancel && (
+        if ($syncwaitinglist && (!$bookingoptioncancel && (
             // Moving up from waiting list has not been turned off in settings.php.
             !get_config('booking', 'turnoffwaitinglistaftercoursestart') ||
             /* Moving up from waiting list has been turned off in settings.php,
             but we still do sync if the booking option has not started yet. */
-            (get_config('booking', 'turnoffwaitinglistaftercoursestart') && time() < $optionsettings->coursestarttime)
+            (get_config('booking', 'turnoffwaitinglistaftercoursestart') && time() < $optionsettings->coursestarttime))
         )) {
             // Sync the waiting list and send status change mails.
             $this->sync_waiting_list();
         }
-
-        // Before returning, purge caches.
-        self::purge_cache_for_option($this->optionid);
 
         // We also have to trigger unenrolement of corresponding subbookings.
         $subbookings = subbookings_info::return_array_of_subbookings($this->optionid);
@@ -774,10 +776,7 @@ class booking_option {
      * "Sync" users on waiting list, based on edited option - if has limit or not.
      */
     public function sync_waiting_list() {
-        global $DB, $USER;
-
-        /* TODO: We might need to rewrite this function and use the booking_answers class instead of direct DB calls.
-        The way it works now, we could run into serious problems - e.g. when combining this functionality with Booking campaigns! */
+        global $USER;
 
         // If waiting list is turned off globally, we return right away.
         if (get_config('booking', 'turnoffwaitinglist')) {
@@ -788,96 +787,94 @@ class booking_option {
 
         $settings = $this->settings;
 
+        $ba = singleton_service::get_instance_of_booking_answers($settings);
+
         // If there is no waiting list, we do not do anything!
-        if (!empty($settings->maxoverbooking)) {
-            if ($settings->limitanswers && !empty($settings->maxanswers)) {
+        if ($settings->limitanswers && !empty($settings->maxanswers)) {
 
-                // If users drop out of the waiting list because of changed limits, delete and inform them.
-                $answerstodelete = $DB->get_records_sql(
-                    'SELECT * FROM {booking_answers} WHERE optionid = ? AND waitinglist < 3 ORDER BY timemodified ASC',
-                    [$this->optionid], $settings->maxoverbooking + $settings->maxanswers);
+            // 1. Update, enrol and inform users who have switched from the waiting list to status "booked".
+            $usersonwaitinglist = array_replace([], $ba->usersonwaitinglist);
+            $noofuserstobook = $settings->maxanswers - count($ba->usersonlist) - count($ba->usersreserved);
 
-                foreach ($answerstodelete as $answertodelete) {
-                    $answertodelete->waitinglist = STATUSPARAM_DELETED;
-                    $DB->update_record('booking_answers', $answertodelete);
+            // We want to enrol people who have been waiting longer first.
+            usort($usersonwaitinglist, fn($a, $b) => $a->timecreated < $b->timecreated ? -1 : 1);
+            if ($noofuserstobook > 0 && !empty($ba->usersonwaitinglist)) {
+                while (!empty($usersonwaitinglist)) {
+                    $currentanswer = array_shift($usersonwaitinglist);
+                    $user = singleton_service::get_instance_of_user($currentanswer->userid);
+                    $this->user_submit_response($user, 0, 0, false, true);
+                    $this->enrol_user_coursestart($currentanswer->userid);
 
-                    $event = bookinganswer_cancelled::create([
-                        'objectid' => $this->optionid,
-                        'context' => $context,
-                        'userid' => $USER->id, // The user who did cancel.
-                        'relateduserid' => $answertodelete->userid, // Affected user - the user who was cancelled.
-                        'other' => [
-                            'extrainfo' => 'Answer deleted by sync_waiting_list.',
-                        ],
-                    ]);
-                    $event->trigger();
-
+                    // Before sending, we delete the booking answers cache!
+                    self::purge_cache_for_option($this->optionid);
                     $messagecontroller = new message_controller(
-                        MSGCONTRPARAM_QUEUE_ADHOC, MSGPARAM_CANCELLED_BY_TEACHER_OR_SYSTEM,
-                        $this->cmid, $this->bookingid, $this->optionid, $answertodelete->userid
+                        MSGCONTRPARAM_QUEUE_ADHOC, MSGPARAM_STATUS_CHANGED,
+                        $this->cmid, $this->bookingid, $this->optionid, $currentanswer->userid
                     );
                     $messagecontroller->send_or_queue();
                 }
+            }
 
-                // Update, enrol and inform users who have switched from the waiting list to status "booked".
-                // We include STATUSPARAM_BOOKED STATUSPARAM_WAITINGLIST & STATUSPARAM_RESERVED (all < 3) in this logic.
-                $newbookedanswers = $DB->get_records_sql(
-                        'SELECT * FROM {booking_answers} WHERE optionid = ? AND waitinglist < 3 ORDER BY timemodified ASC',
-                        [$this->optionid], 0, $settings->maxanswers);
-                foreach ($newbookedanswers as $newbookedanswer) {
-                    if ($newbookedanswer->waitinglist == STATUSPARAM_WAITINGLIST) {
-                        $newbookedanswer->waitinglist = STATUSPARAM_BOOKED;
-                        $DB->update_record("booking_answers", $newbookedanswer);
-                        $this->enrol_user_coursestart($newbookedanswer->userid);
+            // 2. Update and inform users who have been put on the waiting list because of changed limits.
+            $usersonlist = array_merge($ba->usersonlist, $ba->usersreserved);
+            usort($usersonlist, fn($a, $b) => $a->timecreated < $b->timecreated ? -1 : 1);
+            while (count($usersonlist) > $settings->maxanswers) {
+                $currentanswer = array_pop($usersonlist);
+                array_push($usersonwaitinglist, $currentanswer);
 
-                        // Before sending, we delete the booking answers cache!
-                        self::purge_cache_for_option($this->optionid);
+                $user = singleton_service::get_instance_of_user($currentanswer->userid);
+                $this->user_submit_response($user, 0, 0, false, true);
+                $this->unenrol_user($currentanswer->userid);
 
-                        $messagecontroller = new message_controller(
-                            MSGCONTRPARAM_QUEUE_ADHOC, MSGPARAM_STATUS_CHANGED,
-                            $this->cmid, $this->bookingid, $this->optionid, $newbookedanswer->userid
-                        );
-                        $messagecontroller->send_or_queue();
-                    }
-                }
+                // Before sending, we delete the booking answers cache!
+                self::purge_cache_for_option($this->optionid);
+                $messagecontroller = new message_controller(
+                    MSGCONTRPARAM_QUEUE_ADHOC, MSGPARAM_STATUS_CHANGED,
+                    $this->cmid, $this->bookingid, $this->optionid, $currentanswer->userid
+                );
+                $messagecontroller->send_or_queue();
+            }
 
-                // Update and inform users who have been put on the waiting list because of changed limits.
-                // We include STATUSPARAM_BOOKED STATUSPARAM_WAITINGLIST & STATUSPARAM_RESERVED (all < 3) in this logic.
-                $newwaitinglistanswers = $DB->get_records_sql(
-                        'SELECT * FROM {booking_answers} WHERE optionid = ? AND waitinglist < 3 ORDER BY timemodified ASC',
-                        [$this->optionid], $settings->maxanswers, $settings->maxoverbooking);
+            // 3. If users drop out of the waiting list because of changed limits, delete and inform them.
+            while (count($usersonwaitinglist) > $settings->maxoverbooking) {
+                $currentanswer = array_pop($usersonwaitinglist);
+                // The fourth param needs to be false here, so we do not run into a recursion.
+                $this->user_delete_response($currentanswer->userid, false, false, false);
 
-                foreach ($newwaitinglistanswers as $newwaitinglistanswer) {
-                    if ($newwaitinglistanswer->waitinglist == STATUSPARAM_BOOKED) {
-                        $newwaitinglistanswer->waitinglist = STATUSPARAM_WAITINGLIST;
-                        $DB->update_record("booking_answers", $newwaitinglistanswer);
+                $event = bookinganswer_cancelled::create([
+                    'objectid' => $this->optionid,
+                    'context' => $context,
+                    'userid' => $USER->id, // The user who did cancel.
+                    'relateduserid' => $currentanswer->userid, // Affected user - the user who was cancelled.
+                    'other' => [
+                        'extrainfo' => 'Answer deleted by sync_waiting_list.',
+                    ],
+                ]);
+                $event->trigger();
 
-                        $messagecontroller = new message_controller(
-                            MSGCONTRPARAM_QUEUE_ADHOC, MSGPARAM_STATUS_CHANGED,
-                            $this->cmid, $this->bookingid, $this->optionid, $newwaitinglistanswer->userid
-                        );
-                        $messagecontroller->send_or_queue();
-                    }
-                }
-            } else {
-                // If option was set to unlimited, inform all users that have been on the waiting list of the status change.
-                if ($onwaitinglistanswers = $DB->get_records('booking_answers',
-                                                            ['optionid' => $this->optionid,
-                                                            'waitinglist' => 1,
-                                                            ])) {
-                    foreach ($onwaitinglistanswers as $onwaitinglistanswer) {
+                // Before sending, we delete the booking answers cache!
+                self::purge_cache_for_option($this->optionid);
+                $messagecontroller = new message_controller(
+                    MSGCONTRPARAM_QUEUE_ADHOC, MSGPARAM_CANCELLED_BY_TEACHER_OR_SYSTEM,
+                    $this->cmid, $this->bookingid, $this->optionid, $currentanswer->userid
+                );
+                $messagecontroller->send_or_queue();
+            }
 
-                        $messagecontroller = new message_controller(
-                            MSGCONTRPARAM_QUEUE_ADHOC, MSGPARAM_STATUS_CHANGED,
-                            $this->cmid, $this->bookingid, $this->optionid, $onwaitinglistanswer->userid
-                        );
-                        $messagecontroller->send_or_queue();
-                    }
-                }
+        } else {
+            // If option was set to unlimited, we book all users that have been on the waiting list and inform them.
+            foreach ($ba->usersonwaitinglist as $currentanswer) {
+                $user = singleton_service::get_instance_of_user($currentanswer->userid);
+                $this->user_submit_response($user, 0, 0, false, true);
+                $this->enrol_user_coursestart($currentanswer->userid);
 
-                // Now move everybody from the waiting list to booked users.
-                $DB->execute("UPDATE {booking_answers} SET waitinglist = 0 WHERE optionid = :optionid AND waitinglist < 2",
-                        ['optionid' => $this->optionid]);
+                // Before sending, we delete the booking answers cache!
+                self::purge_cache_for_option($this->optionid);
+                $messagecontroller = new message_controller(
+                    MSGCONTRPARAM_QUEUE_ADHOC, MSGPARAM_STATUS_CHANGED,
+                    $this->cmid, $this->bookingid, $this->optionid, $currentanswer->userid
+                );
+                $messagecontroller->send_or_queue();
             }
         }
     }
@@ -972,31 +969,38 @@ class booking_option {
         if (isset($bookinganswers->users[$user->id]) && ($currentanswer = $bookinganswers->users[$user->id])) {
             switch($currentanswer->waitinglist) {
                 case STATUSPARAM_DELETED:
-                    $currentanswerid = $currentanswer->boid;
+                    $currentanswerid = $currentanswer->baid;
                     break;
                 case STATUSPARAM_BOOKED:
+                    // If we come from sync_waiting_list it might be possible that someone is moved from booked to waiting list.
                     // If we are already booked, we don't do anything.
-                    return true;
+                    if ($waitinglist == STATUSPARAM_BOOKED) {
+                        return true;
+                    }
+                    // Else, we might move from booked to waitinglist, we just continue.
+                    $currentanswerid = $currentanswer->baid;
+                    $timecreated = $currentanswer->timecreated;
+                    break;
                 case STATUSPARAM_RESERVED:
                     // If the old and the new value is reserved, we just return true, we don't need to do anything.
                     if ($waitinglist == STATUSPARAM_RESERVED) {
                         return true;
                     }
                     // Else, we might move from reserved to booked, we just continue.
-                    $currentanswerid = $currentanswer->boid;
+                    $currentanswerid = $currentanswer->baid;
                     break;
                 case STATUSPARAM_WAITINGLIST:
                     if ($waitinglist == STATUSPARAM_WAITINGLIST) {
                         return true;
                     }
                     // Else, we might move from waitinglist to booked, we just continue.
-                    $currentanswerid = $currentanswer->boid;
+                    $currentanswerid = $currentanswer->baid;
                     $timecreated = $currentanswer->timecreated;
                     break;
                 case STATUSPARAM_NOTIFYMELIST:
                     // If we have a notification...
                     // ... we override it here, because all alternatives are higher.
-                    $currentanswerid = $currentanswer->boid;
+                    $currentanswerid = $currentanswer->baid;
                     // We don't pass the creation date on, as it is not interesting in this case.
                     break;
             }
@@ -2873,7 +2877,7 @@ class booking_option {
         $bookedusers = $answers->usersonlist;
 
         // Use the booking option title as subject.
-        $subject = $settings->get_title_with_prefix();
+        $subject = str_replace(' ', '%20', $settings->get_title_with_prefix());
 
         if (empty($bookedusers)) {
             return '';
@@ -2906,7 +2910,9 @@ class booking_option {
         }
 
         // We put all teachers in CC and all participants in BCC.
-        return "mailto:$USER->email?$teachersstring" . "bcc=$emailstring&subject=$subject";
+        return str_replace('amp;', '',
+            htmlspecialchars("mailto:$USER->email?$teachersstring" . "bcc=$emailstring&subject=$subject",
+            ENT_QUOTES));
     }
 
     /**
@@ -3063,7 +3069,7 @@ class booking_option {
 
         // Add a param to the option's teachers report (training journal).
         $teachersreportlink = new \moodle_url('/mod/booking/optiondates_teachers_report.php', [
-            'id' => $cmid,
+            'cmid' => $cmid,
             'optionid' => $optionid,
         ]);
         $params->journal = \html_writer::link($teachersreportlink, $teachersreportlink->out());
@@ -3149,5 +3155,25 @@ class booking_option {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Returns an array with status and a label to be displayed on the booking button.
+     * @param booking_option_settings $settings
+     */
+    public static function is_blocked_by_campaign(booking_option_settings $settings):array {
+
+        foreach ($settings->campaigns as $campaign) {
+
+            $result = $campaign->is_blocking($settings);
+            if ($result['status'] === true) {
+                return $result;
+            }
+        }
+
+        return [
+            'status' => false,
+            'label' => '',
+        ];
     }
 }

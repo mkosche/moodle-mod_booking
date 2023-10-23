@@ -41,15 +41,20 @@ $string['courses'] = 'Kurse';
 $string['course_s'] = 'Kurs(e)';
 $string['date_s'] = 'Termin(e)';
 $string['dayofweek'] = 'Wochentag';
+$string['deduction'] = 'Abzug';
+$string['deductionreason'] = 'Grund für den Abzug';
 $string['doyouwanttobook'] = 'Wollen Sie <b>{$a}</b> buchen?';
 $string['gotomanageresponses'] = '&lt;&lt; Buchungen verwalten';
 $string['gotomoodlecourse'] = 'Zum Moodle-Kurs';
 $string['limitfactor'] = 'Buchungslimit-Faktor';
 $string['messageprovider:bookingconfirmation'] = "Buchungsbestätigungen";
 $string['noselection'] = 'Keine Auswahl';
+$string['optionsfield'] = 'Buchungsoptionsfeld';
+$string['optionsfields'] = 'Buchungsoptionsfelder';
 $string['optionsiteach'] = 'Von mir geleitet';
 $string['placeholders'] = 'Platzhalter';
 $string['pricefactor'] = 'Preisfaktor';
+$string['responsesfields'] = 'Felder in der Teilnehmer:innen-Liste';
 $string['responsible'] = 'Zuständig';
 $string['responsiblecontact'] = 'Zuständige Kontaktperson';
 $string['responsiblecontact_help'] = 'Geben Sie eine zuständige Kontaktperson an. Dies sollte jemand anderer als der/die Lehrer/in sein.';
@@ -167,6 +172,7 @@ $string['bookingoption_completed'] = 'Buchungsoption abgeschlossen';
 $string['bookingoption_created'] = 'Buchungsoption angelegt';
 $string['bookingoption_updated'] = 'Buchungsoption upgedatet';
 $string['bookingoption_deleted'] = 'Buchungsoption gelöscht';
+$string['bookinginstance_updated'] = 'Buchungsinstanz upgedated';
 
 $string['eventreport_viewed'] = 'Report angesehen';
 $string['eventuserprofilefields_updated'] = 'Nutzerprofil aktualisiert';
@@ -405,7 +411,7 @@ $string['errorpagination'] = 'Geben Sie ein Zahl ein, die größer als 0 ist';
 $string['notconectedbooking'] = 'Nicht vorgeschaltete Buchung';
 $string['connectedbooking_help'] = 'Buchung von der Teilnehmer:innen übernommen werden. Es kann bestimmt werden wie viele Teilnehmer:innen übernommen werden.';
 $string['allowbookingafterstart'] = 'Buchen nach Kursbeginn erlauben';
-$string['cancancelmyself'] = 'Teilnehmer:innen dürfen Buchungen selbst stornieren';
+$string['cancancelbook'] = 'Teilnehmer:innen dürfen Buchungen selbst stornieren';
 $string['cancancelbookdays'] = 'Nutzer:innen können nur bis n Tage vor Kursstart stornieren. Negative Werte meinen n Tage NACH Kursstart.';
 $string['cancancelbookdays:semester'] = 'Nutzer:innen können nur bis n Tage vor <b>Semesterbeginn</b> stornieren. Negative Werte meinen n Tage NACH Semesterbeginn.';
 $string['cancancelbookdaysno'] = 'Kein Limit';
@@ -420,8 +426,11 @@ $string['maxoverbooking'] = 'Maximale Anzahl der Wartelistenplätze';
 $string['minanswers'] = 'Mindestteilnehmerzahl';
 $string['defaultbookingoption'] = 'Standardeinstellungen für Buchungsoptionen';
 $string['activatemails'] = 'E-Mails aktivieren (Bestätigungen, Erinnerungen etc.)';
-$string['sendcopytobookingmanger'] = 'Eine Kopie der Bestätigungsmail an den Buchungsverwalter senden';
+$string['copymail'] = 'Eine Kopie der Bestätigungsmail an den Buchungsverwalter senden';
 $string['bookingpolicy'] = 'Buchungsbedingungen - Booking Policy';
+
+$string['eventslist'] = 'Letzte Bearbeitungen';
+$string['showrecentupdates'] = 'Zeige die letzten Bearbeitungen';
 
 $string['error:semestermissingbutcancelfromsemesterstartactive'] = 'Die Einstellung zur Berechnung der Stornierungsfrist ab Semesterbeginn ist aktiv, aber das Semester fehlt!';
 
@@ -1421,8 +1430,8 @@ $string['signincustfields_desc'] = 'Wählen Sie die Profilfelder, die auf der Un
 $string['showcustomfields'] = 'Anzuzeigende benutzerdefnierte Buchungsoptionsfelder';
 $string['showcustomfields_desc'] = 'Wählen Sie die benutzerdefinierte Buchungsoptionfelder, die auf der Unterschriftenliste abgedruckt werden sollen';
 
-$string['showlistoncoursepagelbl'] = 'Extra-Info auf Kursseite anzeigen';
-$string['showlistoncoursepagelbl_help'] = 'Wenn Sie diese Einstellung aktivieren, werden der Kursname, eine Kurzinfo
+$string['showlistoncoursepage'] = 'Extra-Info auf Kursseite anzeigen';
+$string['showlistoncoursepage_help'] = 'Wenn Sie diese Einstellung aktivieren, werden der Kursname, eine Kurzinfo
  und ein Button, der auf die verfügbaren Buchungsoptionen verlinkt, angezeigt.';
 $string['hidelistoncoursepage'] = 'Nein, Extra-Info nicht auf Kursseite anzeigen (Standard)';
 $string['showcoursenameandbutton'] = 'Kursnamen, Kurzinfo und einen Button, der die verfügbaren Buchungsoptionen öffnet, anzeigen';
@@ -1816,6 +1825,7 @@ $string['reason'] = 'Grund';
 $string['error:reasonfornoteacher'] = 'Geben Sie einen Grund an, warum an diesem Termin kein/e Trainer/in anwesend war.';
 $string['error:reasontoolong'] = 'Grund ist zu lange, geben Sie einen kürzeren Text ein.';
 $string['error:reasonforsubstituteteacher'] = 'Geben Sie einen Grund für die Vertretung an.';
+$string['error:reasonfordeduction'] = 'Geben Sie einen Grund für den Abzug an.';
 
 // Teachers_instance_report.php.
 $string['teachers_instance_report'] = 'Trainer:innen-Gesamtbericht';
@@ -2091,13 +2101,32 @@ $string['addbookingcampaign'] = 'Kampagne hinzufügen';
 $string['deletebookingcampaign'] = 'Kampagne löschen';
 $string['deletebookingcampaign_confirmtext'] = 'Wollen Sie die folgende Kampagne wirklich löschen?';
 $string['campaign_name'] = 'Eigener Name der Kampagne';
-$string['campaign_customfield'] = 'Benutzerdefiniertes Buchungsoptionsfeld hat einen bestimmten Wert';
+$string['campaign_customfield'] = 'Preis oder Buchungslimit anpassen';
 $string['campaign_customfield_descriptiontext'] = 'Betrifft: Benutzerdefiniertes Buchungsoptionsfeld "{$a->fieldname}"
  mit dem Wert "{$a->fieldvalue}".';
 $string['campaignfieldname'] = 'Feld';
 $string['campaignfieldvalue'] = 'Wert';
 $string['campaignstart'] = 'Beginn der Kampagne';
 $string['campaignend'] = 'Ende der Kampagne';
+
+$string['campaign_blockbooking'] = 'Bestimmte Buchungen blockieren';
+$string['campaign_blockbooking_descriptiontext'] = 'Betrifft: Benutzerdefiniertes Buchungsoptionsfeld "{$a->fieldname}"
+mit dem Wert "{$a->fieldvalue}".';
+
+$string['blockoperator'] = 'Operator';
+$string['blockoperator_help'] = '<b>Blockiere über</b> ... Sobald der angegebene Prozentsatz an Buchungen erreicht ist, wird das Online-Buchen geblockt,
+es kann dann nur noch an der Kassa oder durch einen Admin gebucht werden.<br>
+<b>Blockiere unter</b> ... Das Buchen wird geblockt bis der angegebene Prozentsatz an Buchungen erreicht ist,
+bis dahin kann nur an der Kassa oder durch einen Admin gebucht werden.';
+$string['blockabove'] = 'Blockiere über';
+$string['blockbelow'] = 'Blockiere unter';
+$string['percentageavailableplaces'] = 'Prozent der verfügbaren Plätze';
+$string['percentageavailableplaces_help'] = 'Geben Sie einen gültigen Prozentsatz zwischen 0 und 100 an (ohne %-Zeichen!).';
+$string['hascapability'] = 'Außer mit dieser Fähikgeit';
+$string['blockinglabel'] = 'Nachricht beim Blockieren';
+$string['blockinglabel_help'] = 'Geben Sie die Nachricht ein, die angezeigt werden soll, wenn Buchungen blockiert werden.
+Wenn Sie die Nachricht lokalisieren wollen, verwenden Sie die
+<a href="https://docs.moodle.org/403/de/Mehrsprachiger_Inhalt" target="_blank">Moodle-Sprachfilter</a>.';
 
 // Booking campaign help buttons.
 $string['campaign_name_help'] = 'Geben Sie einen beliebigen Namen für die Kampagne an - z.B. "Weihnachtsaktion 2023" oder "Oster-Rabatt 2023".';
@@ -2111,8 +2140,10 @@ $string['limitfactor_help'] = 'Geben Sie einen Wert an, mit dem das Buchungslimi
 // Booking campaign errors.
 $string['error:pricefactornotbetween0and1'] = 'Sie müssen einen Wert zwischen 0 und 1 eingeben. Um die Preise z.B. um 10% zu reduzieren,
  geben Sie den Wert 0,9 ein.';
-$string['error:limitfactornotbetween1and2'] = 'Sie müssen einen Wert zwischen 1 und 2 eingeben. Um das Buchungslimit z.B. um 20% zu erhöhen,
+$string['error:limitfactornotbetween1and2'] = 'Sie müssen einen Wert zwischen 0 und 2 eingeben. Um das Buchungslimit z.B. um 20% zu erhöhen,
  geben Sie den Wert 1,2 ein.';
+ $string['error:missingblockinglabel'] = 'Geben Sie die Nachricht ein, die angezeigt werden soll, wenn Buchungen blockiert werden.';
+ $string['error:percentageavailableplaces'] = 'Geben Sie einen gültigen Prozentsatz zwischen 0 und 100 an (ohne %-Zeichen!).';
 $string['error:campaignstart'] = 'Kampagnenbeginn muss vor dem Kampagnenende liegen.';
 $string['error:campaignend'] = 'Kampagnenende muss nach dem Kampagnenbeginn sein.';
 

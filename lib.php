@@ -112,6 +112,7 @@ define('BO_COND_BOOKING_TIME', 60);
 define('BO_COND_BOOKINGPOLICY', 50);
 define('BO_COND_SUBBOOKINGBLOCKS', 45);
 define('BO_COND_SUBBOOKING', 40);
+define('BO_COND_CAMPAIGN_BLOCKBOOKING', 35);
 
 define('BO_COND_JSON_CUSTOMFORM', 16);
 define('BO_COND_JSON_ENROLLEDINCOURSE', 15);
@@ -157,6 +158,7 @@ define('PAGINATIONDEF', 25);
 
 // Define campaign types.
 define('CAMPAIGN_TYPE_CUSTOMFIELD', 0);
+define('CAMPAIGN_TYPE_BLOCKBOOKING', 1);
 
 /**
  * @param stdClass $cm
@@ -731,6 +733,19 @@ function booking_update_instance($booking) {
 
     booking_grade_item_update($booking);
 
+    $oldrecord = $DB->get_record('booking', ['id' => $booking->id]);
+    $changes = booking::booking_instance_get_changes($oldrecord, $booking);
+
+    // We trigger the right event.
+    $event = \mod_booking\event\bookinginstance_updated::create([
+        'context' => $context,
+        'objectid' => $cm->id,
+        'other' => [
+            'changes' => $changes ?? '',
+        ],
+    ]);
+    $event->trigger();
+
     // When updating an instance, we need to invalidate the cache for booking instances.
     cache_helper::invalidate_by_event('setbackbookinginstances', [$cm->id]);
 
@@ -741,6 +756,7 @@ function booking_update_instance($booking) {
 
     // We also need to set back Wunderbyte table cache!
     cache_helper::purge_by_event('setbackencodedtables');
+    cache_helper::purge_by_event('setbackeventlogtable');
 
     return $DB->update_record('booking', $booking);
 }
@@ -1485,9 +1501,15 @@ function booking_update_options(object $optionvalues, context_module $context, i
                             'context' => $context,
                             'objectid' => $optionid,
                             'userid' => $USER->id,
+                            'other' => [
+                                'changes' => $changes ?? '',
+                            ],
                     ]
             );
             $event->trigger();
+
+            cache_helper::purge_by_event('setbackeventlogtable');
+
         }
         // Finally, we need to check if any existing booking rules are affected.
         if ($option->bookingid != 0) {
@@ -1830,13 +1852,13 @@ function booking_extend_settings_navigation(settings_navigation $settings, navig
 
 /**
  * Check if logged in user is in teachers db.
- * @param object $option optional option class
+ * @param mixed|int $optionoroptionid optional option class or optionid
  * @return true if is assigned as teacher otherwise return false
  */
-function booking_check_if_teacher(object $option = null) {
+function booking_check_if_teacher($optionoroptionid = null) {
     global $DB, $USER;
 
-    if (empty($option)) {
+    if (empty($optionoroptionid)) {
         // If we have no option, we check, if the teacher is a teacher of ANY option.
         $user = $DB->get_records('booking_teachers',
             ['userid' => $USER->id]);
@@ -1846,7 +1868,14 @@ function booking_check_if_teacher(object $option = null) {
             return true;
         }
     } else {
-        $settings = singleton_service::get_instance_of_booking_option_settings($option->id);
+        if (is_object($optionoroptionid)) {
+            $optionid = (int) $optionoroptionid->id;
+        } else if (is_number($optionoroptionid)) {
+            $optionid = (int) $optionoroptionid;
+        } else {
+            return false;
+        }
+        $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
         if (in_array($USER->id, $settings->teacherids)) {
             return true;
         } else {

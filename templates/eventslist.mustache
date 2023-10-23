@@ -15,30 +15,27 @@
     along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
 {{!
-    @template mod_booking/form-user-selector-suggestion
-
-    Moodle template for the list of valid options in an autocomplate form element.
+    @template mod_booking/col_price
 
     Classes required for JS:
     * none
 
     Data attributes required for JS:
-    * none
+    * data-region
 
-    Context variables required for this template:
-    * id int user id
-    * firstname string user's first name
-    * lastname string user's last name
-    * email string user email field
-
-    Example context (json):
-    {
-        "id" : 12,
-        "firstname" : "Max",
-        "lastname" : "Mustermann",
-        "email" : "max.mustermann@gibts.net"
+     Example context (json):
+     {
+        "eventstable": "<table></table>"
     }
 }}
-<span class="user-suggestion font-weight-bold text-dark">
-    {{firstname}} {{lastname}} (ID: {{id}}){{#email}} | {{.}}{{/email}}
-</span><br>
+
+<p>
+    <button class="btn btn-link showrecentupdates-btn" type="button" data-toggle="collapse" data-target="#showEventList" aria-expanded="false" aria-controls="showEventList">
+        <i class="fa fa-wrench" aria-hidden="true"></i>&nbsp;{{#str}} showrecentupdates, mod_booking {{/str}}...
+    </button>
+</p>
+<div class="collapse" id="showEventList">
+<div class="card card-body">
+    {{{eventstable}}}
+</div>
+</div>

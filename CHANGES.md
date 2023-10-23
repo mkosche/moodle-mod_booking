@@ -1,3 +1,61 @@
+## Version 8.0.46 (2023102000)
+**New features:**
+* New feature: Add new blocking campaign which allows to block booking for students depending on booking status (e.g. half of places gone).
+* New feature: Actions logs for booking options.
+* New feature: Actions logs for booking instances.
+
+**Improvements:**
+* Improvement: Show users and teachers in autocomplete in one single line.
+* Improvement: Better campaign strings.
+* Improvement: Complete re-writing of sync_waiting_list with singleton, etc.
+* Improvement: Missing hours and substitutions for teachers in instance report work better now.
+
+**Bugfixes:**
+* Bugfix: Booking of any users feature was broken - used user preferences to fix it.
+* Bugfix: Fix broken automatic loading of custom field values in campaign modal.
+* Bugfix: Fix some strings for github actions.
+* Bugfix: Make sure we have a string to replace, for str_replace in message_controller.
+* Bugfix: When we use format_text, we need to set $PAGE->context first!
+* Bugfix: Empty select on settings.php.
+
+## Version 8.0.45 (2023101300)
+**Improvements:**
+* Improvement: booking_check_if_teacher function can now be used with optionid too.
+* Improvement: Better user selectors for teachers.
+* Improvement: Availability info texts now work on optionview.php (booking option detail page) too.
+* Improvement: Booking option detail page (optionview.php) can now be accessed without login.
+
+**Code quality:**
+* Linting: Example context for col_availableplaces and better param documentation for booking_check_if_teacher.
+* Linting: Fix example context for col_availableplaces.
+* Linting: No trailing comma allowed in JSON.
+* Linting: Fix form-user-selector-suggestion.mustache for github actions.
+
+## Version 8.0.44 (2023100900)
+**New features:**
+* New feature: Lock editing of substitution once the "reviewed" checkbox has been clicked.
+
+**Improvements:**
+* Improvement: New function to lazy load teacher list for autocomplete.
+* Improvement: New template for smaller user suggestions in autocomplete.
+* Improvement: Add responsible contact to booking option description.
+* Improvement: Return educational units without label.
+* Improvement: Access restrictions for "Go to Moodle course" now make more sense.
+* Improvement: Add optiondatesteacherstable templates to mustache ignore list.
+* Improvement: Make sure mailto link gets encoded correctly.
+* Improvement: Fix signin sheets, only Lastname, Firstname, No profiletext anymore.
+
+**Bugfixes:**
+* Bugfix: Fixes for GH-325 (Pull request).
+* Bugfix: Fix bug in event description.
+* Bugfix: New teacher syntax.
+* Bugfix: We need module context in the teacher substitutions form!
+* Bugfix: Fix caching bug with substitutions table (optiondates teachers report).
+* Bugfix: Fix some bugs with cmid and reloading of substitution report (optiondates teachers report).
+* Bugfix: Fix broken behat tests (because of changed CSS selector).
+* Bugfix: Fix warning if sendmail is not set.
+* Bugfix: Use table row not table header in behat tests for substitutions.
+
 ## Version 8.0.43 (2023100300)
 **Bugfixes:**
 * Bugfix: Use semicolon in mailto function, not comma - for compatibility with some mail clients.
@@ -481,7 +539,7 @@
 * Bugfix: Fix and improve option templates, menu entries and checkbox for limit answers.
 * Bugfix: Delete booking_teachers artifacts when a booking instance gets deleted.
 * Bugfix: Fixed a bug where users could not be booked for unlimited options and a wrong error message was shown.
-* Bugfix: Bugfix: waitinglist < 2 for booking answers in viewconfirmation.php
+* Bugfix: waitinglist < 2 for booking answers in viewconfirmation.php
 * Bugfix: Fixed an issue with external functions.
 * Bugfix: Fix faulty upgrade of subbooking answer table.
 * Bugfix: Fix booking_time condition.

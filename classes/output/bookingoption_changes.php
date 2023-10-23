@@ -48,10 +48,11 @@ class bookingoption_changes implements renderable, templatable {
     /**
      * Constructor
      *
-     * @param array $changesarray
+     * @param array $changesarray an array containing fieldname, oldvalue and newvalue of changes
+     * @param int $cmid course module id
      */
-    public function __construct($changesarray, $cmid) {
-        $this->changesarray = $changesarray;
+    public function __construct(array $changesarray, int $cmid) {
+        $this->changesarray = $changesarray['changes'] ?? [];
         $this->cmid = $cmid;
     }
 
@@ -60,6 +61,8 @@ class bookingoption_changes implements renderable, templatable {
 
         $newchangesarray = [];
         foreach ($this->changesarray as $entry) {
+
+            $entry = (array)$entry;
             if (isset($entry['fieldname'])) {
                 if ($entry['fieldname'] == 'coursestarttime') {
                     if (isset($entry['oldvalue']) && isset($entry['newvalue'])) {
@@ -130,14 +133,22 @@ class bookingoption_changes implements renderable, templatable {
                         $fieldid = null;
                     }
 
-                    $link = new moodle_url($baseurl . '/mod/booking/link.php',
-                        ['id' => $this->cmid,
+                    if (!empty($entry['optionid'])) {
+                        $link = new moodle_url($baseurl . '/mod/booking/view.php',
+                        [
+                            'id' => $this->cmid,
+                        ]);
+                    } else {
+                        $link = new moodle_url($baseurl . '/mod/booking/link.php',
+                        [
+                            'id' => $this->cmid,
                             'optionid' => $entry['optionid'],
                             'action' => 'join',
                             'sessionid' => $entry['optiondateid'],
                             'fieldid' => $fieldid,
                             'meetingtype' => $entry['newname'],
                         ]);
+                    }
 
                     $entry['newvalue'] = html_writer::link($link, $link->out());
                 }

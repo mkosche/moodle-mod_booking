@@ -41,15 +41,20 @@ $string['courses'] = 'Courses';
 $string['course_s'] = 'Kurs(e)';
 $string['date_s'] = 'Date(s)';
 $string['dayofweek'] = 'Weekday';
+$string['deduction'] = 'Deduction';
+$string['deductionreason'] = 'Reason for the deduction';
 $string['doyouwanttobook'] = 'Do you want to book <b>{$a}</b>?';
 $string['gotomanageresponses'] = '&lt;&lt; Manage bookings';
 $string['gotomoodlecourse'] = 'Go to Moodle course';
 $string['limitfactor'] = 'Booking limit factor';
 $string['messageprovider:bookingconfirmation'] = "Booking confirmations";
 $string['noselection'] = 'No selection';
+$string['optionsfield'] = 'Booking option field';
+$string['optionsfields'] = 'Booking option fields';
 $string['optionsiteach'] = 'Teached by me';
 $string['placeholders'] = 'Placeholders';
 $string['pricefactor'] = 'Price factor';
+$string['responsesfields'] = 'Fields in participants list';
 $string['responsible'] = 'Responsible';
 $string['responsiblecontact'] = 'Responsible contact person';
 $string['responsiblecontact_help'] = 'Choose a person who is responsible for this booking option. This is not supposed to be the teacher!';
@@ -171,6 +176,7 @@ $string['bookingoption_completed'] = 'Booking option completed';
 $string['bookingoption_created'] = 'Booking option created';
 $string['bookingoption_updated'] = 'Booking option updated';
 $string['bookingoption_deleted'] = 'Booking option deleted';
+$string['bookinginstance_updated'] = 'Booking instance updated';
 
 $string['eventreport_viewed'] = 'Report viewed';
 $string['eventuserprofilefields_updated'] = 'Userprofile updated';
@@ -415,7 +421,7 @@ $string['errorpagination'] = 'Please enter a number bigger than 0';
 $string['notconectedbooking'] = 'Not connected';
 $string['connectedbooking_help'] = 'Booking instance eligible for transferring booked users. You can define from which option within the selected booking instance and how many users you will accept.';
 $string['allowbookingafterstart'] = 'Allow booking after course start';
-$string['cancancelmyself'] = 'Allow users to cancel their booking themselves';
+$string['cancancelbook'] = 'Allow users to cancel their booking themselves';
 $string['cancancelbookdays'] = 'Disallow users to cancel their booking n days before start. Minus means, that users can still cancel n days AFTER course start.';
 $string['cancancelbookdays:semester'] = 'Disallow users to cancel their booking n days before <b>semester</b> start. Minus means, that users can still cancel n days AFTER semester start.';
 $string['cancancelbookdaysno'] = "Don't limit";
@@ -430,8 +436,11 @@ $string['maxoverbooking'] = 'Max. number of places on waiting list';
 $string['minanswers'] = 'Min. number of participants';
 $string['defaultbookingoption'] = 'Default booking options';
 $string['activatemails'] = 'Activate e-mails (confirmations, notifications and more)';
-$string['sendcopytobookingmanger'] = 'Send confirmation e-mail to booking manager';
+$string['copymail'] = 'Send confirmation e-mail to booking manager';
 $string['bookingpolicy'] = 'Booking policy';
+
+$string['eventslist'] = 'Recent updates';
+$string['showrecentupdates'] = 'Show recent updates';
 
 $string['error:semestermissingbutcancelfromsemesterstartactive'] = 'The setting to calculate cancellation periods from semester start is active but semester is missing!';
 
@@ -1474,8 +1483,8 @@ $string['signincustfields_desc'] = 'Select the custom profiles fields to be show
 $string['showcustomfields'] = 'Custom booking option fields';
 $string['showcustomfields_desc'] = 'Select the custom booking option fields to be shown on the sign-in sheet';
 
-$string['showlistoncoursepagelbl'] = 'Show extra information on course page';
-$string['showlistoncoursepagelbl_help'] = 'If you activate this setting, the course name, a short info and a button
+$string['showlistoncoursepage'] = 'Show extra information on course page';
+$string['showlistoncoursepage_help'] = 'If you activate this setting, the course name, a short info and a button
                                             redirecting to the available booking options will be shown.';
 $string['hidelistoncoursepage'] = 'Hide extra information on course page (default)';
 $string['showcoursenameandbutton'] = 'Show course name, short info and a button redirecting to the available booking options';
@@ -1931,6 +1940,7 @@ $string['reason'] = 'Reason';
 $string['error:reasonfornoteacher'] = 'Enter a reason why no teachers were present at this date.';
 $string['error:reasontoolong'] = 'Reason is too long, enter a shorter text.';
 $string['error:reasonforsubstituteteacher'] = 'Enter a reason for the substitute teacher(s).';
+$string['error:reasonfordeduction'] = 'Enter a reason for the deduction.';
 
 // Teachers_instance_report.php.
 $string['teachers_instance_report'] = 'Teachers report';
@@ -2213,13 +2223,32 @@ $string['addbookingcampaign'] = 'Add campaign';
 $string['deletebookingcampaign'] = 'Delete campaign';
 $string['deletebookingcampaign_confirmtext'] = 'Do you really want to delete the following campaign?';
 $string['campaign_name'] = 'Custom name for the campaign';
-$string['campaign_customfield'] = 'Booking option custom field has a specific value';
+$string['campaign_customfield'] = 'Change price or booking limit';
 $string['campaign_customfield_descriptiontext'] = 'Affects: Booking option custom field "{$a->fieldname}"
  having the value "{$a->fieldvalue}".';
 $string['campaignfieldname'] = 'Field';
 $string['campaignfieldvalue'] = 'Value';
 $string['campaignstart'] = 'Start of campaign';
 $string['campaignend'] = 'End of campaign';
+
+$string['campaign_blockbooking'] = 'Block certain booking options';
+$string['campaign_blockbooking_descriptiontext'] = 'Affects: Booking option custom field "{$a->fieldname}"
+having the value "{$a->fieldvalue}".';
+
+$string['blockoperator'] = 'Operator';
+$string['blockoperator_help'] = '<b>Block above</b> ... Online booking will be blocked once the given percentage
+of bookings is reached. Booking will only be possible for a cashier or admin afterwards.<br>
+<b>Block below</b> ... Online booking will be blocked until the given percentage
+of bookings is reached. Before that happens, booking is only possible for cashier or admin.';
+$string['blockabove'] = 'Block above';
+$string['blockbelow'] = 'Block below';
+$string['percentageavailableplaces'] = 'Percentage of available places';
+$string['percentageavailableplaces_help'] = 'You need to enter a valid percentage beween 0 and 100 (without %-sign!).';
+$string['hascapability'] = 'Except has capability';
+$string['blockinglabel'] = 'Message when blocking';
+$string['blockinglabel_help'] = 'Enter the message that should be shown, when booking is blocked.
+If you want to localize this message, you can use
+<a href="https://docs.moodle.org/403/en/Multi-language_content_filter" target="_blank">language filters</a>.';
 
 // Booking campaign help buttons.
 $string['campaign_name_help'] = 'Specify any name for the campaign - for example, "Christmas Campaign 2023" or "Easter Discount 2023".';
@@ -2232,7 +2261,9 @@ $string['limitfactor_help'] = 'Specify a value by which to multiply the booking 
 
 // Booking campaign errors.
 $string['error:pricefactornotbetween0and1'] = 'You need to enter a value between 0 and 1, e.g. 0.9 to reduce prices by 10%.';
-$string['error:limitfactornotbetween1and2'] = 'You need to enter a value between 1 and 2, e.g. 1.2 to add 20% more bookable places.';
+$string['error:limitfactornotbetween1and2'] = 'You need to enter a value between 0 and 2, e.g. 1.2 to add 20% more bookable places.';
+$string['error:missingblockinglabel'] = 'Please enter the message to show when booking is blocked.';
+$string['error:percentageavailableplaces'] = 'You need to enter a valid percentage beween 0 and 100 (without %-sign!).';
 $string['error:campaignstart'] = 'Campaign start has to be before campaign end.';
 $string['error:campaignend'] = 'Campaign end has to be after campaign start.';
 

@@ -34,16 +34,16 @@ use mod_booking\singleton_service;
  * @copyright 2014 David Bogner
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class bookingoption_updated extends \core\event\base {
+class bookinginstance_updated extends \core\event\base {
 
     protected function init() {
         $this->data['crud'] = 'u'; // Meaning: u = update.
         $this->data['edulevel'] = self::LEVEL_TEACHING;
-        $this->data['objecttable'] = 'booking_options';
+        $this->data['objecttable'] = 'booking';
     }
 
     public static function get_name() {
-        return get_string('bookingoption_updated', 'booking');
+        return get_string('bookinginstance_updated', 'booking');
     }
 
     public function get_description() {
@@ -53,24 +53,23 @@ class bookingoption_updated extends \core\event\base {
         $data = $this->get_data();
 
         $jsonstring = isset($data['other']) ? $data['other'] : '[]';
+
         if (gettype($jsonstring) == 'string') {
             $changes = (array) json_decode($jsonstring);
         }
 
         if (!empty($changes) && !empty($data['objectid'])) {
-            $settings = singleton_service::get_instance_of_booking_option_settings($data['objectid']);
-
-            $data = new bookingoption_changes($changes, $settings->cmid);
+            $data = new bookingoption_changes($changes, $data['objectid']);
             $renderer = $PAGE->get_renderer('mod_booking');
             $html = $renderer->render_bookingoption_changes($data);
         } else {
             $html = '';
         }
 
-        return "User with id '{$this->userid}' updated 'booking option' with id '{$this->objectid}'." . $html;
+        return "User with id '{$this->userid}' updated 'booking instance' with cmid '{$this->objectid}'." . $html;
     }
 
     public function get_url() {
-        return new \moodle_url('/mod/booking/report.php', ['id' => $this->contextinstanceid, 'optionid' => $this->objectid]);
+        return new \moodle_url('/course/modedit.php', ['update' => $this->objectid]);
     }
 }
