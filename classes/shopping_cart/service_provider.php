@@ -93,7 +93,14 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
                 }
             }
 
-            $cartitem = new cartitem($item['itemid'],
+            // Make sure we have a valid cost center.
+            $costcenter = $settings->costcenter ?? '';
+            if (is_array($costcenter)) {
+                $costcenter = reset($costcenter);
+            }
+
+            $cartitem = new cartitem(
+                $item['itemid'],
                 $item['title'],
                 $item['price'],
                 $item['currency'],
@@ -103,7 +110,9 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
                 $item['imageurl'],
                 $item['canceluntil'],
                 $serviceperiodstart,
-                $serviceperiodend
+                $serviceperiodend,
+                null, 0,
+                $costcenter
             );
 
             return ['cartitem' => $cartitem];
@@ -129,6 +138,12 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
                 }
             }
 
+            // Make sure we have a valid cost center.
+            $costcenter = $settings->costcenter ?? '';
+            if (is_array($costcenter)) {
+                $costcenter = reset($costcenter);
+            }
+
             $cartitem = new cartitem($item['itemid'],
                 $item['name'],
                 $item['price'],
@@ -139,7 +154,9 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
                 $item['imageurl'] ?? '',
                 $item['canceluntil'],
                 $serviceperiodstart,
-                $serviceperiodend
+                $serviceperiodend,
+                null, 0,
+                $costcenter
             );
 
             return ['cartitem' => $cartitem];
