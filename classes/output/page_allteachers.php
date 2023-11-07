@@ -96,7 +96,7 @@ class page_allteachers implements renderable, templatable {
                 $picture = new \user_picture($teacher);
                 $picture->size = 70;
                 $imageurl = $picture->get_url($PAGE);
-                $teacherarr['image'] = $imageurl;
+                $teacherarr['image'] = $imageurl->out();
             }
 
             // Add a link to the report of performed teaching units.

@@ -1,4 +1,3 @@
-<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -14,20 +13,18 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- *
- * @package mod_booking
- * @copyright 2023 Wunderbyte GmbH <info@wunderbyte.at>,
- * @author David Bogner, Georg Maißer, Bernhard Fischer, Andraž Prinčič
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+/*
+ * @package    mod_booking
+ * @copyright  Wunderbyte GmbH <info@wunderbyte.at>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2023110200;
-$plugin->requires = 2022041900; // Requires this Moodle version. Current: Moodle 4.0.0.
-$plugin->release = '8.0.47';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->component = 'mod_booking';
-$plugin->dependencies = [
-    'local_wunderbyte_table' => 2023103100,
-];
+import Notification from 'core/notification';
+
+export const showNotification = (message, type) => {
+
+    Notification.addNotification({
+        message,
+        type
+    });
+};

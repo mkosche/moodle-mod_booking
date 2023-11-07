@@ -24,6 +24,7 @@ import Templates from 'core/templates';
 import Notification from 'core/notification';
 
 import {reloadAllTables} from 'local_wunderbyte_table/reload';
+import {closeModal, closeInline} from 'mod_booking/bookingpage/prepageFooter';
 
 var currentbookitpage = {};
 var totalbookitpages = {};
@@ -285,30 +286,65 @@ export const loadPreBookingPage = (
     }
 
     Ajax.call([{
-        methodname: "mod_booking_load_pre_booking_page",
+        methodname: "mod_booking_allow_add_item_to_cart",
         args: {
-            optionid,
-            userid,
-            'pagenumber': currentbookitpage[optionid],
+            'itemid': optionid,
+            'userid': userid,
         },
-        done: function(res) {
+        done: function(response) {
+            // Will always be 1, if shopping cart is not installed!
+            if (response.success == 1) {
+                Ajax.call([{
+                    methodname: "mod_booking_load_pre_booking_page",
+                    args: {
+                        optionid,
+                        userid,
+                        'pagenumber': currentbookitpage[optionid],
+                    },
+                    done: function(res) {
+                        // If we are on the last page, we reset it to 0.
+                        if (currentbookitpage[optionid] === totalbookitpages[optionid] - 1) {
+                            currentbookitpage[optionid] = 0;
+                        }
 
-            // If we are on the last page, we reset it to 0.
-            if (currentbookitpage[optionid] === totalbookitpages[optionid] - 1) {
-                currentbookitpage[optionid] = 0;
+                        const jsonobject = JSON.parse(res.json);
+
+                        // We support more than one template, they will be seperated by comma.
+                        // We have a data key in the json
+                        const templates = res.template.split(',');
+                        let dataarray = jsonobject;
+                        // Const buttontype = res.buttontype;
+
+                        renderTemplatesOnPage(templates, dataarray, element);
+                    },
+                    fail: function(err) {
+                        // eslint-disable-next-line no-console
+                        console.log(err);
+                    }
+                }]);
+            } else {
+                setTimeout(() => {
+                    closeModal(optionid);
+                    closeInline(optionid);
+                }, 500);
+                import('local_shopping_cart/cart')
+                    // eslint-disable-next-line promise/always-return
+                    .then(shoppingcart => {
+                        const addItemShowNotification = shoppingcart.addItemShowNotification;
+                        // Now you can use the specific function
+                        response.userid = userid;
+                        addItemShowNotification(response);
+                    })
+                    .catch(err => {
+                        // Handle any errors, including if the module doesn't exist
+                        // eslint-disable-next-line no-console
+                        console.log(err);
+                });
+                reloadAllTables();
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2500);
             }
-
-            const jsonobject = JSON.parse(res.json);
-
-            // We support more than one template, they will be seperated by comma.
-            // We have a data key in the json
-            const templates = res.template.split(',');
-            let dataarray = jsonobject;
-            // Const buttontype = res.buttontype;
-
-            renderTemplatesOnPage(templates, dataarray, element);
-
-            // ShowRightButton(optionid, buttontype);
 
             return true;
         },
