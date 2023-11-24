@@ -35,7 +35,49 @@ use stdClass;
  */
 class singleton_service {
     // Hold the class instance of the singleton service.
+
+    /** @var singleton_service $instance */
     private static $instance = null;
+
+    /** @var array $bookinganswers */
+    public array $bookinganswers = [];
+
+    /** @var array $bookingsbycmid */
+    public array $bookingsbycmid = [];
+
+    /** @var array $bookingsbybookingid */
+    public array $bookingsbybookingid = [];
+
+    /** @var array $bookingsettingsbycmid */
+    public array $bookingsettingsbycmid = [];
+
+    /** @var array $bookingsettingsbybookingid */
+    public array $bookingsettingsbybookingid = [];
+
+    /** @var array $bookingoptions */
+    public array $bookingoptions = [];
+
+    /** @var array $bookingoptionsettings */
+    public array $bookingoptionsettings = [];
+
+    /** @var array $users */
+    public array $users = [];
+
+    /** @var array $prices */
+    public array $prices = [];
+
+    /** @var array $pricecategory */
+    public array $pricecategory = [];
+
+    /** @var array $userpricecategory */
+    public array $userpricecategory = [];
+
+    /** @var array $renderer */
+    public array $renderer = [];
+
+    /** @var array $campaigns */
+    public array $campaigns = [];
+
 
     // The constructor is private
     // to prevent initiation with outer code.
@@ -75,8 +117,8 @@ class singleton_service {
      * When invalidating the cache, we need to also destroy the booking_answer_object.
      * As we batch handle a lot of users, they always need a "clean" booking answers object.
      *
-     * @param integer $optionid
-     * @return void
+     * @param int $optionid
+     * @return bool
      */
     public static function destroy_booking_answers($optionid) {
         $instance = self::get_instance();
@@ -93,9 +135,9 @@ class singleton_service {
      * Service to create and return singleton instance of booking by cmid.
      *
      * @param int $cmid
-     * @return booking
+     * @return booking|null
      */
-    public static function get_instance_of_booking_by_cmid(int $cmid): booking {
+    public static function get_instance_of_booking_by_cmid(int $cmid): ?booking {
 
         $instance = self::get_instance();
 
@@ -189,9 +231,9 @@ class singleton_service {
      *
      * @param int $cmid
      * @param int $optionid
-     * @return booking_option
+     * @return booking_option|null
      */
-    public static function get_instance_of_booking_option(int $cmid, int $optionid) {
+    public static function get_instance_of_booking_option(int $cmid, int $optionid): ?booking_option {
         $instance = self::get_instance();
 
         if (isset($instance->bookingoptions[$optionid])) {
@@ -249,7 +291,7 @@ class singleton_service {
      * Service to create and return singleton instance of price class.
      *
      * @param int $optionid
-     * @return user
+     * @return price
      */
     public static function get_instance_of_price($optionid) {
         $instance = self::get_instance();
@@ -268,7 +310,7 @@ class singleton_service {
      * This function does not automatically get the right category but needs the setter function below to be useful.
      *
      * @param string $identifier
-     * @return stdClass
+     * @return stdClass|null
      */
     public static function get_price_category($identifier) {
         $instance = self::get_instance();
@@ -342,7 +384,7 @@ class singleton_service {
 
         $instance = self::get_instance();
 
-        if (!isset($instance->campaigns)) {
+        if (empty($instance->campaigns)) {
             $campaigns = $DB->get_records('booking_campaigns');
 
             if (!$campaigns || empty($campaigns)) {

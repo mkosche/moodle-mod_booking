@@ -77,6 +77,9 @@ $string['thankyouwaitinglist'] = '<i class="fa fa-3x fa-clock-o text-primary" ar
 $string['thankyouerror'] = '<i class="fa fa-3x fa-frown-o text-danger" aria-hidden="true"></i><br>
 Unfortunately, there was an error when booking <b>{$a}</b>.';
 $string['toomanytoshow'] = 'Too many records found...';
+$string['unsubscribe:successnotificationlist'] = 'You were unsubscribed successfully from e-mail notifications for "{$a}".';
+$string['unsubscribe:errorotheruser'] = 'You are not allowed to unsubscribe a different user than yourself!';
+$string['unsubscribe:alreadyunsubscribed'] = 'You are already unsubscribed.';
 $string['userprofilefield'] = "Profile field";
 $string['usersmatching'] = 'Matching users';
 $string['allmoodleusers'] = 'All users of this site';
@@ -1341,6 +1344,7 @@ $string['enablecompletiongroup'] = 'Require entries';
 $string['messagesend'] = 'Your message has been sent.';
 $string['messagesubject'] = 'Subject';
 $string['messagetext'] = 'Message';
+$string['sendmessage'] = 'Send message';
 
 // Teachers_handler.php.
 $string['teachersforoption'] = 'Teachers';
@@ -1530,6 +1534,7 @@ $string['bookingpricesettings_desc'] = 'Here you can customize booking prices.';
 $string['bookwithcreditsactive'] = "Book with credits";
 $string['bookwithcreditsactive_desc'] = "Users with credits can book directly without paying a price.";
 
+$string['bookwithcreditsprofilefieldoff'] = 'Do not show';
 $string['bookwithcreditsprofilefield'] = "User profile field for credits";
 $string['bookwithcreditsprofilefield_desc'] = "To use this functionality, please define a user profile field where credits are stored.
 <span class='text-danger'><b>Be careful:</b> You should create this field in a way that your users can't set a credit themselves.</span>";
@@ -1548,7 +1553,7 @@ $string['bookingpricecategory_info'] = 'Define the name of the category, eg "stu
 $string['addpricecategory'] = 'Add price category';
 $string['addpricecategory_info'] = 'You can add another price category';
 
-$string['pricecategoryfieldoff'] = 'Do not show';
+$string['userprofilefieldoff'] = 'Do not show';
 $string['pricecategoryfield'] = 'User profile field for price category';
 $string['pricecategoryfielddesc'] = 'Choose the user profile field, which stores the price category identifier for each user.';
 
@@ -1978,7 +1983,8 @@ $string['task_clean_booking_db'] = 'Booking: Clean database';
 $string['task_purge_campaign_caches'] = 'Booking: Clean caches for booking campaigns';
 $string['optionbookabletitle'] = '{$a->title} is available again';
 $string['optionbookablebody'] = '{$a->title} is now available again. <a href="{$a->url}">Click here</a> to directly go there.<br><br>
-(You receive this mail because you have clicked on the notification button for this option.)';
+(You receive this mail because you have clicked on the notification button for this option.)<br><br>
+<a href="{$a->unsubscribelink}">Unsubscribe from notification e-mails for "{$a->title}".</a>';
 
 // Calculate prices.
 $string['recalculateprices'] = 'Calculate all prices from instance with formula';

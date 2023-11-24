@@ -28,7 +28,8 @@
         "continuebutton": true,
         "continuelabel": "my label",
         "continueaction": "continu eaction",
-        "continuelink": "http://"
+        "continuelink": "http://",
+        "shoppingcartisinstalled": true
     }
 }}
 
@@ -56,6 +57,6 @@
 
 {{#js}}
     require(['mod_booking/bookingpage/prepageFooter'], function(init) {
-    init.initFooterButtons({{optionid}}, {{userid}});
+        init.initFooterButtons({{optionid}}, {{userid}}, {{shoppingcartisinstalled}});
     });
 {{/js}}

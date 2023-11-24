@@ -98,13 +98,13 @@ class booking_option {
     /** @var string $times course start time - course end time or session times separated with a comma */
     public string $optiontimes = '';
 
-    /** @var boolean if I'm booked */
+    /** @var bool if I'm booked */
     public $iambooked = 0;
 
-    /** @var boolean if I'm on waiting list */
+    /** @var bool if I'm on waiting list */
     public $onwaitinglist = 0;
 
-    /** @var boolean if I completed? */
+    /** @var bool if I completed? */
     public $completed = 0;
 
     /** @var int user on waiting list */
@@ -912,9 +912,9 @@ class booking_option {
      *        The number of bookings for the user has to be decreased by one, because, the user will
      *        be unsubscribed
      *        from the old booking option afterwards (which is not yet taken into account).
-     * @param boolean $addedtocart true if we just added this booking option to the shopping cart.
-     * @param integer $verified 0 for unverified, 1 for pending and 2 for verified.
-     * @return boolean true if booking was possible, false if meanwhile the booking got full
+     * @param bool $addedtocart true if we just added this booking option to the shopping cart.
+     * @param int $verified 0 for unverified, 1 for pending and 2 for verified.
+     * @return bool true if booking was possible, false if meanwhile the booking got full
      */
     public function user_submit_response(
             $user,
@@ -1020,11 +1020,11 @@ class booking_option {
     /**
      * Handles the actual writing or updating.
      *
-     * @param integer $bookingid
-     * @param integer $frombookingid
-     * @param integer $userid
-     * @param integer $optionid
-     * @param integer $waitinglist
+     * @param int $bookingid
+     * @param int $frombookingid
+     * @param int $userid
+     * @param int $optionid
+     * @param int $waitinglist
      * @param [type] $currentanswerid
      * @param [type] $timecreated
      * @return void
@@ -1638,7 +1638,7 @@ class booking_option {
      * the book now button. If a user is entitled to book (e.g. an admin or a special user who can always book
      * - which was set with "OR" override conditions) then (s)he can even book if the option is fully booked.
      *
-     * @param integer $userid
+     * @param int $userid
      * @param bool $allowoverbooking
      * @return mixed false if enrolement is not possible, 0 for can book, 1 for waitinglist and 2 for notification list.
      */
@@ -2007,7 +2007,7 @@ class booking_option {
      * Central function to return a list of booking options with all possible filters applied.
      * Default is a list of all booking options from the whole site.
      *
-     * @param integer $bookingid // Should be set.
+     * @param int $bookingid // Should be set.
      * @param array $filters
      * @param string $fields
      * @param string $from
@@ -2466,8 +2466,8 @@ class booking_option {
      * Takes the user on the notification list or off it, depending on the actual status at the moment.
      * Returns the status and error, if there is any.
      *
-     * @param integer $userid
-     * @param integer $optionid
+     * @param int $userid
+     * @param int $optionid
      * @return array
      */
     public static function toggle_notify_user(int $userid, int $optionid) {
@@ -2510,10 +2510,7 @@ class booking_option {
                                     'waitinglist' => STATUSPARAM_NOTIFYMELIST,
                                     ]);
 
-                // Before returning, we have to set back the answer cache.
-                $cache = \cache::make('mod_booking', 'bookingoptionsanswers');
-                $cache->delete($optionid);
-                // We also purge caches for the option in general.
+                // Do not forget to purge cache afterwards.
                 self::purge_cache_for_option($optionid);
 
                 $status = 0;
@@ -2531,7 +2528,7 @@ class booking_option {
      * Function to cancel a booking option.
      * This does not delete, but only makes in unbookable and specially marked.
      *
-     * @param integer $optionid
+     * @param int $optionid
      * @param string $cancelreason
      * @param bool $undo
      * @return void
@@ -2717,7 +2714,7 @@ class booking_option {
      * If the config setting booking/cancelfromsemesterstart is set
      * then we use the semester start instead of coursestarttime.
      *
-     * @param integer $optionid
+     * @param int $optionid
      * @return int
      */
     public static function return_cancel_until_date($optionid) {
@@ -3169,5 +3166,17 @@ class booking_option {
             'status' => false,
             'label' => '',
         ];
+    }
+
+    /**
+     * Helper function to check if a booking option has a price set or not.
+     * @param int $optionid
+     * @param int $userid
+     * @return bool true if a price is set, else false
+     */
+    public static function has_price_set(int $optionid, int $userid) {
+        $user = singleton_service::get_instance_of_user($userid);
+        $optionprice = price::get_price('option', $optionid, $user);
+        return !empty($optionprice);
     }
 }

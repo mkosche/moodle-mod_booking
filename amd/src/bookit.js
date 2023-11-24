@@ -122,6 +122,7 @@ export const initprepagemodal = (optionid, userid, totalnumberofpages, uniquid) 
         const elements = document.querySelectorAll("[id^=" + SELECTORS.MODALID);
 
         elements.forEach(element => {
+
             optionid = element.dataset.optionid;
             uniquid = element.dataset.uniquid;
             userid = element.dataset.userid;
@@ -137,7 +138,6 @@ export const initprepagemodal = (optionid, userid, totalnumberofpages, uniquid) 
     totalbookitpages[optionid] = totalnumberofpages;
 
     // We need to get all prepage modals on this site. Make sure they are initialized.
-
     respondToVisibility(optionid, userid, uniquid, totalnumberofpages, loadPreBookingPage);
 };
 
@@ -191,6 +191,9 @@ export const initprepageinline = (optionid, userid, totalnumberofpages, uniquid)
 
         button.dataset.initialized = true;
 
+        // eslint-disable-next-line no-console
+        console.log('add listener to button', button, button.dataset.action);
+
         button.addEventListener('click', e => {
 
             // Get the row element.
@@ -224,6 +227,7 @@ function respondToVisibility(optionid, userid, uniquid, totalnumberofpages, call
     let elements = document.querySelectorAll("[id^=" + SELECTORS.MODALID + optionid + "_" + uniquid + "]");
 
     elements.forEach(element => {
+
         if (!element || element.dataset.initialized == 'true') {
             return;
         }
@@ -231,9 +235,15 @@ function respondToVisibility(optionid, userid, uniquid, totalnumberofpages, call
         element.dataset.initialized = true;
 
         var observer = new MutationObserver(function() {
+
             if (!isHidden(element)) {
-                // Todo: Make sure it's not triggered on close.
-                callback(optionid, userid, uniquid, totalnumberofpages);
+
+                // Because of the modal animation, "isHIdden" is also true on hiding modal.
+                if (element.classList.contains('show')) {
+
+                    // Todo: Make sure it's not triggered on close.
+                    callback(optionid, userid, uniquid, totalnumberofpages);
+                }
             }
         });
 
@@ -323,10 +333,12 @@ export const loadPreBookingPage = (
                     }
                 }]);
             } else {
-                setTimeout(() => {
-                    closeModal(optionid);
-                    closeInline(optionid);
-                }, 500);
+
+                closeModal(optionid, false);
+                closeInline(optionid, false);
+
+                // Make sure that the prepage modal is actually closed.
+
                 import('local_shopping_cart/cart')
                     // eslint-disable-next-line promise/always-return
                     .then(shoppingcart => {
@@ -340,10 +352,6 @@ export const loadPreBookingPage = (
                         // eslint-disable-next-line no-console
                         console.log(err);
                 });
-                reloadAllTables();
-                setTimeout(() => {
-                    window.location.reload();
-                }, 2500);
             }
 
             return true;
@@ -365,6 +373,18 @@ async function renderTemplatesOnPage(templates, dataarray, element) {
 
     const modal = element.closest('.prepage-body');
 
+    // We need to pass the id of our element to the templates to render.
+    // If not, we might select the wrong modal or collapsible.
+    let elementid = modal.id;
+
+    if (!elementid) {
+        const parent = modal.closest('[id]');
+        elementid = parent.id;
+    }
+
+    // eslint-disable-next-line no-console
+    console.log(modal, elementid);
+
     modal.querySelector(SELECTORS.MODALHEADER).innerHTML = '';
     modal.querySelector(SELECTORS.INMODALDIV).innerHTML = '';
     modal.querySelector(SELECTORS.MODALBUTTONAREA).innerHTML = '';
@@ -379,6 +399,8 @@ async function renderTemplatesOnPage(templates, dataarray, element) {
         if (!data) {
             return true;
         }
+
+        data.data.elementid = elementid;
 
         switch (template) {
             case 'mod_booking/bookingpage/header':
@@ -395,6 +417,9 @@ async function renderTemplatesOnPage(templates, dataarray, element) {
                 targetelement = modal.querySelector(SELECTORS.INMODALDIV);
                 break;
         }
+
+        // eslint-disable-next-line no-console
+        console.log(data.data);
 
         await Templates.renderForPromise(template, data.data).then(({html, js}) => {
 
@@ -503,9 +528,9 @@ function bookit(itemid, area, userid, data) {
 function returnVisibleElement(optionid, uniquid, appendedSelector) {
 
     // First, we get all the possbile Elements (we don't now the unique id appended to the element.)
-    let selector = "[id^=" + SELECTORS.MODALID + optionid + "_" + uniquid + "] " + appendedSelector;
+    let selector = '[id^="' + SELECTORS.MODALID + optionid + '_' + uniquid + '"] ' + appendedSelector;
     if (!uniquid || uniquid.length === 0) {
-        selector = "[id^=" + SELECTORS.MODALID + optionid + "].show " + appendedSelector;
+        selector = '[id^="' + SELECTORS.MODALID + optionid + '_"].show ' + appendedSelector;
     }
 
     let elements = document.querySelectorAll(selector);
@@ -514,7 +539,7 @@ function returnVisibleElement(optionid, uniquid, appendedSelector) {
     // If so, we need to have a different way of selecting elements.
     if (elements.length === 0) {
 
-        selector = "[id^=" + SELECTORS.INLINEID + optionid + "] " + appendedSelector;
+        selector = '[id^="' + SELECTORS.INLINEID + optionid + '_"] ' + appendedSelector;
         elements = document.querySelectorAll(selector);
 
     }

@@ -76,6 +76,9 @@ Sie wurden zur Warteliste von <b>{$a}</b> hinzugefügt. Sollte jemand ausfallen,
 $string['thankyouerror'] = '<i class="fa fa-3x fa-frown-o text-danger" aria-hidden="true"></i><br>
 Leider ist bei der Buchung von <b>{$a}</b> ein Fehler aufgetreten.';
 $string['toomanytoshow'] = 'Zu viele gefunden...';
+$string['unsubscribe:successnotificationlist'] = 'Sie wurden erfolgreich von den E-Mail-Benachrichtigungen für "{$a}" abgemeldet.';
+$string['unsubscribe:errorotheruser'] = 'Es ist nicht erlaubt, E-Mail-Abmeldungen für fremde Benutzer:innen durchzuführen!';
+$string['unsubscribe:alreadyunsubscribed'] = 'Sie sind bereits abgemeldet.';
 $string['userprofilefield'] = "Profilfeld";
 $string['usersmatching'] = 'Gefundene Nutzer:innen';
 $string['allmoodleusers'] = 'Alle Nutzer:innen dieser Website';
@@ -1289,6 +1292,7 @@ $string['enablecompletiongroup'] = 'Aktivitätsabschluss';
 $string['messagesend'] = 'Die Nachricht wurde erfolgreich versandt.';
 $string['messagesubject'] = 'Betreff';
 $string['messagetext'] = 'Nachricht';
+$string['sendmessage'] = 'Nachricht senden';
 
 // Teachers_handler.php.
 $string['teachersforoption'] = 'Trainer:innen';
@@ -1477,6 +1481,7 @@ $string['bookingpricesettings_desc'] = 'Individuelle Einstellungen für die Prei
 $string['bookwithcreditsactive'] = "Buchen mit Guthaben/Credits";
 $string['bookwithcreditsactive_desc'] = "Nutzer:innen mit Guthaben/Credits sehen keinen Preis, sondern können mit ihren Credits buchen.";
 
+$string['bookwithcreditsprofilefieldoff'] = 'Nicht anzeigen';
 $string['bookwithcreditsprofilefield'] = "Benutzerdefiniertes Profilfeld für Guthaben/Credits";
 $string['bookwithcreditsprofilefield_desc'] = "Um die Funktion nutzen zu können, muss es ein Profilfeld geben, in dem die Credits der Nutzer:innen hiinterlegt werden können.
 <span class='text-danger'><b>Achtung:</b> Dieses Feld sollte von den Nutzer:innen nicht bearbeitet werden können.</span>";
@@ -1495,7 +1500,7 @@ $string['bookingpricecategory_info'] = 'Definieren Sie den Namen der Preiskatego
 $string['addpricecategory'] = 'Neue Preiskategorie hinzufügen';
 $string['addpricecategory_info'] = 'Sie können eine weitere Preiskategorie definieren.';
 
-$string['pricecategoryfieldoff'] = 'Nicht anzeigen';
+$string['userprofilefieldoff'] = 'Nicht anzeigen';
 $string['pricecategoryfield'] = 'Nutzerprofilfeld für die Preiskategorie';
 $string['pricecategoryfielddesc'] = 'Wählen Sie ein Nutzerprofilfeld aus, in dem für jede/n Nutzer/in der Identifikator der Preiskategorie gesichert wird.';
 
@@ -1864,7 +1869,8 @@ $string['task_clean_booking_db'] = 'Booking: Datenbank aufräumen';
 $string['task_purge_campaign_caches'] = 'Booking: Caches für Buchungskampagne leeren';
 $string['optionbookabletitle'] = '{$a->title} wieder buchbar';
 $string['optionbookablebody'] = 'Sie können {$a->title} ab sofort wieder buchen. Klicken Sie <a href="{$a->url}">hier</a>, um direkt zur Buchungsoption zu gelangen.<br><br>
-(Sie erhalten diese Nachricht, da Sie bei der Buchungsoption auf den Benachrichtigungs-Button geklickt haben.)';
+(Sie erhalten diese Nachricht, da Sie bei der Buchungsoption auf den Benachrichtigungs-Button geklickt haben.)<br><br>
+<a href="{$a->unsubscribelink}">Von Erinnerungs-E-Mails für "{$a->title}" abmelden.</a>';
 
 // Calculate prices.
 $string['recalculateprices'] = 'Preise mit Formel neu berechnen';

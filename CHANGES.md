@@ -1,3 +1,39 @@
+## Version 8.0.50 (2023112201)
+**Bugfixes:**
+* Bugfix: Fix potential empty arrays in settings.php.
+
+## Version 8.0.49 (2023112200)
+**New features:**
+* New feature: Show unsubscribe link in notification mails.
+
+**Improvements:**
+* Improvement: Added support for Moodle 4.3 and PHP 8.2.
+* Improvement: Do not send notification mails and remove user from notification list if booking option is already over.
+
+**Bugfixes:**
+* Bugfix: Cashier always has to be able to book options without prices - even when blocked by a condition.
+
+## Version 8.0.48 (2023111300)
+**New features:**
+* New feature: Campaign Limits take into account overbooking at the time of campaign start and add overbooked places to limit.
+
+**Improvements:**
+* Improvement: Some improvements to new cost center feature.
+* Improvement: Code quality: Always use int and bool - never integer or boolean.
+* Improvement: Get rid of deprecated institutions autocomplete js.
+
+**Bugfixes:**
+* Bugfix: Make sure that booking and cancelling of options without a price is possible even when shopping cart is installed.
+* Bugfix: Fix bugs with prepages (both modal and inline) in combination with new cost center feature.
+* Bufix: Fix behat tests and issues related to prepages (both modal and inline).
+* Bufix: Fix error "Exception - Warning: Undefined array key "serviceperiodstart".
+* Bugfix: Fix Javascript for Prepage Modals.
+* Bugfix: Add shoppingcartisinstalled to example json.
+* Bugfix: Fix normal booking button js.
+* Bugfix: fix prepage JS for multiple tables on one page.
+* Bugfix: Fix namespaces.
+* Bugfix: Fix param definition in external services.
+
 ## Version 8.0.47 (2023110200)
 **New features:**
 * New feature: Introduce a new setting to tell booking which booking option custom field is used to store the cost center for each booking option.

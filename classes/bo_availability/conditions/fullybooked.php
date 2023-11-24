@@ -102,15 +102,6 @@ class fullybooked implements bo_condition {
             }
         }
 
-        // It's also true, if we have the cashier capability...
-        // ...as the cashier always needs to be able to book for other users...
-        // ...even if the booking option is fully booked.
-        if (class_exists('local_shopping_cart\shopping_cart') &&
-                has_capability('local/shopping_cart:cashier', context_system::instance()) &&
-                $userid != $USER->id) {
-            $isavailable = true;
-        }
-
         // If it's inversed, we inverse.
         if ($not) {
             $isavailable = !$isavailable;
@@ -129,8 +120,8 @@ class fullybooked implements bo_condition {
      * Hard block is only checked if is_available already returns false.
      *
      * @param booking_option_settings $booking_option_settings
-     * @param integer $userid
-     * @return boolean
+     * @param int $userid
+     * @return bool
      */
     public function hard_block(booking_option_settings $settings, $userid):bool {
 

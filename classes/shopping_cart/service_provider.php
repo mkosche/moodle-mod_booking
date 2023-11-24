@@ -26,6 +26,7 @@ namespace mod_booking\shopping_cart;
 
 use context_system;
 use local_shopping_cart\local\entities\cartitem;
+use local_shopping_cart\shopping_cart;
 use mod_booking\bo_availability\bo_info;
 use mod_booking\booking;
 use mod_booking\booking_bookit;
@@ -170,8 +171,8 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
      * This function unloads item from card. Plugin has to make sure it's available again.
      *
      * @param string $area
-     * @param integer $itemid
-     * @param integer $userid
+     * @param int $itemid
+     * @param int $userid
      * @return array
      */
     public static function unload_cartitem( string $area, int $itemid, int $userid = 0): array {
@@ -214,12 +215,12 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
     /**
      * Callback function that handles inscripiton after fee was paid.
      * @param string $area
-     * @param integer $itemid
-     * @param integer $paymentid
-     * @param integer $userid
-     * @return boolean
+     * @param int $itemid
+     * @param int $paymentid
+     * @param int $userid
+     * @return bool
      */
-    public static function successful_checkout(string $area, int $itemid, int $paymentid, int $userid):bool {
+    public static function successful_checkout(string $area, int $itemid, int $paymentid, int $userid): bool {
         global $USER, $CFG;
 
         require_once($CFG->dirroot . '/mod/booking/lib.php');
@@ -276,9 +277,9 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
     /**
      * This cancels an already booked course.
      * @param string $area
-     * @param integer $itemid
-     * @param integer $userid
-     * @return boolean
+     * @param int $itemid
+     * @param int $userid
+     * @return bool
      */
     public static function cancel_purchase(string $area, int $itemid, int $userid = 0): bool {
         global $CFG;
@@ -366,11 +367,11 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
      * Function to unload subbooking from cart.
      *
      * @param string $area
-     * @param integer $itemid
-     * @param integer $userid
+     * @param int $itemid
+     * @param int $userid
      * @return array
      */
-    private static function unload_subbooking(string $area, int $itemid, int $userid = 0):array {
+    private static function unload_subbooking(string $area, int $itemid, int $userid = 0): array {
 
         // We unreserve this subbooking option.
         subbookings_info::save_response($area, $itemid, STATUSPARAM_NOTBOOKED, $userid);
@@ -378,6 +379,54 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
         return [
             'success' => 1,
             'itemstounload' => [],
+        ];
+    }
+
+    /**
+     * Callback to check if adding item to cart is allowed.
+     *
+     * @param string $area
+     * @param int $itemid
+     * @param int $userid
+     * @return array
+     */
+    public static function allow_add_item_to_cart(string $area, int $itemid,
+        int $userid = 0): array {
+
+        if ($area == "option") {
+
+            $settings = singleton_service::get_instance_of_booking_option_settings($itemid);
+            if (!booking_option::has_price_set($itemid, $userid)) {
+                return [
+                    'allow' => true,
+                    'info' => 'nopriceisset',
+                    'itemname' => $settings->get_title_with_prefix() ?? '',
+                ];
+            }
+
+            $user = singleton_service::get_instance_of_user($userid);
+            $item = $settings->return_booking_option_information($user);
+            $cartitem = new cartitem($itemid,
+                $item['title'],
+                $item['price'],
+                $item['currency'],
+                'mod_booking',
+                'option',
+                $item['description'],
+                $item['imageurl'],
+                $item['canceluntil'],
+                $item['coursestarttime'],
+                $item['courseendtime'],
+                null,
+                0,
+                $item['costcenter']
+            );
+            return $cartitem->as_array() ?? [];
+        }
+        return [
+            'allow' => true,
+            'info' => 'notabookingoption',
+            'itemname' => '',
         ];
     }
 }

@@ -38,35 +38,44 @@ var SELECTORS = {
  * Add the click listener to a prepage modal button.
  * @param {integer} optionid
  * @param {integer} userid
+ * @param {boolean} shoppingcartisinstalled
  */
-export function initFooterButtons(optionid, userid) {
-
-    // Everytime we close the modal, we want to reset to the first prepage.
-    jQuery.each(jQuery("[id^=" + SELECTORS.MODALID + optionid + "]"), function() {
-        jQuery(this).on("hide.bs.modal", function() {
-            setBackModalVariables(optionid);
-        });
-    });
-
-    initBookingButton(optionid);
-
-    // First, get all link elements in the footer.
-    let elements = document.querySelectorAll("[id^=" + SELECTORS.MODALID + optionid + "] " + SELECTORS.INMODALFOOTER + " a");
-
-    if (elements.length === 0) {
-        elements = document.querySelectorAll("[id^=" + SELECTORS.INLINEID + optionid + "] " + SELECTORS.INMODALFOOTER + " a");
-    }
+export function initFooterButtons(optionid, userid, shoppingcartisinstalled) {
 
     // eslint-disable-next-line no-console
-    console.log('elements', elements, "[id^=" + SELECTORS.INLINEID + optionid + "] " + SELECTORS.INMODALFOOTER + " a");
+    console.log('initFooterButtons', optionid);
 
-    elements.forEach(element => {
+    // We need to find out if we are in modal or inline mode.
+     // First, get all link elements in the footer.
+     let elements = document.querySelectorAll('[id^="' + SELECTORS.INLINEID + optionid + '_"] ' + SELECTORS.INMODALFOOTER + " a");
+
+     if (elements.length === 0) {
+         elements = document.querySelectorAll('[id^="' + SELECTORS.MODALID + optionid + '_"] ' + SELECTORS.INMODALFOOTER + " a");
+
+         // Everytime we close the modal, we want to reset to the first prepage.
+        jQuery.each(jQuery('[id^="' + SELECTORS.MODALID + optionid + '_"]'), function() {
+            jQuery(this).on("hide.bs.modal", function() {
+                setBackModalVariables(optionid);
+            });
+        });
+     }
+
+    // This would be linked to automatic forwarding, which we don't use at the moment.
+    // initBookingButton(optionid);
+
+    // eslint-disable-next-line no-console
+    console.log('buttons found', elements);
+
+    elements.forEach(async element => {
         if (element && !element.dataset.initialized) {
 
             // Make sure we dont initialize this twice.
             element.dataset.initialized = true;
 
             const action = element.dataset.action;
+
+            // eslint-disable-next-line no-console
+            console.log(element, action);
 
             // We might to execute some actions right away.
 
@@ -75,27 +84,28 @@ export function initFooterButtons(optionid, userid) {
                 case 'closeinline':
                 case 'continuepost':
                 case 'checkout':
-
                     // eslint-disable-next-line no-console
-                    console.log('closeinline');
+                    console.log('closeinline', action);
+                    if (shoppingcartisinstalled) {
+                        import('local_shopping_cart/cart')
+                        .then(cart => {
+                            // eslint-disable-next-line no-console
+                            console.log(cart);
 
-                    import('local_shopping_cart/cart').then(cart => {
-
-                        const oncashier = window.location.href.indexOf("cashier.php");
-
-                        // If we are not on cashier, we can just redirect.
-                        if (oncashier > 0) {
-                            cart.reinit(-1);
-                        } else {
-                            cart.reinit();
-                        }
-
-                        return;
-                    }).catch(e => {
-                        // eslint-disable-next-line no-console
-                        console.log(e);
-                    });
-
+                            const oncashier = window.location.href.indexOf("cashier.php");
+                            // If we are not on cashier, we can just redirect.
+                            if (oncashier > 0) {
+                                cart.reinit(-1);
+                            } else {
+                                cart.reinit();
+                            }
+                            return;
+                        })
+                        .catch(() => {
+                            // eslint-disable-next-line no-console
+                            console.log('local_shopping_cart/cart could not be loaded');
+                        });
+                    }
                     listenToCloseInline();
                 break;
             }
@@ -136,77 +146,123 @@ export function initFooterButtons(optionid, userid) {
     });
 }
 
+// /**
+//  *
+//  * @param {int} optionid
+//  */
+// async function initBookingButton(optionid) {
+
+//     // First, we get the right modal.
+//     let modal = document.querySelector('div.modal.show[id^="' + SELECTORS.MODALID + optionid + '_"]');
+
+//     if (!modal) {
+
+//         // First, we get the right modal.
+//         const modals = document.querySelectorAll('div.inlineprepagearea [id^="' + SELECTORS.INLINEID + optionid + '_"]');
+
+//         modals.forEach(el => {
+//             if (!isHidden(el)) {
+//                 modal = el;
+//             }
+//         });
+//         if (!modal) {
+//             return;
+//         }
+//     }
+
+//     modal.addEventListener('click', (e) => {
+
+//         let button = e.target;
+
+//         if (button) {
+
+//             const bookingButtonArea = e.target.closest(SELECTORS.BOOKITBUTTON);
+
+//             button = e.target.closest('.btn');
+
+//             if (bookingButtonArea && button) {
+
+//                 if ((bookingButtonArea.dataset.action == 'noforward')) {
+//                     return;
+//                 }
+
+//                 // There are several bugs caused by automatic forwarding, so we comment it out for now.
+//                 // We don't continue right away but wait for a second.
+//                 /* setTimeout(() => {
+//                     continueToNextPage(optionid);
+//                 }, WAITTIME);*/
+//             }
+//         }
+//     });
+// }
+
 /**
  *
  * @param {int} optionid
+ * @param {bool} reloadTables
  */
-async function initBookingButton(optionid) {
+export function closeModal(optionid, reloadTables = true) {
 
-    // First, we get the right modal.
-    let modal = document.querySelector("div.modal.show[id^=" + SELECTORS.MODALID + optionid + "]");
+    jQuery.each(jQuery('[id^="' + SELECTORS.MODALID + optionid + '_"]'), async function() {
 
-    if (!modal) {
+        // We don't have a good way to check if the modal is ready to execute hide.
+        // So first we attach a listener to this modal to close it after show.
 
-        // First, we get the right modal.
-        const modals = document.querySelectorAll("div.inlineprepagearea [id^=" + SELECTORS.INLINEID + optionid + "]");
+        // It might be that the modal in question is not shown yet.
+        jQuery(this).on('shown.bs.modal', e => {
 
-        modals.forEach(el => {
-            if (!isHidden(el)) {
-                modal = el;
+            jQuery(e.currentTarget).off('shown.bs.modal');
+            // eslint-disable-next-line no-console
+            console.log('modal hide after shown', e);
+
+            jQuery(this).modal('hide');
+
+            if (reloadTables) {
+                reloadAllTables();
             }
         });
-        if (!modal) {
-            return;
-        }
-    }
 
-    modal.addEventListener('click', (e) => {
-
-        let button = e.target;
-
-        if (button) {
-
-            const bookingButtonArea = e.target.closest(SELECTORS.BOOKITBUTTON);
-
-            button = e.target.closest('.btn');
-
-            if (bookingButtonArea && button) {
-
-                if ((bookingButtonArea.dataset.action == 'noforward')) {
-                    return;
-                }
-
-                // There are several bugs caused by automatic forwarding, so we comment it out for now.
-                // We don't continue right away but wait for a second.
-                /* setTimeout(() => {
-                    continueToNextPage(optionid);
-                }, WAITTIME);*/
-            }
-        }
-    });
-}
-
-/**
- *
- * @param {int} optionid
- */
-export function closeModal(optionid) {
-
-    jQuery.each(jQuery("[id^=" + SELECTORS.MODALID + optionid + "]"), function() {
+        // Now we run hide anyways, just to be sure.
         jQuery(this).modal('hide');
-        reloadAllTables();
+
+        if (reloadTables) {
+            reloadAllTables();
+        }
     });
 }
 
 /**
  *
  * @param {int} optionid
+ * @param {bool} reloadTables
  */
-export function closeInline(optionid) {
+export function closeInline(optionid, reloadTables = true) {
 
-    jQuery.each(jQuery("[id^=" + SELECTORS.INLINEID + optionid + "]"), function() {
+    jQuery.each(jQuery('[id^="' + SELECTORS.INLINEID + optionid + '_"]'), function() {
+
+        // We don't have a good way to check if the modal is ready to execute hide.
+        // So first we attach a listener to this modal to close it after show.
+
+        // It might be that the modal in question is not shown yet.
+        jQuery(this).on('shown.bs.collapse', e => {
+
+            jQuery(e.currentTarget).off('shown.bs.collapse');
+            // eslint-disable-next-line no-console
+            console.log('collapse hide after shown', e);
+
+            jQuery(this).collapse('toggle');
+
+            if (reloadTables) {
+                reloadAllTables();
+            }
+        });
+
+        // Now we run hide anyways, just to be sure.
         jQuery(this).collapse('toggle');
-        reloadAllTables();
+
+        if (reloadTables) {
+            reloadAllTables();
+        }
     });
 }
 
@@ -216,7 +272,7 @@ export function closeInline(optionid) {
  */
 function listenToCloseInline(optionid) {
 
-    jQuery.each(jQuery("[id^=" + SELECTORS.INLINEID + optionid + "]"), function() {
+    jQuery.each(jQuery('[id^="' + SELECTORS.INLINEID + optionid + '_"]'), function() {
 
         jQuery(this).on('hide.bs.collapse', function() {
 
@@ -225,12 +281,12 @@ function listenToCloseInline(optionid) {
     });
 }
 
-/**
- * Function to check visibility of element.
- * @param {*} el
- * @returns {boolean}
- */
-function isHidden(el) {
-    var style = window.getComputedStyle(el);
-    return ((style.display === 'none') || (style.visibility === 'hidden'));
-}
+// /**
+//  * Function to check visibility of element.
+//  * @param {*} el
+//  * @returns {boolean}
+//  */
+// function isHidden(el) {
+//     var style = window.getComputedStyle(el);
+//     return ((style.display === 'none') || (style.visibility === 'hidden'));
+// }
