@@ -30,9 +30,13 @@
  */
 import DynamicForm from 'core_form/dynamicform';
 
-export const init = (selector, formClass, existingholidays) => {
+export const init = (selector, formClass) => {
 
-    const form = new DynamicForm(document.querySelector(selector), formClass);
+    const formelement = document.querySelector(selector);
+    const jsonstring = window.atob(formelement.dataset.data);
+    const existingholidays = JSON.parse(jsonstring);
+
+    const form = new DynamicForm(formelement, formClass);
 
     // We need this in order to fix a bug with repeat elements.
     // Clicking on labels does not work correctly, so we remove the "for" attribut if one is clicked.

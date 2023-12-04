@@ -33,9 +33,13 @@ import DynamicForm from 'core_form/dynamicform';
 import {get_string as getString} from 'core/str';
 import Notification from 'core/notification';
 
-export const init = (selector, formClass, existingsemesters) => {
+export const init = (selector, formClass) => {
 
-    const form = new DynamicForm(document.querySelector(selector), formClass);
+    const formelement = document.querySelector(selector);
+    const jsonstring = window.atob(formelement.dataset.data);
+    const existingsemesters = JSON.parse(jsonstring);
+
+    const form = new DynamicForm(formelement, formClass);
 
     form.addEventListener(form.events.FORM_SUBMITTED, (e) => {
         e.preventDefault();
@@ -43,22 +47,19 @@ export const init = (selector, formClass, existingsemesters) => {
         const response = e.detail;
         form.load({...existingsemesters, response});
 
-         // eslint-disable-next-line no-console
-         console.log(e.detail);
+        // eslint-disable-next-line no-console
+        console.log(e.detail);
 
-         getString('allchangessaved', 'mod_booking').then(message => {
-
+        getString('allchangessaved', 'mod_booking').then(message => {
             Notification.addNotification({
                 message: message,
                 type: "success"
             });
-
             return;
         }).catch(e => {
             // eslint-disable-next-line no-console
             console.log(e);
         });
-
     });
 
     // Cancel button does not make much sense in such forms but since it's there we'll just reload.

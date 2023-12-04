@@ -22,12 +22,14 @@
 
     Data attributes required for JS:
     * data-region
- 
+
     Example context (json):
     [
         {
-            "renderedchangesemesterform": "HTNL form",
-            "renderedholidaysform": "HTNL form"
+            "renderedchangesemesterform": "HTML form",
+            "renderedholidaysform": "HTML form",
+            "existingsemesters": "json",
+            "existingholidays": "json"
         }
     ]
 }}
@@ -46,21 +48,21 @@
       {{#str}} holidays, mod_booking {{/str}}
     </a>
     {{#renderedchangesemesterform}}
-    <a class="nav-link active" id="choosesemester-tab" data-toggle="tab" href="#choosesemesterform" role="tab" aria-controls="choosesemesterform" aria-selected="false">
-      {{#str}} choosesemester, mod_booking {{/str}}
+    <a class="nav-link active" id="changesemester-tab" data-toggle="tab" href="#changesemesterform" role="tab" aria-controls="changesemesterform" aria-selected="false">
+      {{#str}} changesemester, mod_booking {{/str}}
     </a>
     {{/renderedchangesemesterform}}
   </div>
 </nav>
 <div class="tab-content" id="nav-tabContent">
-  <div data-region="semestersformcontainer" class="tab-pane fade {{^renderedchangesemesterform}}show active{{/renderedchangesemesterform}}" id="semestersform" role="tabpanel" aria-labelledby="semesters-tab">
+  <div data-region="semestersformcontainer" data-data="{{{existingsemesters}}}" class="tab-pane fade {{^renderedchangesemesterform}}show active{{/renderedchangesemesterform}}" id="semestersform" role="tabpanel" aria-labelledby="semesters-tab">
     {{{ renderedsemestersform }}}
   </div>
-  <div data-region="holidaysformcontainer" class="tab-pane fade" id="holidaysform" role="tabpanel" aria-labelledby="holidays-tab">
+  <div data-region="holidaysformcontainer" data-data="{{{existingholidays}}}" class="tab-pane fade" id="holidaysform" role="tabpanel" aria-labelledby="holidays-tab">
     {{{ renderedholidaysform }}}
   </div>
   {{#renderedchangesemesterform}}
-    <div data-region="changesemestercontainer" class="tab-pane fade show active" id="choosesemesterform" role="tabpanel" aria-labelledby="choosesemesters-tab">
+    <div data-region="changesemestercontainer" class="tab-pane fade show active" id="changesemesterform" role="tabpanel" aria-labelledby="changesemester-tab">
       {{{ renderedchangesemesterform }}}
     </div>
   {{/renderedchangesemesterform}}
