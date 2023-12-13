@@ -219,7 +219,7 @@ class mod_booking_mod_form extends moodleform_mod {
             $whichviewopts);
         $mform->setType('whichview', PARAM_TAGLIST);
 
-        // Select default sort order for options overview.
+        // Select default sort column for options overview.
         $sortposibilities = [];
         $sortposibilities['coursestarttime'] = get_string('optiondatestart', 'mod_booking');
         $sortposibilities['titleprefix'] = get_string('titleprefix', 'mod_booking');
@@ -229,6 +229,15 @@ class mod_booking_mod_form extends moodleform_mod {
         $mform->addElement('select', 'defaultoptionsort', get_string('sortby'),
             $sortposibilities);
         $mform->setDefault('defaultoptionsort', 'text');
+
+        // Select default sort order.
+        $sortorderoptions = [
+            'asc' => get_string('sortorder:asc', 'mod_booking'),
+            'desc' => get_string('sortorder:desc', 'mod_booking'),
+        ];
+        $mform->addElement('select', 'defaultsortorder', get_string('sortorder', 'mod_booking'),
+            $sortorderoptions);
+        $mform->setDefault('defaultsortorder', 'asc');
 
         // Presence tracking.
         $menuoptions = [];
@@ -309,6 +318,8 @@ class mod_booking_mod_form extends moodleform_mod {
             'location' => get_string('location', 'mod_booking'),
             'institution' => get_string('institution', 'mod_booking'),
             'minanswers' => get_string('minanswers', 'mod_booking'),
+            'bookingopeningtime' => get_string('bookingopeningtime', 'mod_booking'),
+            'bookingclosingtime' => get_string('bookingclosingtime', 'mod_booking'),
         ];
 
         $optionsdownloadfields = [
@@ -325,6 +336,8 @@ class mod_booking_mod_form extends moodleform_mod {
             'course' => get_string('course', 'core'),
             'minanswers' => get_string('minanswers', 'mod_booking'),
             'bookings' => get_string('bookings', 'mod_booking'),
+            'bookingopeningtime' => get_string('bookingopeningtime', 'mod_booking'),
+            'bookingclosingtime' => get_string('bookingclosingtime', 'mod_booking'),
         ];
 
         $signinsheetfields = ['fullname' => get_string('fullname', 'mod_booking'),
@@ -685,9 +698,19 @@ class mod_booking_mod_form extends moodleform_mod {
         $mform->addElement('advcheckbox', 'cancancelbook', get_string('cancancelbook', 'mod_booking'));
         $mform->disabledIf('cancancelbook', 'disablecancel', 'eq', 1);
 
-        $cancancelbookdaysstring = get_config('booking', 'cancelfromsemesterstart') ?
-            get_string('cancancelbookdays:semester', 'mod_booking') :
-            get_string('cancancelbookdays', 'mod_booking');
+        $cancancelbookdaysstring = get_string('cancancelbookdays', 'mod_booking');
+        $canceldependenton = get_config('booking', 'canceldependenton');
+        switch ($canceldependenton) {
+            case 'semesterstart':
+                $cancancelbookdaysstring = get_string('cancancelbookdays:semesterstart', 'mod_booking');
+                break;
+            case 'bookingopeningtime':
+                $cancancelbookdaysstring = get_string('cancancelbookdays:bookingopeningtime', 'mod_booking');
+                break;
+            case 'bookingclosingtime':
+                $cancancelbookdaysstring = get_string('cancancelbookdays:bookingclosingtime', 'mod_booking');
+                break;
+        }
 
         $opts = [10000 => get_string('cancancelbookdaysno', 'mod_booking')];
         $extraopts = array_combine(range(-100, 100), range(-100, 100));
@@ -716,7 +739,7 @@ class mod_booking_mod_form extends moodleform_mod {
         $mform->addElement('advcheckbox', 'numgenerator', get_string("numgenerator", "booking"));
 
         $mform->addElement('text', 'paginationnum', get_string('paginationnum', 'booking'), 0);
-        $mform->setDefault('paginationnum', PAGINATIONDEF);
+        $mform->setDefault('paginationnum', MOD_BOOKING_PAGINATIONDEF);
         $mform->setType('paginationnum', PARAM_INT);
 
         $mform->addElement('text', 'banusernames', get_string('banusernames', 'booking'), 0);
@@ -1131,8 +1154,8 @@ class mod_booking_mod_form extends moodleform_mod {
         global $DB;
         $errors = parent::validation($data, $files);
 
-        if (empty($data['semesterid']) && get_config('booking', 'cancelfromsemesterstart')) {
-            $errors['semesterid'] = get_string('error:semestermissingbutcancelfromsemesterstartactive', 'mod_booking');
+        if (empty($data['semesterid']) && (get_config('booking', 'canceldependenton') == "semesterstart")) {
+            $errors['semesterid'] = get_string('error:semestermissingbutcanceldependentonsemester', 'mod_booking');
         }
 
         if ($DB->count_records('user', ['username' => $data['bookingmanager']]) != 1) {

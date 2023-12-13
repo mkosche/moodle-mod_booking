@@ -19,10 +19,13 @@ global $CFG;
 // General strings.
 $string['accept'] = 'Accept';
 $string['age'] = 'Age';
+$string['allowupdatedays'] = 'Days before reference date';
 $string['areyousure:book'] = 'Click again to confirm booking';
 $string['areyousure:cancel'] = 'Click again to confirm cancellation';
 $string['assignteachers'] = 'Assign teachers:';
 $string['alreadypassed'] = 'Already passed';
+$string['bookingopeningtime'] = 'Bookable from';
+$string['bookingclosingtime'] = 'Bookable until';
 $string['bookingoption'] = 'Booking option';
 $string['bookingoptionnamewithoutprefix'] = 'Name (without prefix)';
 $string['bookings'] = 'Bookings';
@@ -48,6 +51,7 @@ $string['deduction'] = 'Deduction';
 $string['deductionreason'] = 'Reason for the deduction';
 $string['deductionnotpossible'] = 'All teachers were present at this date. So no deduction can be logged.';
 $string['doyouwanttobook'] = 'Do you want to book <b>{$a}</b>?';
+$string['from'] = 'From';
 $string['gotomanageresponses'] = '&lt;&lt; Manage bookings';
 $string['gotomoodlecourse'] = 'Go to Moodle course';
 $string['limitfactor'] = 'Booking limit factor';
@@ -65,7 +69,11 @@ $string['responsiblecontact_help'] = 'Choose a person who is responsible for thi
 $string['reviewed'] = 'Reviewed';
 $string['rowupdated'] = 'Row was updated.';
 $string['search'] = 'Search...';
+$string['semesterid'] = 'SemesterID';
 $string['sendmailtoallbookedusers'] = 'Send e-mail to all booked users';
+$string['sortorder'] = 'Sort order';
+$string['sortorder:asc'] = 'A&rarr;Z';
+$string['sortorder:desc'] = 'Z&rarr;A';
 $string['teachers'] = 'Teachers';
 $string['assignteachers'] = 'Assign teachers:';
 $string['thankyoubooked'] = '<i class="fa fa-3x fa-calendar-check-o text-success" aria-hidden="true"></i><br><br>
@@ -77,10 +85,13 @@ $string['thankyouwaitinglist'] = '<i class="fa fa-3x fa-clock-o text-primary" ar
  You were added to the waiting list for <b>{$a}</b>. You will automatically move up, in case someone drops out.';
 $string['thankyouerror'] = '<i class="fa fa-3x fa-frown-o text-danger" aria-hidden="true"></i><br>
 Unfortunately, there was an error when booking <b>{$a}</b>.';
+$string['timefilter:coursetime'] = 'Course time';
+$string['timefilter:bookingtime'] = 'Booking time';
 $string['toomanytoshow'] = 'Too many records found...';
 $string['unsubscribe:successnotificationlist'] = 'You were unsubscribed successfully from e-mail notifications for "{$a}".';
 $string['unsubscribe:errorotheruser'] = 'You are not allowed to unsubscribe a different user than yourself!';
 $string['unsubscribe:alreadyunsubscribed'] = 'You are already unsubscribed.';
+$string['until'] = 'Until';
 $string['userprofilefield'] = "Profile field";
 $string['usersmatching'] = 'Matching users';
 $string['allmoodleusers'] = 'All users of this site';
@@ -162,8 +173,6 @@ $string['booking:canseeinvisibleoptions'] = 'View invisible options.';
 $string['booking:changelockedcustomfields'] = 'Can change locked custom booking option fields.';
 $string['booking:comment'] = 'Add comments';
 $string['booking:managecomments'] = 'Manage comments';
-$string['bookingopeningtime'] = 'From';
-$string['bookingclosingtime'] = 'Until';
 $string['bookingfull'] = 'There are no available places';
 $string['bookingname'] = 'Booking name';
 $string['bookingoptionsmenu'] = 'Booking options';
@@ -432,7 +441,9 @@ $string['connectedbooking_help'] = 'Booking instance eligible for transferring b
 $string['allowbookingafterstart'] = 'Allow booking after course start';
 $string['cancancelbook'] = 'Allow users to cancel their booking themselves';
 $string['cancancelbookdays'] = 'Disallow users to cancel their booking n days before start. Minus means, that users can still cancel n days AFTER course start.';
-$string['cancancelbookdays:semester'] = 'Disallow users to cancel their booking n days before <b>semester</b> start. Minus means, that users can still cancel n days AFTER semester start.';
+$string['cancancelbookdays:semesterstart'] = 'Disallow users to cancel their booking n days before <b>semester</b> start. Minus means, that users can still cancel n days AFTER semester start.';
+$string['cancancelbookdays:bookingopeningtime'] = 'Disallow users to cancel their booking n days before <b>registration start</b> (booking opening time). Minus means, that users can still cancel n days AFTER registration start.';
+$string['cancancelbookdays:bookingclosingtime'] = 'Disallow users to cancel their booking n days before <b>registration end</b> (booking closing time). Minus means, that users can still cancel n days AFTER registration end.';
 $string['cancancelbookdaysno'] = "Don't limit";
 $string['addtocalendar'] = 'Add to course calendar';
 $string['caleventtype'] = 'Calendar event visibility';
@@ -451,7 +462,7 @@ $string['bookingpolicy'] = 'Booking policy';
 $string['eventslist'] = 'Recent updates';
 $string['showrecentupdates'] = 'Show recent updates';
 
-$string['error:semestermissingbutcancelfromsemesterstartactive'] = 'The setting to calculate cancellation periods from semester start is active but semester is missing!';
+$string['error:semestermissingbutcanceldependentonsemester'] = 'The setting to calculate cancellation periods from semester start is active but semester is missing!';
 
 $string['page:bookingpolicy'] = 'Booking policy';
 $string['page:bookitbutton'] = 'Book';
@@ -1638,12 +1649,15 @@ $string['teachersallowmailtobookedusers_desc'] = 'If you activate this setting, 
     if you are sure it corresponds with your organization\'s privacy policy.</span>';
 
 $string['cancellationsettings'] = 'Cancellation settings ' . $string['badge:pro'];
-$string['cancelfromsemesterstart'] = 'Cancellation period dependent on semester start instead of course start';
-$string['cancelfromsemesterstart_desc'] = 'If you activate this setting, the booking instance setting
-    "Disallow users to cancel their booking n days before start. Minus means, that users can still cancel n
-    days AFTER course start." will not use the start time of the booking option to calculate the cancellation
-    period but the start time of the semester set within the booking instance instead.<br>
-    Additionally, the <i>service period</i> of courses in shopping cart will be set to semester start and end dates.';
+$string['canceldependenton'] = 'Cancellation period dependent on';
+$string['canceldependenton_desc'] = 'Choose the date that should be used as "start" for the setting
+"Disallow users to cancel their booking n days before start. Minus means, that users can still cancel n
+days AFTER course start.".<br>
+This will also set the <i>service period</i> of courses in shopping cart accordingly (if shopping cart is installed).';
+$string['cdo:coursestarttime'] = 'Start of the booking option (coursestarttime)';
+$string['cdo:semesterstart'] = 'Semester start';
+$string['cdo:bookingopeningtime'] = 'Booking registration start (bookingopeningtime)';
+$string['cdo:bookingclosingtime'] = 'Booking registration end (bookingclosingtime)';
 
 // Mobile.
 $string['next'] = 'Next';

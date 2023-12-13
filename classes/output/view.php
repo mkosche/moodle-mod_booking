@@ -56,6 +56,9 @@ class view implements renderable, templatable {
     /** @var int $defaultoptionsort */
     private $defaultoptionsort = null;
 
+    /** @var int $defaultsortorder */
+    private $defaultsortorder = null;
+
     /** @var string $renderedactiveoptionstable the rendered active options table */
     private $renderedactiveoptionstable = null;
 
@@ -134,8 +137,9 @@ class view implements renderable, templatable {
         $context = context_system::instance();
         $bookingsettings = singleton_service::get_instance_of_booking_settings_by_cmid($cmid);
 
-        // Default sort order from booking settings.
+        // Default sort column and sort order from booking settings.
         $this->defaultoptionsort = $bookingsettings->defaultoptionsort;
+        $this->defaultsortorder = $bookingsettings->defaultsortorder;
 
         // If we do not have a whichview from URL, we use the default from instance settings.
         if (empty($whichview)) {
@@ -322,7 +326,7 @@ class view implements renderable, templatable {
 
         list($fields, $from, $where, $params, $filter) =
             booking::get_options_filter_sql(0, 0, '', null, $booking->context, [],
-                $wherearray, null, STATUSPARAM_BOOKED, $additionalwhere);
+                $wherearray, null, MOD_BOOKING_STATUSPARAM_BOOKED, $additionalwhere);
         $params['timenow'] = time();
         $activebookingoptionstable->set_filter_sql($fields, $from, $where, $filter, $params);
 
@@ -391,6 +395,8 @@ class view implements renderable, templatable {
         // In the future, we can parametrize this function so we can use it on many different places.
         $this->wbtable_initialize_list_layout($teacheroptionstable, $tfilter, $tsearch, $tsort);
 
+        $teacheroptionstable->showreloadbutton = false; // No reload button on teacher pages.
+        $teacheroptionstable->requirelogin = false; // Teacher pages need to be accessible without login.
         $out = $teacheroptionstable->outhtml($booking->get_pagination_setting(), true);
 
         return $out;
@@ -527,32 +533,34 @@ class view implements renderable, templatable {
         $bookingsettings = singleton_service::get_instance_of_booking_settings_by_cmid($this->cmid);
         $optionsfields = explode(',', $bookingsettings->optionsfields);
 
+        $sortorder = $bookingsettings->defaultsortorder === "desc" ? SORT_DESC : SORT_ASC;
+
         // Set default sort order.
         switch ($this->defaultoptionsort) {
             case 'titleprefix':
-                $wbtable->sortable(true, 'titleprefix', SORT_ASC);
+                $wbtable->sortable(true, 'titleprefix', $sortorder);
                 break;
             case 'coursestarttime':
                 // Show newest first.
-                $wbtable->sortable(true, 'coursestarttime', SORT_DESC);
+                $wbtable->sortable(true, 'coursestarttime', $sortorder);
                 break;
             case 'location':
                 if (in_array('location', $optionsfields)) {
-                    $wbtable->sortable(true, 'location', SORT_ASC);
+                    $wbtable->sortable(true, 'location', $sortorder);
                 } else {
-                    $wbtable->sortable(true, 'text', SORT_ASC); // Fallback.
+                    $wbtable->sortable(true, 'text', $sortorder); // Fallback.
                 }
                 break;
             case 'institution':
                 if (in_array('institution', $optionsfields)) {
-                    $wbtable->sortable(true, 'institution', SORT_ASC);
+                    $wbtable->sortable(true, 'institution', $sortorder);
                 } else {
-                    $wbtable->sortable(true, 'text', SORT_ASC); // Fallback.
+                    $wbtable->sortable(true, 'text', $sortorder); // Fallback.
                 }
                 break;
             case 'text':
             default:
-                $wbtable->sortable(true, 'text', SORT_ASC);
+                $wbtable->sortable(true, 'text', $sortorder);
                 break;
         }
 
@@ -593,7 +601,7 @@ class view implements renderable, templatable {
         $wbtable->cardsort = true;
 
         // Without defining sorting won't work!
-        $wbtable->define_columns(['titleprefix', 'coursestarttime']);
+        $wbtable->define_columns(['titleprefix', 'coursestarttime', 'courseendtime']);
 
         $columnsleftside = [];
         $columnsleftside[] = 'invisibleoption';
@@ -627,6 +635,12 @@ class view implements renderable, templatable {
         }
         if (in_array('responsiblecontact', $optionsfields)) {
             $columnsfooter[] = 'responsiblecontact';
+        }
+        if (in_array('bookingopeningtime', $optionsfields)) {
+            $columnsfooter[] = 'bookingopeningtime';
+        }
+        if (in_array('bookingclosingtime', $optionsfields)) {
+            $columnsfooter[] = 'bookingclosingtime';
         }
         if (in_array('showdates', $optionsfields)) {
             $columnsfooter[] = 'showdates';
@@ -663,6 +677,22 @@ class view implements renderable, templatable {
             $wbtable->add_classes_to_subcolumns('footer',
                 ['columniclassbefore' => 'fa fa-user fa-fw text-gray font-size-sm'],
                 ['responsiblecontact']);
+        }
+        if (in_array('bookingopeningtime', $optionsfields)) {
+            $wbtable->add_classes_to_subcolumns('footer',
+                ['columnclass' => 'text-left pr-2 text-gray font-size-sm d-block'],
+                ['bookingopeningtime']);
+            $wbtable->add_classes_to_subcolumns('footer',
+                ['columniclassbefore' => 'fa fa-forward fa-fw text-gray font-size-sm'],
+                ['bookingopeningtime']);
+        }
+        if (in_array('bookingclosingtime', $optionsfields)) {
+            $wbtable->add_classes_to_subcolumns('footer',
+                ['columnclass' => 'text-left pr-2 text-gray font-size-sm d-block'],
+                ['bookingclosingtime']);
+            $wbtable->add_classes_to_subcolumns('footer',
+                ['columniclassbefore' => 'fa fa-step-forward fa-fw text-gray font-size-sm'],
+                ['bookingclosingtime']);
         }
         if (in_array('showdates', $optionsfields)) {
             $wbtable->add_classes_to_subcolumns('footer',
@@ -768,15 +798,30 @@ class view implements renderable, templatable {
             }
 
             $filtercolumns['coursestarttime'] = [
-                'localizedname' => get_string('timespan', 'local_wunderbyte_table'),
+                'localizedname' => get_string('timefilter:coursetime', 'mod_booking'),
                 'datepicker' => [
                     'In between' => [
-                        'possibleoperations' => ['flexoverlap', 'within', 'before', 'after'],
+                        'possibleoperations' => ['within', 'flexoverlap', 'before', 'after'],
                         'columntimestart' => 'coursestarttime',
                         'columntimeend' => 'courseendtime',
                         'labelstartvalue' => get_string('coursestarttime', 'mod_booking'),
                         'defaultvaluestart' => 'now', // Can also be Unix timestamp or string "now".
                         'labelendvalue' => get_string('courseendtime', 'mod_booking'),
+                        'defaultvalueend' => strtotime('+ 1 year', time()), // Can also be Unix timestamp or string "now".
+                        'checkboxlabel' => get_string('apply_filter', 'local_wunderbyte_table'),
+                    ],
+                ],
+            ];
+            $filtercolumns['bookingopeningtime'] = [
+                'localizedname' => get_string('timefilter:bookingtime', 'mod_booking'),
+                'datepicker' => [
+                    'In between' => [
+                        'possibleoperations' => ['within', 'flexoverlap', 'before', 'after'],
+                        'columntimestart' => 'bookingopeningtime',
+                        'columntimeend' => 'bookingclosingtime',
+                        'labelstartvalue' => get_string('bookingopeningtime', 'mod_booking'),
+                        'defaultvaluestart' => 'now', // Can also be Unix timestamp or string "now".
+                        'labelendvalue' => get_string('bookingclosingtime', 'mod_booking'),
                         'defaultvalueend' => strtotime('+ 1 year', time()), // Can also be Unix timestamp or string "now".
                         'checkboxlabel' => get_string('apply_filter', 'local_wunderbyte_table'),
                     ],
@@ -795,6 +840,12 @@ class view implements renderable, templatable {
             }
             if (in_array('institution', $optionsfields)) {
                 $sortablecolumns['institution'] = get_string('institution', 'mod_booking');
+            }
+            if (in_array('bookingopeningtime', $optionsfields)) {
+                $sortablecolumns['bookingopeningtime'] = get_string('bookingopeningtime', 'mod_booking');
+            }
+            if (in_array('bookingclosingtime', $optionsfields)) {
+                $sortablecolumns['bookingclosingtime'] = get_string('bookingclosingtime', 'mod_booking');
             }
             $wbtable->define_sortablecolumns($sortablecolumns);
         }

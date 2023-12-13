@@ -142,6 +142,12 @@ class bookingoption_description implements renderable, templatable {
     /** @var stdClass $responsiblecontactuser */
     private $responsiblecontactuser = null;
 
+    /** @var string $bookingopeningtime */
+    private $bookingopeningtime = '';
+
+    /** @var string $bookingclosingtime */
+    private $bookingclosingtime = '';
+
     /**
      * Constructor.
      * @param int $optionid
@@ -152,7 +158,7 @@ class bookingoption_description implements renderable, templatable {
     public function __construct(
             int $optionid,
             $bookingevent = null,
-            int $descriptionparam = DESCRIPTION_WEBSITE, // Default.
+            int $descriptionparam = MOD_BOOKING_DESCRIPTION_WEBSITE, // Default.
             bool $withcustomfields = true,
             bool $forbookeduser = null,
             object $user = null) {
@@ -173,7 +179,7 @@ class bookingoption_description implements renderable, templatable {
         so the user status of the current USER is not enough.
         But we use it if nothing else is specified. */
         if ($forbookeduser === null) {
-            if ($bookinganswers->user_status($user->id) == STATUSPARAM_BOOKED) {
+            if ($bookinganswers->user_status($user->id) == MOD_BOOKING_STATUSPARAM_BOOKED) {
                 $forbookeduser = true;
             } else {
                 $forbookeduser = false;
@@ -201,9 +207,6 @@ class bookingoption_description implements renderable, templatable {
         if (!empty($settings->entity)) {
             $entityurl = new moodle_url('/local/entities/view.php', ['id' => $settings->entity['id']]);
             $entityfullname = $settings->entity['name'];
-            if (!empty($settings->entity['shortname'])) {
-                $entityfullname .= " (" . $settings->entity['shortname'] . ")";
-            }
             $this->location = html_writer::tag('a', $entityfullname, ['href' => $entityurl->out(false)]);
         } else {
             $this->location = $settings->location;
@@ -294,6 +297,35 @@ class bookingoption_description implements renderable, templatable {
 
         // User object of the responsible contact.
         $this->responsiblecontactuser = $settings->responsiblecontactuser ?? null;
+        if (!empty($this->responsiblecontactuser)) {
+            $this->responsiblecontactuser->link = new moodle_url('/user/profile.php', ['id' => $this->responsiblecontactuser->id]);
+        }
+
+        if (empty($settings->bookingopeningtime)) {
+            $this->bookingopeningtime = null;
+        } else {
+            switch (current_language()) {
+                case 'de':
+                    $this->bookingopeningtime = date('d.m.Y, H:i', $settings->bookingopeningtime);
+                    break;
+                default:
+                    $this->bookingopeningtime = date('M d, Y, H:i', $settings->bookingopeningtime);
+                    break;
+            }
+        }
+
+        if (empty($settings->bookingclosingtime)) {
+            $this->bookingclosingtime = null;
+        } else {
+            switch (current_language()) {
+                case 'de':
+                    $this->bookingclosingtime = date('d.m.Y, H:i', $settings->bookingclosingtime);
+                    break;
+                default:
+                    $this->bookingclosingtime = date('M d, Y, H:i', $settings->bookingclosingtime);
+                    break;
+            }
+        }
 
         if (isset($settings->customfields)) {
             $this->customfields = $settings->customfields;
@@ -328,18 +360,18 @@ class bookingoption_description implements renderable, templatable {
         ]);
 
         switch ($descriptionparam) {
-            case DESCRIPTION_WEBSITE:
+            case MOD_BOOKING_DESCRIPTION_WEBSITE:
                 if ($forbookeduser) {
                     // If it is for booked user, we show a short info text that the option is already booked.
                     $this->booknowbutton = get_string('infoalreadybooked', 'booking');
-                } else if ($bookinganswers->user_status($user->id) == STATUSPARAM_WAITINGLIST) {
+                } else if ($bookinganswers->user_status($user->id) == MOD_BOOKING_STATUSPARAM_WAITINGLIST) {
                     // If onwaitinglist is 1, we show a short info text that the user is on the waiting list.
                     // Currently this is only working for the current USER.
                     $this->booknowbutton = get_string('infowaitinglist', 'booking');
                 }
                 break;
 
-            case DESCRIPTION_CALENDAR:
+            case MOD_BOOKING_DESCRIPTION_CALENDAR:
                 $encodedlink = booking::encode_moodle_url($moodleurl);
                 $this->booknowbutton = "<a href=$encodedlink class='btn btn-primary'>"
                         . get_string('gotobookingoption', 'booking')
@@ -348,12 +380,12 @@ class bookingoption_description implements renderable, templatable {
                 // TODO: ...in order to update the event table accordingly.
                 break;
 
-            case DESCRIPTION_ICAL:
+            case MOD_BOOKING_DESCRIPTION_ICAL:
                 $this->booknowbutton = get_string('gotobookingoption', 'booking') . ': '
                     .  $moodleurl->out(false);
                 break;
 
-            case DESCRIPTION_MAIL:
+            case MOD_BOOKING_DESCRIPTION_MAIL:
                 // The link should be clickable in mails (placeholder {bookingdetails}).
                 $this->booknowbutton = get_string('gotobookingoption', 'booking') . ': ' .
                     '<a href = "' . $moodleurl . '" target = "_blank">' .
@@ -361,7 +393,7 @@ class bookingoption_description implements renderable, templatable {
                     '</a>';
                 break;
 
-            case DESCRIPTION_OPTIONVIEW:
+            case MOD_BOOKING_DESCRIPTION_OPTIONVIEW:
                 // Get the availability information for this booking option.
 
                 // Add availability info texts to $bookinginformation.
@@ -416,6 +448,8 @@ class bookingoption_description implements renderable, templatable {
             'dayofweektime' => $this->dayofweektime,
             'bookinginformation' => $this->bookinginformation,
             'bookitsection' => $this->bookitsection,
+            'bookingopeningtime' => $this->bookingopeningtime,
+            'bookingclosingtime' => $this->bookingclosingtime,
         ];
 
         if (!empty($this->unitstring)) {

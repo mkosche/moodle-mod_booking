@@ -69,22 +69,22 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
             // The blocking ID has to be the price id.
             // If its already in the cart, we can also just proceed.
             // Else, we abort.
-            if ($id != BO_COND_PRICEISSET
-                && $id != BO_COND_ALREADYRESERVED) {
+            if ($id != MOD_BOOKING_BO_COND_PRICEISSET
+                && $id != MOD_BOOKING_BO_COND_ALREADYRESERVED) {
 
                 if (!has_capability('local/shopping_cart:cashier', context_system::instance())) {
                     return ['error' => 'nopermissiontobook'];
                 }
             }
 
-            $item = booking_bookit::answer_booking_option($area, $itemid, STATUSPARAM_RESERVED, $userid);
+            $item = booking_bookit::answer_booking_option($area, $itemid, MOD_BOOKING_STATUSPARAM_RESERVED, $userid);
 
             // Initialize.
             $serviceperiodstart = $item['coursestarttime'];
             $serviceperiodend = $item['courseendtime'];
 
             // If cancellation is dependent on semester start, we also use semester start and end dates for the service period.
-            if (get_config('booking', 'cancelfromsemesterstart')) {
+            if (get_config('booking', 'canceldependenton') == "semesterstart") {
                 $bookingsettings = singleton_service::get_instance_of_booking_settings_by_cmid($settings->cmid);
                 if (!empty($bookingsettings->semesterid)) {
                     $semester = new semester($bookingsettings->semesterid);
@@ -92,6 +92,12 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
                     $serviceperiodstart = $semester->startdate;
                     $serviceperiodend = $semester->enddate;
                 }
+            } else if (get_config('booking', 'canceldependenton') == "bookingopeningtime"
+                || get_config('booking', 'canceldependenton') == "bookingclosingtime") {
+                // If cancellation is either dependent on bookingopeningtime or bookingclosingtime...
+                // ...we use the full registration period as service period.
+                $serviceperiodstart = $settings->bookingopeningtime ?? $item['coursestarttime'];
+                $serviceperiodend = $settings->bookingclosingtime ?? $item['courseendtime'];
             }
 
             // Make sure we have a valid cost center.
@@ -127,7 +133,7 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
             $serviceperiodend = $item['courseendtime'];
 
             // If cancellation is dependent on semester start, we also use semester start and end dates for the service period.
-            if (get_config('booking', 'cancelfromsemesterstart')) {
+            if (get_config('booking', 'canceldependenton')) {
                 $subbooking = subbookings_info::get_subbooking_by_area_and_id($area, $itemid);
                 $settings = singleton_service::get_instance_of_booking_option_settings($subbooking->optionid);
                 $bookingsettings = singleton_service::get_instance_of_booking_settings_by_cmid($settings->cmid);
@@ -194,7 +200,7 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
             // First, get an array of all depending subbookings.
             $subbookings = subbookings_info::return_array_of_subbookings($itemid);
 
-            booking_bookit::answer_booking_option($area, $itemid, STATUSPARAM_NOTBOOKED, $userid);
+            booking_bookit::answer_booking_option($area, $itemid, MOD_BOOKING_STATUSPARAM_NOTBOOKED, $userid);
 
             return [
                 'success' => 1,
@@ -243,7 +249,7 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
                 // If the booking is not successful, we return false and trigger the payment unsuccessful event.
                 // This will happen, when the booking is full.
                 $user = singleton_service::get_instance_of_user($userid);
-                if (!$bookingoption->user_submit_response($user, 0, 0, false, true)) {
+                if (!$bookingoption->user_submit_response($user, 0, 0, false, MOD_BOOKING_VERIFIED)) {
 
                     // Log cancellation of user.
                     $event = booking_failed::create([
@@ -265,7 +271,7 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
             // The syntax is "subbooking-1" for the subbooking id 1.
 
             // We actually book this subbooking option.
-            subbookings_info::save_response($area, $itemid, STATUSPARAM_BOOKED, $userid);
+            subbookings_info::save_response($area, $itemid, MOD_BOOKING_STATUSPARAM_BOOKED, $userid);
 
             return true;
         } else {
@@ -287,7 +293,7 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
         require_once($CFG->dirroot . '/mod/booking/lib.php');
 
         if ($area === 'option') {
-            booking_bookit::answer_booking_option($area, $itemid, STATUSPARAM_DELETED, $userid);
+            booking_bookit::answer_booking_option($area, $itemid, MOD_BOOKING_STATUSPARAM_DELETED, $userid);
             return true;
 
         } else if (strpos($area, 'subbooking') === 0) {
@@ -295,7 +301,7 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
             // The syntax is "subbooking-1" for the subbooking id 1.
 
             // We actually book this subbooking option.
-            subbookings_info::save_response($area, $itemid, STATUSPARAM_DELETED, $userid);
+            subbookings_info::save_response($area, $itemid, MOD_BOOKING_STATUSPARAM_DELETED, $userid);
 
             return true;
         } else {
@@ -374,7 +380,7 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
     private static function unload_subbooking(string $area, int $itemid, int $userid = 0): array {
 
         // We unreserve this subbooking option.
-        subbookings_info::save_response($area, $itemid, STATUSPARAM_NOTBOOKED, $userid);
+        subbookings_info::save_response($area, $itemid, MOD_BOOKING_STATUSPARAM_NOTBOOKED, $userid);
 
         return [
             'success' => 1,

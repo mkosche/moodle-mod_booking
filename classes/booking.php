@@ -155,7 +155,8 @@ class booking {
      * @return int
      */
     public function get_pagination_setting():int {
-        $paginationnum = (int) $this->settings->paginationnum > 0 ? (int) $this->settings->paginationnum : PAGINATIONDEF;
+        $paginationnum = (int) $this->settings->paginationnum > 0 ? (int) $this->settings->paginationnum :
+            MOD_BOOKING_PAGINATIONDEF;
         return $paginationnum;
     }
 
@@ -530,7 +531,8 @@ class booking {
             WHERE ba.bookingid = ?
             AND ba.userid = ?
             AND ba.waitinglist <= ?
-            AND (bo.courseendtime = 0 OR bo.courseendtime > ?)", [$this->id, $user->id, STATUSPARAM_WAITINGLIST, time()]);
+            AND (bo.courseendtime = 0 OR bo.courseendtime > ?)",
+            [$this->id, $user->id, MOD_BOOKING_STATUSPARAM_WAITINGLIST, time()]);
 
         return (int)$activebookingcount;
     }
@@ -562,9 +564,9 @@ class booking {
     public function get_bookingoptions_fields(bool $download = false) {
 
         if ($download) {
-            $fields = explode(',', $this->settings->optionsdownloadfields ?? BOOKINGOPTION_DEFAULTFIELDS);
+            $fields = explode(',', $this->settings->optionsdownloadfields ?? MOD_BOOKING_BOOKINGOPTION_DEFAULTFIELDS);
         } else {
-            $fields = explode(',', $this->settings->optionsfields ?? BOOKINGOPTION_DEFAULTFIELDS);
+            $fields = explode(',', $this->settings->optionsfields ?? MOD_BOOKING_BOOKINGOPTION_DEFAULTFIELDS);
         }
 
         $columns = [];
@@ -623,6 +625,14 @@ class booking {
                 case 'bookings':
                     $headers[] = get_string('bookings', 'mod_booking');
                     $columns[] = 'bookings';
+                    break;
+                case 'bookingopeningtime':
+                    $headers[] = get_string('bookingopeningtime', 'mod_booking');
+                    $columns[] = 'bookingopeningtime';
+                    break;
+                case 'bookingclosingtime':
+                    $headers[] = get_string('bookingclosingtime', 'mod_booking');
+                    $columns[] = 'bookingclosingtime';
                     break;
             }
         }
@@ -870,7 +880,7 @@ class booking {
                                                 $filterarray = [],
                                                 $wherearray = [],
                                                 $userid = null,
-                                                $bookingparam = STATUSPARAM_BOOKED,
+                                                $bookingparam = MOD_BOOKING_STATUSPARAM_BOOKED,
                                                 $additionalwhere = '',
                                                 $innerfrom = '') {
 
@@ -1080,7 +1090,7 @@ class booking {
         $search = $rsearch['query'];
         $params = array_merge(['bookingid' => $this->id,
                                     'userid' => $USER->id,
-                                    'booked' => STATUSPARAM_BOOKED,
+                                    'booked' => MOD_BOOKING_STATUSPARAM_BOOKED,
                                 ], $rsearch['params']);
 
         if ($limitnum != 0) {
@@ -1145,11 +1155,11 @@ class booking {
      * @param array $areas
      * @return array
      */
-    public static function return_array_of_dates(array $areas): array {
+    public static function return_array_of_entity_dates(array $areas): array {
 
         // TODO: Now that the SQL has been changed, we need to fix this function!
 
-        global $DB;
+        global $DB, $USER;
 
         // Get the SQL to retrieve all the right IDs.
         $sql = self::return_sql_for_options_dates($areas);
@@ -1194,10 +1204,10 @@ class booking {
             $optionsettings = singleton_service::get_instance_of_booking_option_settings($record->optionid);
 
             // Link is always the same.
-            $link = new moodle_url('/mod/booking/view.php', [
+            $link = new moodle_url('/mod/booking/optionview.php', [
                 'optionid' => $record->optionid,
-                'id' => $optionsettings->cmid,
-                'whichview' => 'showonlyone',
+                'cmid' => $optionsettings->cmid,
+                'userid' => $USER->id,
             ]);
 
             $newentittydate = new entitydate(
@@ -1283,7 +1293,7 @@ class booking {
                     FROM (
                     SELECT *, json_array_elements(availability::json) availability1
                     FROM {booking_options}) bos1
-                    WHERE bos1.availability1 ->>'id' = '" . BO_COND_JSON_ENROLLEDINCOURSE . "'
+                    WHERE bos1.availability1 ->>'id' = '" . MOD_BOOKING_BO_COND_JSON_ENROLLEDINCOURSE . "'
                     ) bos2
                     LEFT JOIN {enrol} e
                     ON e.courseid = bos2.bocourseid
@@ -1320,7 +1330,7 @@ class booking {
                             ) AS boscourseids
                             FROM {booking_options}
                         ) bos1
-                        WHERE bos1.boavailid = '". BO_COND_JSON_ENROLLEDINCOURSE . "'"
+                        WHERE bos1.boavailid = '". MOD_BOOKING_BO_COND_JSON_ENROLLEDINCOURSE . "'"
                     . $where . " ) bo";
         }
     }
@@ -1434,6 +1444,7 @@ class booking {
         $keyslocalization = [
             'name' => get_string('bookingname', 'mod_booking'),
             'defaultoptionsort' => get_string('sortby'),
+            'defaultsortorder' => get_string('sortorder', 'mod_booking'),
             'optionsfield' => get_string('optionsfield', 'mod_booking'),
         ];
 

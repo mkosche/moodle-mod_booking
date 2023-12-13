@@ -229,14 +229,14 @@ class optiondates_teachers_table extends wunderbyte_table {
      * @param string $data
      * @return array
      */
-    public function togglecheckbox(int $optiondateid, string $data):array {
-        global $DB, $PAGE;
+    public function action_togglecheckbox(int $optiondateid, string $data):array {
+        global $DB;
 
         if (!has_capability('mod/booking:canreviewsubstitutions', context_system::instance())) {
             return [
                 'success' => 0,
                 'message' => get_string('error:missingcapability', 'mod_booking'),
-             ];
+            ];
         }
 
         $dataobject = json_decode($data);

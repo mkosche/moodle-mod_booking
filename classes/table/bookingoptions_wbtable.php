@@ -486,7 +486,7 @@ class bookingoptions_wbtable extends wunderbyte_table {
 
         $isteacherofthisoption = booking_check_if_teacher($values);
         if (!empty($settings->courseid) && (
-            $status == STATUSPARAM_BOOKED ||
+            $status == MOD_BOOKING_STATUSPARAM_BOOKED ||
             has_capability('mod/booking:updatebooking', context_system::instance()) ||
             $isteacherofthisoption)) {
             // The link will be shown to everyone who...
@@ -511,23 +511,11 @@ class bookingoptions_wbtable extends wunderbyte_table {
      * @throws coding_exception
      */
     public function col_dayofweektime($values) {
-
         $ret = '';
         $settings = singleton_service::get_instance_of_booking_option_settings($values->id, $values);
-
-        $units = null;
-        if (!empty($settings->dayofweektime)) {
-            $unitsnumber = dates_handler::calculate_and_render_educational_units($settings->dayofweektime);
-            $units = get_string('units', 'mod_booking') . ": $unitsnumber";
-        }
-
         if (!empty($settings->dayofweektime)) {
             $ret = $settings->dayofweektime;
-            if (!$this->is_downloading() && !empty($units)) {
-                $ret .= " ($units)";
-            }
         }
-
         return $ret;
     }
 
@@ -640,7 +628,7 @@ class bookingoptions_wbtable extends wunderbyte_table {
         $ddoptions = [];
         $ret = '<div class="menubar" id="action-menu-' . $optionid . '-menubar" role="menubar">';
 
-        if ($status == STATUSPARAM_BOOKED) {
+        if ($status == MOD_BOOKING_STATUSPARAM_BOOKED) {
             $ret .= html_writer::link(
                 new moodle_url('/mod/booking/viewconfirmation.php',
                     ['id' => $cmid, 'optionid' => $optionid]),
@@ -912,6 +900,68 @@ class bookingoptions_wbtable extends wunderbyte_table {
             $ret = strip_tags($description);
         } else {
             $ret = html_writer::div($description);
+        }
+        return $ret;
+    }
+
+    /**
+     * This function is called for each data row to allow processing of the
+     * "bookingopeningtime" value.
+     *
+     * @param object $values Contains object with all the values of record.
+     * @return string a string containing the booking opening time
+     * @throws coding_exception
+     */
+    public function col_bookingopeningtime($values) {
+        $bookingopeningtime = $values->bookingopeningtime;
+        if (empty($bookingopeningtime)) {
+            return '';
+        }
+
+        switch (current_language()) {
+            case 'de':
+                $renderedbookingopeningtime = date('d.m.Y, H:i', $bookingopeningtime);
+                break;
+            default:
+                $renderedbookingopeningtime = date('M d, Y, H:i', $bookingopeningtime);
+                break;
+        }
+
+        if ($this->is_downloading()) {
+            $ret = $renderedbookingopeningtime;
+        } else {
+            $ret = get_string('bookingopeningtime', 'mod_booking') . ": " . $renderedbookingopeningtime;
+        }
+        return $ret;
+    }
+
+    /**
+     * This function is called for each data row to allow processing of the
+     * "col_bookingclosingtime" value.
+     *
+     * @param object $values Contains object with all the values of record.
+     * @return string a string containing the booking closing time
+     * @throws coding_exception
+     */
+    public function col_bookingclosingtime($values) {
+        $bookingclosingtime = $values->bookingclosingtime;
+        if (empty($bookingclosingtime)) {
+            return '';
+        }
+
+        switch (current_language()) {
+            case 'de':
+                $renderedbookingclosingtime = date('d.m.Y, H:i', $bookingclosingtime);
+                break;
+            default:
+                $renderedbookingclosingtime = date('M d, Y, H:i', $bookingclosingtime);
+                break;
+        }
+
+        if ($this->is_downloading()) {
+            $ret = $renderedbookingclosingtime;
+        } else {
+            $ret = get_string('bookingclosingtime', 'mod_booking') . ": " . $renderedbookingclosingtime;
         }
         return $ret;
     }

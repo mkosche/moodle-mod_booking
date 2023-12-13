@@ -124,7 +124,7 @@ if (!$agree && (!empty($bookingoption->booking->settings->bookingpolicy))) {
             if (has_capability('mod/booking:subscribeusers', $context) || (booking_check_if_teacher(
                     $bookingoption->option))) {
                 foreach ($users as $user) {
-                    if (!$bookingoption->user_submit_response($user, 0, 0, false, VERIFIED)) {
+                    if (!$bookingoption->user_submit_response($user, 0, 0, false, MOD_BOOKING_VERIFIED)) {
                         $subscribesuccess = false;
                         $notsubscribedusers[] = $user;
                     }
@@ -139,10 +139,14 @@ if (!$agree && (!empty($bookingoption->booking->settings->bookingpolicy))) {
                         foreach ($notsubscribedusers as $user) {
                             $result = $DB->get_records_sql(
                                     'SELECT ba.id answerid, bo.text
-                                     FROM {booking_answers} ba
-                                     LEFT JOIN {booking_options} bo ON bo.id = ba.optionid
-                                     WHERE ba.userid = ? AND ba.waitinglist < ?
-                                     AND ba.bookingid = ?', [$user->id, STATUSPARAM_RESERVED, $bookingoption->booking->id]);
+                                    FROM {booking_answers} ba
+                                    LEFT JOIN {booking_options} bo ON bo.id = ba.optionid
+                                    WHERE ba.userid = ? AND ba.waitinglist < ?
+                                    AND ba.bookingid = ?', [
+                                        $user->id,
+                                        MOD_BOOKING_STATUSPARAM_RESERVED,
+                                        $bookingoption->booking->id,
+                                    ]);
                             $output .= "{$user->firstname} {$user->lastname}";
                             if (!empty($result)) {
                                 $r = [];

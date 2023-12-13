@@ -1,3 +1,37 @@
+## Version 8.0.54 (2023120700)
+**Improvements:**
+* Improvement: Refactor action names for wbtable.
+* Improvement: Make sure wbtable container is aligned left by adding left margin of 0 (ml-0).
+
+**Bugfixes:**
+* Bugfix: Fix bug with duplication of booking instances when optionid or userid of teacher is missing or cannot be mapped.
+
+## Version 8.0.53 (2023120400)
+**New features:**
+* New feature: Show booking opening and closing time in all relevant views and add possibility to sort by them.
+* New feature: Filters for booking time and course time.
+
+**Improvements:**
+* Improvement: No reload button on teacher page and no login required for table.
+* Improvement: Links in entity calendar now point to preview page (optionview.php).
+* Improvement: No entity shortname on booking option preview page (optionview.php).
+
+**Bugfixes:**
+* Bugfix: Fix {teachers} placeholder.
+* Bugfix: Add some fixes for course calendar events and refactor some legacy code.
+
+## Version 8.0.52 (2023112800)
+**New features:**
+* New feature: Add possibility to set default sort order for booking instances.
+* New feature: Choose date field for cancellation period, new fields: bookingopeningtime, bookingclosingtime.
+
+**Improvements:**
+* Improvement: Make sure, we never send mails for invisible booking options.
+
+**Bugfixes:**
+* Bugfix: All plugin constants must start with uppercase frankenstyle prefix.
+* Bugfix: Remove table prefix and use curly brackets.
+
 ## Version 8.0.51 (2023112700)
 **Improvements:**
 * Improvement: Add sortby and sortorder to recommendedin shortcode.
