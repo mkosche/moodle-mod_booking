@@ -24,12 +24,30 @@
 
 namespace mod_booking\form;
 
+use cache_exception;
+use dml_exception;
+use coding_exception;
+use stdClass;
+use ddl_exception;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
 
+/**
+ * Customfield class.
+ * @package mod_booking
+ * @copyright 2021 Wunderbyte GmbH <info@wunderbyte.at>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class customfield extends \moodleform {
 
+    /**
+     * Definitiion.
+     * @return void
+     * @throws dml_exception
+     * @throws coding_exception
+     */
     public function definition() {
         $mform = & $this->_form;
         $i = 0;
@@ -97,11 +115,25 @@ class customfield extends \moodleform {
         $mform->closeHeaderBefore('buttonar');
     }
 
+    /**
+     * Validation.
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
         return $errors;
     }
 
+    /**
+     * Get data.
+     * @return stdClass|null
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws cache_exception
+     * @throws ddl_exception
+     */
     public function get_data() {
         global $DB;
         $data = parent::get_data();

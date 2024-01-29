@@ -14,22 +14,33 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Module booking data generator
+ *
+ * @package mod_booking
+ * @category test
+ * @copyright 2023 Wunderbyte GmbH <info@wunderbyte.at>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
+use mod_booking\booking_option;
 use mod_booking\price;
+use mod_booking\semester;
 use mod_booking\customfield\booking_handler;
 
 /**
- * mod_booking data generator
+ * Class to handle module booking data generator
  *
  * @package mod_booking
  * @category test
- * @copyright 2017 Andraž Prinčič {@link https://www.princic.net}
+ * @copyright 2023 Wunderbyte GmbH <info@wunderbyte.at>
+ * @author 2023 Andrii Semenets
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class mod_booking_generator extends testing_module_generator {
 
     /**
@@ -49,6 +60,15 @@ class mod_booking_generator extends testing_module_generator {
         parent::reset();
     }
 
+    /**
+     * Create booking instance
+     *
+     * @param mixed|null $record
+     * @param array|null $options
+     *
+     * @return stdClass
+     *
+     */
     public function create_instance($record = null, array $options = null) {
         global $CFG;
 
@@ -88,6 +108,7 @@ class mod_booking_generator extends testing_module_generator {
      * @return stdClass the booking option object
      */
     public function create_option($record = null) {
+        global $DB;
 
         $record = (array) $record;
 
@@ -116,32 +137,10 @@ class mod_booking_generator extends testing_module_generator {
 
         $record = (object) $record;
 
-        // Conversion of strings like ["optiondatestart[0]"]=> int(1690792686) into arrays (by ChatGPT).
-        $optiondatestart = [];
-        $optiondateend = [];
-        foreach ($record as $key => $value) {
-            if (strpos($key, 'optiondatestart') === 0) {
-                // Get the index from the key.
-                preg_match('/optiondatestart\[(\d+)\]/', $key, $matches);
-                $index = $matches[1];
-                $optiondatestart[$index] = $value;
-            } else if (strpos($key, 'optiondateend') === 0) {
-                // Get the index from the key.
-                preg_match('/optiondateend\[(\d+)\]/', $key, $matches);
-                $index = $matches[1];
-                $optiondateend[$index] = $value;
-            }
-        }
-        // Sort the arrays by index.
-        ksort($optiondatestart);
-        ksort($optiondateend);
-
-        // Add optiondates to booking option.
-        if (is_array($optiondatestart) && is_array($optiondateend)) {
-            foreach ($optiondatestart as $i => $startdate) {
-                $record->newoptiondates[] = "$startdate - $optiondateend[$i]";
-            }
-        }
+        // Finalizing object with required properties.
+        $record->id = 0;
+        $record->cmid = $cmb1->id;
+        $record->identifier = booking_option::create_truly_unique_option_identifier();
 
         // Process option teachers.
         if (!empty($record->teachersforoption)) {
@@ -152,15 +151,29 @@ class mod_booking_generator extends testing_module_generator {
             }
         }
 
-        if ($record->id = booking_update_options($record, $context)) {
-            $record->optionid = $record->id;
-            // Save the prices to option.
-            $price = new price('option', $record->optionid);
-            foreach ($price->pricecategories as $pricecat) {
+        if (!empty($record->semesterid)) {
+            // Force $bookingsettings->semesterid by given $record->semesterid.
+            $DB->set_field('booking', 'semesterid', $record->semesterid, ['id' => $record->bookingid]);
+            // It might be necessary to reset cache.
+            // phpcs:ignore
+            //$semester = new semester($record->semesterid);
+        }
+
+        // Prepare pricef for being used in option(s) if exist.
+        $pricecategories = $DB->get_records('booking_pricecategories', ['disabled' => 0]);
+        if (!empty($pricecategories)) {
+            foreach ($pricecategories as $pricecat) {
                 $catname = "pricegroup_".$pricecat->identifier;
-                $record->{$catname} = ["bookingprice_".$pricecat->identifier => (float) $pricecat->defaultvalue];
+                // We apply default values only if form does not contain it.
+                if (empty($record->{$catname})) {
+                    $record->{$catname} = ["bookingprice_".$pricecat->identifier => (float) $pricecat->defaultvalue];
+                }
             }
-            $price->save_from_form($record);
+        }
+
+        // Create / save booking option(s).
+        if ($record->id = booking_option::update($record, $context)) {
+            $record->optionid = $record->id;
             // Save customfield data to option (the id key has to be set to option id).
             $handler = booking_handler::create();
             $handler->instance_form_save($record, $record->optionid == -1);

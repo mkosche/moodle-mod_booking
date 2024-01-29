@@ -115,13 +115,11 @@ class subbooking_additionalperson implements booking_subbooking {
             'context' => $context,
         ];
 
-        $mform->addElement(
-            'editor',
-            'subbooking_additionalperson_description_editor',
+        $mform->addElement('editor', 'subbooking_additionalperson_description_editor',
             get_string('subbooking_additionalperson_description', 'mod_booking'),
             null,
             $textfieldoptions);
-        $mform->setType('subbooking_additionalperson_description', PARAM_RAW);
+        $mform->setType('subbooking_additionalperson_description_editor', PARAM_RAW);
 
         // For price & entities wie need the id of this subbooking.
         $sboid = $formdata['id'] ?? 0;
@@ -143,8 +141,10 @@ class subbooking_additionalperson implements booking_subbooking {
 
     /**
      * Save the JSON for timeslot subbooking defined in form.
+     *
      * The role has to determine the handler for condtion and action and get the right json object.
-     * @param stdClass &$data form data reference
+     *
+     * @param stdClass $data form data reference
      */
     public function save_subbooking(stdClass &$data) {
         global $DB, $USER;
@@ -217,7 +217,8 @@ class subbooking_additionalperson implements booking_subbooking {
 
     /**
      * Sets the subbooking defaults when loading the form.
-     * @param stdClass &$data reference to the default values
+     *
+     * @param stdClass $data reference to the default values
      * @param stdClass $record a record from booking_subbookings
      */
     public function set_defaults(stdClass &$data, stdClass $record) {
@@ -248,6 +249,10 @@ class subbooking_additionalperson implements booking_subbooking {
             'mod_booking',
             'subbookings',
             $record->id);
+
+        // Add price.
+        $price = new price('subbooking', $record->id);
+        $price->set_data($data);
     }
 
     /**

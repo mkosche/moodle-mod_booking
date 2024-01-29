@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Library of common module functions and constants.
+ *
+ * @package     mod_booking
+ * @copyright   2023 Georg Maißer <georg.maisser@wunderbyte.at>
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -153,7 +161,86 @@ define('MOD_BOOKING_PAGINATIONDEF', 25);
 define('MOD_BOOKING_CAMPAIGN_TYPE_CUSTOMFIELD', 0);
 define('MOD_BOOKING_CAMPAIGN_TYPE_BLOCKBOOKING', 1);
 
+// Define IDs of Fields.
+define('MOD_BOOKING_OPTION_FIELD_PREPARE_IMPORT', 1); // Has to be the first field class.
+define('MOD_BOOKING_OPTION_FIELD_ID', 2);
+define('MOD_BOOKING_OPTION_FIELD_RETURNURL', 5);
+define('MOD_BOOKING_OPTION_FIELD_TEMPLATE', 10);
+define('MOD_BOOKING_OPTION_FIELD_TEXT', 20);
+define('MOD_BOOKING_OPTION_FIELD_IDENTIFIER', 30);
+define('MOD_BOOKING_OPTION_FIELD_TITLEPREFIX', 40);
+define('MOD_BOOKING_OPTION_FIELD_DESCRIPTION', 50);
+define('MOD_BOOKING_OPTION_FIELD_INVISIBLE', 60);
+define('MOD_BOOKING_OPTION_FIELD_ANNOTATION', 70);
+define('MOD_BOOKING_OPTION_FIELD_LOCATION', 80);
+define('MOD_BOOKING_OPTION_FIELD_INSTITUTION', 90);
+define('MOD_BOOKING_OPTION_FIELD_ADDRESS', 100);
+define('MOD_BOOKING_OPTION_FIELD_OPTIONIMAGES', 110);
+define('MOD_BOOKING_OPTION_FIELD_MAXANSWERS', 120);
+define('MOD_BOOKING_OPTION_FIELD_MAXOVERBOOKING', 130);
+define('MOD_BOOKING_OPTION_FIELD_MINANSWERS', 140);
+define('MOD_BOOKING_OPTION_FIELD_POLLURL', 150);
+define('MOD_BOOKING_OPTION_FIELD_COURSEID', 160); // Course to enrol to.
+define('MOD_BOOKING_OPTION_FIELD_ADDTOGROUP', 165);
+define('MOD_BOOKING_OPTION_FIELD_ENTITIES', 195);
+define('MOD_BOOKING_OPTION_FIELD_OPTIONDATES', 200);
+define('MOD_BOOKING_OPTION_FIELD_COURSESTARTTIME', 201); // Replaced with optiondates class.
+define('MOD_BOOKING_OPTION_FIELD_COURSEENDTIME', 202); // Replaced with optiondates class.
+define('MOD_BOOKING_OPTION_FIELD_ADDTOCALENDAR', 205);
+define('MOD_BOOKING_OPTION_FIELD_TEACHERS', 210);
+define('MOD_BOOKING_OPTION_FIELD_RESPONSIBLECONTACT', 220);
+define('MOD_BOOKING_OPTION_FIELD_PRICE', 230);
+define('MOD_BOOKING_OPTION_FIELD_PRICEFORMULAADD', 231);
+define('MOD_BOOKING_OPTION_FIELD_PRICEFORMULAMULTIPLY', 232);
+define('MOD_BOOKING_OPTION_FIELD_PRICEFORMULAOFF', 233);
+define('MOD_BOOKING_OPTION_FIELD_CREDITS', 235);
+define('MOD_BOOKING_OPTION_FIELD_ELECTIVE', 240);
+define('MOD_BOOKING_OPTION_FIELD_COSTUMFIELDS', 260);
+define('MOD_BOOKING_OPTION_FIELD_AVAILABILITY', 270);
+define('MOD_BOOKING_OPTION_FIELD_BOOKINGCLOSINGTIME', 271);
+define('MOD_BOOKING_OPTION_FIELD_BOOKINGOPENINGTIME', 272);
+define('MOD_BOOKING_OPTION_FIELD_SUBBOOKINGS', 280);
+define('MOD_BOOKING_OPTION_FIELD_ACTIONS', 290);
+define('MOD_BOOKING_OPTION_FIELD_ADVANCED', 300);
+define('MOD_BOOKING_OPTION_FIELD_DISABLEBOOKINGUSERS', 310);
+define('MOD_BOOKING_OPTION_FIELD_DISABLECANCEL', 320);
+define('MOD_BOOKING_OPTION_FIELD_CANCELUNTIL', 321);
+define('MOD_BOOKING_OPTION_FIELD_ATTACHMENT', 325);
+define('MOD_BOOKING_OPTION_FIELD_NOTIFICATIONTEXT', 330);
+define('MOD_BOOKING_OPTION_FIELD_REMOVEAFTERMINUTES', 340);
+define('MOD_BOOKING_OPTION_FIELD_SHORTURL', 345);
+define('MOD_BOOKING_OPTION_FIELD_HOWMANYUSERS', 346);
+define('MOD_BOOKING_OPTION_FIELD_BEFOREBOOKEDTEXT', 350);
+define('MOD_BOOKING_OPTION_FIELD_BEFORECOMPLETEDTEXT', 360);
+define('MOD_BOOKING_OPTION_FIELD_AFTERCOMPLETEDTEXT', 370);
+define('MOD_BOOKING_OPTION_FIELD_RECURRINGOPTIONS', 380);
+define('MOD_BOOKING_OPTION_FIELD_BOOKUSERS', 400);
+define('MOD_BOOKING_OPTION_FIELD_TEMPLATESAVE', 500);
+
+// To define execution of field methods.
+define('MOD_BOOKING_EXECUTION_NORMAL', 0);
+define('MOD_BOOKING_EXECUTION_POSTSAVE', 1);
+
+// Definition of Header sections in option form.
+define('MOD_BOOKING_HEADER_GENERAL', 'general');
+define('MOD_BOOKING_HEADER_DATES', 'datesheader');
+define('MOD_BOOKING_HEADER_TEACHERS', 'bookingoptionteachers');
+define('MOD_BOOKING_HEADER_RESPONSIBLECONTACT', 'responsiblecontactheader');
+define('MOD_BOOKING_HEADER_ADVANCEDOPTIONS', 'advancedoptions');
+define('MOD_BOOKING_HEADER_BOOKINGOPTIONTEXT', 'textdependingonstatus');
+define('MOD_BOOKING_HEADER_RECURRINGOPTIONS', 'recurringheader');
+define('MOD_BOOKING_HEADER_TEMPLATES', 'templateheader');
+define('MOD_BOOKING_HEADER_PRICE', 'bookingoptionprice');
+define('MOD_BOOKING_HEADER_ELECTIVE', 'electivesettings');
+define('MOD_BOOKING_HEADER_ACTIONS', 'bookingactionsheader');
+define('MOD_BOOKING_HEADER_AVAILABILITY', 'availabilityconditions');
+define('MOD_BOOKING_HEADER_SUBBOOKINGS', 'bookingsubbookingsheader');
+define('MOD_BOOKING_HEADER_CUSTOMFIELDS', 'category_'); // There can be multiple headers, with custom names.
+define('MOD_BOOKING_HEADER_TEMPLATESAVE', 'templateheader');
+
 /**
+ * Booking get coursemodule info.
+ *
  * @param stdClass $cm
  * @return cached_cm_info
  */
@@ -168,16 +255,19 @@ function booking_get_coursemodule_info($cm) {
 }
 
 /**
- *  Callback checking permissions and preparing the file for serving plugin files, see File API.
+ * Serves the booking / option files.
  *
- * @param $course
- * @param $cm
- * @param $context
- * @param $filearea
- * @param $args
- * @param $forcedownload
- * @param array $options
- * @return bool
+ * @package  mod_booking
+ * @category files
+ * @param stdClass $course course object
+ * @param stdClass $cm course module object
+ * @param stdClass $context context object
+ * @param string $filearea file area
+ * @param array $args extra arguments
+ * @param bool $forcedownload whether or not force download
+ * @param array $options additional options affecting the file serving
+ * @return bool false if file not found, does not return if found - justsend the file
+ *
  * @throws coding_exception
  * @throws moodle_exception
  * @throws require_login_exception
@@ -231,6 +321,17 @@ function booking_pluginfile($course, $cm, $context, $filearea, $args, $forcedown
     send_stored_file($file, null, 0, true, $options);
 }
 
+/**
+ * Booking user outline.
+ *
+ * @param object $course
+ * @param object $user
+ * @param object $mod
+ * @param object $booking
+ *
+ * @return stdClass|null
+ *
+ */
 function booking_user_outline($course, $user, $mod, $booking) {
     global $DB;
     if ($answer = $DB->get_record('booking_answers',
@@ -247,12 +348,15 @@ function booking_user_outline($course, $user, $mod, $booking) {
 /**
  * Callback for the "Complete" report - prints the activity summary for the given user.
  *
- * @param $course
- * @param $user
- * @param $mod
- * @param $booking
+ * @param stdClass $course
+ * @param stdClass $user
+ * @param stdClass $mod
+ * @param object $booking
+ *
  * @throws coding_exception
  * @throws dml_exception
+ *
+ * @return void
  */
 function booking_user_complete($course, $user, $mod, $booking) {
     global $DB;
@@ -269,6 +373,14 @@ function booking_user_complete($course, $user, $mod, $booking) {
     }
 }
 
+/**
+ * Booking supports.
+ *
+ * @param bool $feature
+ *
+ * @return bool|null
+ *
+ */
 function booking_supports($feature) {
     switch ($feature) {
         case FEATURE_GROUPS:
@@ -303,8 +415,11 @@ function booking_supports($feature) {
  *
  * @package mod_booking
  * @category comment
- * @param $commentparam
+ *
+ * @param object $commentparam
+ *
  * @return array
+ *
  * @throws dml_exception
  */
 function booking_comment_permissions($commentparam): array {
@@ -390,11 +505,13 @@ function booking_comment_validate(stdClass $commentparam): bool {
 /**
  * Calculate completion state.
  *
- * @param $course
- * @param $cm
- * @param $userid
- * @param $type
+ * @param stdClass $course
+ * @param stdClass $cm
+ * @param int $userid
+ * @param bool $type
+ *
  * @return bool
+ *
  * @throws dml_exception
  */
 function booking_get_completion_state($course, $cm, $userid, $type) {
@@ -755,866 +872,15 @@ function booking_update_instance($booking) {
 }
 
 /**
- * Update the booking option settings when adding and modifying a single booking option.
- *
- * @param object $optionvalues
- * @param context_module $context
- * @param int $updateparam optional param to define behavior
- * @return bool|number optionid
- */
-function booking_update_options(object $optionvalues, context_module $context,
-    int $updateparam = MOD_BOOKING_UPDATE_OPTIONS_PARAM_DEFAULT) {
-    global $DB, $CFG, $PAGE, $USER;
-
-    require_once("$CFG->dirroot/mod/booking/locallib.php");
-    require_once("{$CFG->dirroot}/mod/booking/classes/GoogleUrlApi.php");
-
-    $option = new stdClass();
-    $option->bookingid = $optionvalues->bookingid;
-
-    $customfields = booking_option::get_customfield_settings();
-    if (!($booking = $DB->get_record('booking', ['id' => $optionvalues->bookingid]))) {
-        $booking = new stdClass();
-        $booking->id = 0;
-    }
-
-    // Get the original option to compare it for changes.
-    if (!empty($optionvalues->optionid) &&
-            $optionvalues->optionid != -1) {
-        if (!$originaloption = $DB->get_record('booking_options', ['id' => $optionvalues->optionid])) {
-            $originaloption = false;
-        }
-    }
-
-    // Bugfix: Use !empty instead of isset to check for 0 too.
-    if (!empty($optionvalues->courseid)) {
-        $option->courseid = $optionvalues->courseid;
-    } else {
-        $option->courseid = 0;
-    }
-
-    // For global option templates, 0 is used as bookingid.
-    if (isset($optionvalues->addastemplate) && $optionvalues->addastemplate == 1) {
-        $option->bookingid = 0;
-    }
-
-    if (isset($optionvalues->parentid)) {
-        $option->parentid = $optionvalues->parentid;
-    }
-
-    // Set semesterid and dayofweektime string which we got from the dynamic form (see editoptions.php).
-    if (!empty($optionvalues->semesterid)) {
-        $option->semesterid = $optionvalues->semesterid;
-    }
-
-    if (empty($optionvalues->dayofweektime)) {
-        $option->dayofweektime = '';
-        $option->dayofweek = '';
-    } else {
-        // Possible improvement: We could add the dates_handler::reoccurring_datestring_is_correct check here...
-        // ...and only store if the string is correct, if this is needed.
-        $option->dayofweektime = $optionvalues->dayofweektime;
-
-        // This is only for sql filtering, but we need the weekday in an extra column.
-        $dayinfo = dates_handler::prepare_day_info($optionvalues->dayofweektime);
-        if (!empty($dayinfo['day'])) {
-            $option->dayofweek = $dayinfo['day'];
-        }
-    }
-
-    // Prefix to be shown before title of the booking option.
-    if (empty($optionvalues->titleprefix)) {
-        $option->titleprefix = '';
-    } else {
-        $option->titleprefix = $optionvalues->titleprefix;
-    }
-
-    // Unique identifier of the booking option.
-    if (empty($optionvalues->identifier)) {
-        $option->identifier = booking_option::create_truly_unique_option_identifier();
-    } else {
-        $option->identifier = $optionvalues->identifier;
-    }
-
-    // Customizable availability conditions (json).
-    // Make sure json availability conditions are saved, if they exist.
-    if (!empty($optionvalues->availability)) {
-        $option->availability = $optionvalues->availability;
-    } else {
-        $option->availability = null;
-    }
-
-    // Title of the booking option.
-    $option->text = trim($optionvalues->text);
-
-    if (!isset($optionvalues->howmanyusers) || empty($optionvalues->howmanyusers)) {
-        $option->howmanyusers = 0;
-    } else {
-        $option->howmanyusers = $optionvalues->howmanyusers;
-    }
-    if (!isset($optionvalues->removeafterminutes) || empty($optionvalues->removeafterminutes)) {
-        $option->removeafterminutes = 0;
-    } else {
-        $option->removeafterminutes = $optionvalues->removeafterminutes;
-    }
-    if (!isset($optionvalues->notificationtext) || empty($optionvalues->notificationtext)) {
-        $option->notificationtext = "";
-    } else {
-        $option->notificationtext = $optionvalues->notificationtext;
-    }
-    if (empty($optionvalues->disablebookingusers)) {
-        $option->disablebookingusers = 0;
-    } else {
-        $option->disablebookingusers = $optionvalues->disablebookingusers;
-    }
-
-    $option->sent = 0;
-    $option->sent2 = 0;
-    $option->sentteachers = 0;
-
-    if (isset($optionvalues->location)) {
-        $option->location = trim($optionvalues->location);
-    } else {
-        $option->location = '';
-    }
-
-    if (isset($optionvalues->institution)) {
-        $option->institution = trim($optionvalues->institution);
-    } else {
-        $option->institution = '';
-    }
-
-    if (isset($optionvalues->address)) {
-        $option->address = trim($optionvalues->address);
-    } else {
-        $option->address = '';
-    }
-
-    // Visibility of the option.
-    if (isset($optionvalues->invisible)) {
-        $option->invisible = $optionvalues->invisible;
-    } else {
-        $option->invisible = 0;
-    }
-
-    // Annotation field for internal remarks.
-    if (empty($optionvalues->annotation)) {
-        $option->annotation = "";
-    } else {
-        $option->annotation = $optionvalues->annotation;
-    }
-
-    // Absolute value to be added to price calculation with formula.
-    if (isset($optionvalues->priceformulaadd)) {
-        $option->priceformulaadd = $optionvalues->priceformulaadd;
-    } else {
-        $option->priceformulaadd = 0; // Default: Add 0.
-    }
-
-    // Manual factor to be applied to price calculation with formula.
-    if (isset($optionvalues->priceformulamultiply)) {
-        $option->priceformulamultiply = $optionvalues->priceformulamultiply;
-    } else {
-        $option->priceformulamultiply = 1; // Default: Multiply with 1.
-    }
-
-    // Flag if price formula is turned on or off.
-    if (isset($optionvalues->priceformulaoff)) {
-        $option->priceformulaoff = $optionvalues->priceformulaoff;
-    } else {
-        $option->priceformulaoff = 0; // Default: Turned on.
-    }
-
-    // Link to feedback form.
-    if (isset($optionvalues->pollurl)) {
-        $option->pollurl = $optionvalues->pollurl;
-    } else {
-        $option->pollurl = '';
-    }
-
-    // Link to teachers' feedback form.
-    if (isset($optionvalues->pollurlteachers)) {
-        $option->pollurlteachers = $optionvalues->pollurlteachers;
-    } else {
-        $option->pollurlteachers = '';
-    }
-
-    // Responsible contact person.
-    if (!empty($optionvalues->responsiblecontact)) {
-        $option->responsiblecontact = $optionvalues->responsiblecontact;
-    } else {
-        $option->responsiblecontact = null;
-    }
-
-    if (isset($optionvalues->limitanswers)) {
-        $option->limitanswers = $optionvalues->limitanswers;
-    } else {
-        $option->limitanswers = 0;
-    }
-    if (isset($optionvalues->limitanswers) && $optionvalues->limitanswers == 0) {
-        $option->limitanswers = 0;
-        $option->maxanswers = 0;
-        $option->maxoverbooking = 0;
-    } else {
-        if (isset($optionvalues->maxanswers)) {
-            $option->maxanswers = $optionvalues->maxanswers;
-        } else {
-            $option->maxanswers = 0;
-        }
-        if (isset($optionvalues->maxoverbooking)) {
-            $option->maxoverbooking = $optionvalues->maxoverbooking;
-        } else {
-            $option->maxoverbooking = 0;
-        }
-    }
-
-    if (isset($optionvalues->minanswers)) {
-        $option->minanswers = $optionvalues->minanswers;
-    } else {
-        $option->minanswers = 0;
-    }
-
-    if (isset($optionvalues->restrictanswerperiodopening) && !empty($optionvalues->bookingopeningtime)) {
-        $option->bookingopeningtime = $optionvalues->bookingopeningtime;
-    } else {
-        $option->bookingopeningtime = 0;
-    }
-
-    if (isset($optionvalues->restrictanswerperiodclosing) && !empty($optionvalues->bookingclosingtime)) {
-        $option->bookingclosingtime = $optionvalues->bookingclosingtime;
-    } else {
-        $option->bookingclosingtime = 0;
-    }
-
-    if (isset($optionvalues->startendtimeknown)) {
-        $option->coursestarttime = $optionvalues->coursestarttime ?? 0;
-        $option->courseendtime = $optionvalues->courseendtime ?? 0;
-    } else {
-        $option->coursestarttime = 0;
-        $option->courseendtime = 0;
-    }
-
-    if (isset($optionvalues->enrolmentstatus)) {
-        $option->enrolmentstatus = $optionvalues->enrolmentstatus;
-    } else {
-        $option->enrolmentstatus = 0;
-    }
-
-    if (isset($optionvalues->description)) {
-        $option->description = trim($optionvalues->description);
-    } else {
-        $option->description = "";
-    }
-
-    // We add the json key only if there is actually something committed.
-    // The reason is that this comes from a different form.
-    if (!empty($optionvalues->json)) {
-        $option->json = $optionvalues->json;
-    } else {
-        $option->json = json_encode(new stdClass);
-    }
-
-    // We store the information if a booking option can be cancelled in the JSON.
-    // So this has to happen BEFORE JSON is saved!
-    if (empty($optionvalues->disablecancel)) {
-        // This will store the correct JSON to $optionvalues->json.
-        booking_option::remove_key_from_json($option, "disablecancel");
-    } else {
-        booking_option::add_data_to_json($option, "disablecancel", 1);
-    }
-
-    if (isset($optionvalues->beforebookedtext)) {
-        $option->beforebookedtext = $optionvalues->beforebookedtext;
-    } else {
-        $option->beforebookedtext = "";
-    }
-
-    if (isset($optionvalues->beforecompletedtext)) {
-        $option->beforecompletedtext = $optionvalues->beforecompletedtext;
-    } else {
-        $option->beforecompletedtext = "";
-    }
-
-    if (isset($optionvalues->aftercompletedtext)) {
-        $option->aftercompletedtext = $optionvalues->aftercompletedtext;
-    } else {
-        $option->aftercompletedtext = "";
-    }
-
-    if ((empty($optionvalues->duration) || $optionvalues->duration == 0)
-        && (isset($optionvalues->coursestarttime)
-    && isset($optionvalues->courseendtime))
-    && $delta = $optionvalues->courseendtime - $optionvalues->coursestarttime) {
-        $option->duration = $delta;
-    } else {
-        if (isset($optionvalues->duration)) {
-            $option->duration = $optionvalues->duration;
-        } else {
-            $option->duration = 0;
-        }
-    }
-
-    $option->timemodified = time();
-
-    // Add to calendar option.
-    if (isset($optionvalues->addtocalendar) && $optionvalues->addtocalendar == 1) {
-        // 1 ... Add to calendar as COURSE event.
-        $option->addtocalendar = 1;
-    } else {
-        // 0 ... Do not add to calendar.
-        $option->addtocalendar = 0;
-    }
-
-    // Every time we save an entity, we want to make sure that the name of the entity is stored in location.
-    if (!empty($optionvalues->local_entities_entityid)) {
-        // We might have more than one address, this will lead to more than one record which comes back.
-        if (class_exists('local_entities\entitiesrelation_handler')) {
-            $entities = entitiesrelation_handler::get_entities_by_id($optionvalues->local_entities_entityid);
-            $option->address = '';
-            foreach ($entities as $entity) {
-                $option->location = $entity->parentname ?? $entity->name;
-                $option->address .= "$entity->postcode $entity->city $entity->streetname $entity->streetnumber";
-                if (count($entities) > 1) {
-                    $option->address .= ', ';
-                }
-            }
-            if (count($entities) > 1) {
-                $option->address = substr($option->address, 0, -2);
-            }
-        };
-    }
-
-    /* Create a new course and put it either in a new course category
-       or in an already existing one. */
-    if ($option->courseid == -1) {
-        $categoryid = 1; // By default, we use the first category.
-        if (!empty(get_config('booking', 'newcoursecategorycfield'))) {
-            // FEATURE add more settingfields add customfield_ to settingsvalue from customfields allwo only Textfields or Selects.
-            $cfforcategory = 'customfield_' . get_config('booking', 'newcoursecategorycfield');
-            $category = new stdClass();
-            $category->name = $_POST[$cfforcategory];
-
-            if (!empty($category->name)) {
-                $categories = core_course_external::get_categories([
-                        ['key' => 'name', 'value' => $category->name],
-                ]);
-
-                if (empty($categories)) {
-                    $category->idnumber = $category->name;
-                    $categories = [
-                            ['name' => $category->name, 'idnumber' => $category->idnumber, 'parent' => 0],
-                    ];
-                    $createdcats = core_course_external::create_categories($categories);
-                    $categoryid = $createdcats[0]['id'];
-                } else {
-                    $categoryid = $categories[0]['id'];
-                }
-            }
-        }
-
-        // Create course.
-        $fullnamewithprefix = '';
-        if (!empty($option->titleprefix)) {
-            $fullnamewithprefix .= $option->titleprefix . ' - ';
-        }
-        $fullnamewithprefix .= $option->text;
-
-        // Courses need to have unique shortnames.
-        $i = 1;
-        $shortname = $fullnamewithprefix;
-        while ($DB->get_record('course', ['shortname' => $shortname])) {
-            $shortname = $fullnamewithprefix . '_' . $i;
-            $i++;
-        };
-        $newcourse['fullname'] = $fullnamewithprefix;
-        $newcourse['shortname'] = $shortname;
-        $newcourse['categoryid'] = $categoryid;
-
-        $courses = [$newcourse];
-        $createdcourses = core_course_external::create_courses($courses);
-        $option->courseid = $createdcourses[0]['id'];
-        $optionvalues->courseid = $option->courseid;
-    }
-
-    // Existing booking option record.
-    if (!empty($optionvalues->optionid) && $optionvalues->optionid != -1) {
-
-        $option->id = $optionvalues->optionid;
-
-        // We do nothing if the booking option has no name.
-        if (isset($optionvalues->text) && $optionvalues->text != '') {
-
-            if (isset($optionvalues->shorturl)) {
-                $option->shorturl = $optionvalues->shorturl;
-            } else {
-                $option->shorturl = '';
-            }
-
-            $option->credits = $optionvalues->credits ?? 0;
-            $option->sortorder = $optionvalues->sortorder ?? 0;
-
-            $option->calendarid = $DB->get_field('booking_options', 'calendarid',
-                    ['id' => $option->id]);
-            $coursestarttime = $DB->get_field('booking_options', 'coursestarttime',
-                    ['id' => $option->id]);
-
-            if ($coursestarttime != $optionvalues->coursestarttime) {
-                $option->sent = 0;
-                $option->sent2 = 0;
-                $option->sentteachers = 0;
-            } else {
-                $option->sent = $DB->get_field('booking_options', 'sent',
-                        ['id' => $option->id]);
-                $option->sent2 = $DB->get_field('booking_options', 'sent2',
-                        ['id' => $option->id]);
-                $option->sentteachers = $DB->get_field('booking_options', 'sentteachers',
-                        ['id' => $option->id]);
-            }
-
-            // Save the additional JSON conditions (the ones which have been added to the mform).
-            bo_info::save_json_conditions_from_form($optionvalues);
-            $option->availability = $optionvalues->availability;
-
-            // This is the default behavior but we do not want this when using other update params.
-            if ($updateparam == MOD_BOOKING_UPDATE_OPTIONS_PARAM_DEFAULT ||
-                $updateparam == MOD_BOOKING_UPDATE_OPTIONS_PARAM_IMPORT) {
-                // Elective.
-                // Save combination arrays to DB.
-                if (!empty($booking->iselective)) {
-                    elective::addcombinations($option->id, $optionvalues->mustcombine, 1);
-                    elective::addcombinations($option->id, $optionvalues->mustnotcombine, 0);
-                }
-
-                if (!empty($booking->addtogroup) && $option->courseid > 0) {
-                    $bo = singleton_service::get_instance_of_booking_option($context->instanceid, $option->id);
-                    $bo->option->courseid = $option->courseid;
-                    $option->groupid = $bo->create_group();
-                    $booked = $bo->get_all_users_booked();
-                    if (!empty($booked) && $booking->autoenrol) {
-                        foreach ($booked as $bookinganswer) {
-                            $bo->enrol_user($bookinganswer->userid);
-                        }
-                    }
-                }
-
-                // This is needed to create option dates with the webservice importer.
-                deal_with_multisessions($optionvalues, $booking, $option->id, $context);
-
-                // Check if custom field will be updated or newly created.
-                if (!empty($customfields)) {
-                    foreach ($customfields as $fieldcfgname => $field) {
-                        if (!empty($optionvalues->$fieldcfgname)) {
-                            $customfieldid = $DB->get_field(
-                                    'booking_customfields',
-                                    'id',
-                                    [
-                                        'bookingid' => $booking->id,
-                                        'optionid' => $option->id,
-                                        'cfgname' => $fieldcfgname,
-                                    ]);
-                            if ($customfieldid) {
-                                $customfield = new stdClass();
-                                $customfield->id = $customfieldid;
-
-                                if (is_array($optionvalues->$fieldcfgname)) {
-                                    $customfield->value = implode("\n", $optionvalues->$fieldcfgname);
-                                } else {
-                                    $customfield->value = $optionvalues->$fieldcfgname;
-                                }
-
-                                $DB->update_record('booking_customfields', $customfield);
-                            } else {
-                                $customfield = new stdClass();
-
-                                if (is_array($optionvalues->$fieldcfgname)) {
-                                    $customfield->value = implode("\n", $optionvalues->$fieldcfgname);
-                                } else {
-                                    $customfield->value = $optionvalues->$fieldcfgname;
-                                }
-
-                                $customfield->optionid = $option->id;
-                                $customfield->bookingid = $booking->id;
-                                $customfield->cfgname = $fieldcfgname;
-                                $DB->insert_record('booking_customfields', $customfield);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Save the changes to DB.
-            $DB->update_record("booking_options", $option);
-
-            // This is the default behavior but we do not want this when using other update params.
-            if ($updateparam == MOD_BOOKING_UPDATE_OPTIONS_PARAM_DEFAULT ||
-                $updateparam == MOD_BOOKING_UPDATE_OPTIONS_PARAM_IMPORT) {
-                if (!empty($booking->addtogroup) && $option->courseid > 0) {
-                    $bo = singleton_service::get_instance_of_booking_option($context->instanceid, $option->id);
-                    $bo->option->courseid = $option->courseid;
-                    $option->groupid = $bo->create_group();
-                    $booked = $bo->get_all_users_booked();
-                    if (!empty($booked) && $booking->autoenrol) {
-                        foreach ($booked as $bookinganswer) {
-                            $bo->enrol_user_coursestart($bookinganswer->userid);
-                        }
-                    }
-                }
-
-                // If there have been changes to significant fields, we have to resend an e-mail with the updated ical attachment.
-                $bu = new booking_utils();
-                if ($changes = $bu->booking_option_get_changes($originaloption, $option)) {
-
-                    // Fix a bug where $PAGE->cm->id is not set for webservice importer.
-                    if (!empty($PAGE->cm->id)) {
-                        $cmid = $PAGE->cm->id;
-                    } else {
-                        $cm = context_module::instance($context->instanceid);
-                        if (!empty($cm->id)) {
-                            $cmid = $cm->id;
-                        }
-                    }
-                    // If we have no cmid, it's most possibly a template.
-                    if (!empty($cmid) && $option->bookingid != 0) {
-                        // We only react on changes, if a cmid exists.
-                        $bu->react_on_changes($cmid, $context, $option->id, $changes);
-                    }
-                }
-            }
-        }
-
-        // This is the default behavior but we do not want this when using other update params.
-        if ($updateparam == MOD_BOOKING_UPDATE_OPTIONS_PARAM_DEFAULT || $updateparam == MOD_BOOKING_UPDATE_OPTIONS_PARAM_IMPORT) {
-
-            // Update start and end date of the option depending on the sessions.
-            booking_updatestartenddate($option->id);
-
-            $optiondateshandler = new dates_handler($optionvalues->optionid, $optionvalues->bookingid);
-            if (!empty($optionvalues->newoptiondates) || !empty($optionvalues->stillexistingdates)) {
-                // Save the optiondates.
-                $optiondateshandler->save_from_form($optionvalues);
-            } else {
-                // Delete optiondates.
-                // Quickfix: We cannot do this, if we have multisession keys.
-                if (!isset($optionvalues->ms1starttime)) {
-                    $optiondateshandler->delete_all_option_dates();
-                }
-            }
-
-            // Save teachers using handler.
-            $teachershandler = new teachers_handler($option->id);
-            $teachershandler->save_from_form($optionvalues);
-
-            // Save relation for each newly created optiondate if checkbox is active.
-            $isimport = $updateparam == MOD_BOOKING_UPDATE_OPTIONS_PARAM_IMPORT ? true : false; // For import we need to force this!
-            save_entity_relations_for_optiondates_of_option($optionvalues, $option->id, $isimport);
-        }
-
-        // We need to purge cache after updating an option.
-        booking_option::purge_cache_for_option($option->id);
-
-        // Now check, if there are rules to execute.
-        rules_info::execute_rules_for_option($option->id);
-
-        return $option->id;
-    } else if (!empty($optionvalues->text)) {
-        // New booking option record.
-
-        // If option "Use as global template" has been set.
-        if (isset($optionvalues->addastemplate) && $optionvalues->addastemplate == 1) {
-
-            // 1) count the number of booking options templates.
-            $optiontemplatesdata = $DB->get_records("booking_options", ['bookingid' => 0]);
-            $numberofoptiontemplates = count($optiontemplatesdata);
-
-            // 2) if the user has not activated a valid PRO license, then only allow one booking option.
-            if ($numberofoptiontemplates > 0 && !wb_payment::pro_version_is_activated()) {
-                $dbrecord = $DB->get_record("booking_options", ['text' => $option->text]);
-                if (empty($dbrecord)) {
-                    return 'BOOKING_OPTION_NOT_CREATED';
-                }
-            }
-        }
-
-        // Make sure it's no template by checking if bookingid is something else than 0.
-        if ($option->bookingid != 0) {
-            // A new booking option is added.
-            $optionid = $DB->insert_record("booking_options", $option);
-        } else {
-            // Add as template.
-            // Fixed: For templates, make sure they won't get inserted twice.
-            $dbrecord = $DB->get_record("booking_options",
-                    ['text' => $option->text, 'bookingid' => $option->bookingid]);
-            if (empty($dbrecord)) {
-                $optionid = $DB->insert_record("booking_options", $option);
-            } else {
-                $optionid = $dbrecord->id;
-            }
-        }
-
-        // Elective.
-        // Save combination arrays to DB.
-        if (!empty($booking->iselective)) {
-            elective::addcombinations($optionid, $optionvalues->mustcombine, 1);
-            elective::addcombinations($optionid, $optionvalues->mustnotcombine, 0);
-        }
-
-        $option->credits = $optionvalues->credits ?? 0;
-        $option->sortorder = $optionvalues->sortorder ?? 0;
-
-        // Create group in target course if there is a course specified only.
-        if (!empty($option->courseid) && !empty($booking->addtogroup)) {
-            $option->id = $optionid;
-            $bo = singleton_service::get_instance_of_booking_option($context->instanceid, $optionid);
-            $option->groupid = $bo->create_group($booking, $option);
-            $DB->update_record('booking_options', $option);
-        }
-
-        $option->shorturl = '';
-
-        $event = \mod_booking\event\bookingoption_created::create([
-            'context' => $context,
-            'objectid' => $optionid,
-            'relateduserid' => $USER->id,
-        ]);
-        $event->trigger();
-
-        // Save custom fields if there are any.
-        if (!empty($customfields)) {
-            foreach ($customfields as $fieldcfgname => $field) {
-                if (!empty($optionvalues->$fieldcfgname)) {
-                    $customfield = new stdClass();
-
-                    if (is_array($optionvalues->$fieldcfgname)) {
-                        $customfield->value = implode("\n", $optionvalues->$fieldcfgname);
-                    } else {
-                        $customfield->value = $optionvalues->$fieldcfgname;
-                    }
-
-                    $customfield->optionid = $optionid;
-                    $customfield->bookingid = $booking->id;
-                    $customfield->cfgname = $fieldcfgname;
-                    $DB->insert_record('booking_customfields', $customfield);
-                }
-            }
-        }
-
-        // Fixed: Also create optiondates for new options!
-        if (!empty($optionvalues->newoptiondates) || !empty($optionvalues->stillexistingdates) && !empty($optionid)) {
-            // Save the optiondates.
-            $optiondateshandler = new dates_handler($optionid, $optionvalues->bookingid);
-            $optiondateshandler->save_from_form($optionvalues);
-        }
-
-        $doenrol = true;
-        // If it's a duplicate, we also duplicate referenced values like teachers, entities and customfields!
-        if (!empty($optionvalues->copyoptionid) && $optionvalues->copyoptionid > 0) {
-            $doenrol = false; // For a duplicate, we do not want to enrol the teachers right away...
-            // ...as we most possibly will change the Moodle course in the duplicate.
-            $copyoptionsettings = singleton_service::get_instance_of_booking_option_settings($optionvalues->copyoptionid);
-            $optionvalues->teachersforoption = $copyoptionsettings->teacherids;
-            // If there was an associated entity, also copy it.
-            if (class_exists('local_entities\entitiesrelation_handler')) {
-                $erhandler = new entitiesrelation_handler('mod_booking', 'option');
-                $entityid = $erhandler->get_entityid_by_instanceid($optionvalues->copyoptionid);
-                if ($entityid) {
-                    $erhandler->save_entity_relation($optionid, $entityid);
-                }
-            }
-            // If there are prices defined, let's duplicate them too.
-            if (get_config('booking', 'duplicationrestoreprices')) {
-                /* IMPORTANT: Once we support subbookings, we might have different areas than 'option'
-                    and this means 'itemid' might be something else than an optionid.
-                    So we have to find out, if we still can set the params like this. */
-                $prices = $DB->get_records('booking_prices', ['itemid' => $optionvalues->copyoptionid, 'area' => 'option']);
-                foreach ($prices as $price) {
-                    $price->itemid = $optionid;
-                }
-                $DB->insert_records('booking_prices', $prices);
-            }
-            // Also duplicate associated Moodle custom fields (e.g. "sports").
-            $sql = "SELECT cfd.*
-                    FROM {customfield_data} cfd
-                    LEFT JOIN {customfield_field} cff
-                    ON cff.id = cfd.fieldid
-                    LEFT JOIN {customfield_category} cfc
-                    ON cfc.id = cff.categoryid
-                    WHERE cfc.component = 'mod_booking'
-                    AND cfd.instanceid = :oldoptionid";
-
-            $params = [
-                    'oldoptionid' => $optionvalues->copyoptionid,
-            ];
-
-            $now = time();
-            $oldcustomfields = $DB->get_records_sql($sql, $params);
-            foreach ($oldcustomfields as $cf) {
-                unset($cf->id);
-                $cf->timecreated = $now;
-                $cf->timemodified = $now;
-                $cf->instanceid = $optionid;
-                $DB->insert_record('customfield_data', $cf);
-            }
-
-            // We also need to duplicate subbookings of the booking option.
-            $sql = "SELECT *
-                    FROM {booking_subbooking_options}
-                    WHERE optionid = :oldoptionid";
-            $oldsubbookings = $DB->get_records_sql($sql, $params);
-            foreach ($oldsubbookings as $sb) {
-                unset($sb->id);
-                $sb->usermodified = $USER->id;
-                $sb->timecreated = $now;
-                $sb->timemodified = $now;
-                $sb->optionid = $optionid;
-                $DB->insert_record('booking_subbooking_options', $sb);
-            }
-        }
-
-        // We only save teachers if there are any.
-        if (!empty($optionvalues->teachersforoption)) {
-            // Save teachers using handler.
-            $teachershandler = new teachers_handler($optionid);
-            $teachershandler->save_from_form($optionvalues, $doenrol);
-        }
-
-        // Deal with multiple option dates (multisessions).
-        deal_with_multisessions($optionvalues, $booking, $optionid, $context);
-
-        // Save relation for each newly created optiondate if checkbox is active.
-        $isimport = $updateparam == MOD_BOOKING_UPDATE_OPTIONS_PARAM_IMPORT ? true : false; // For import we need to force this!
-        save_entity_relations_for_optiondates_of_option($optionvalues, $optionid, $isimport);
-
-        // Save the additional JSON conditions (the ones which have been added to the mform).
-        bo_info::save_json_conditions_from_form($optionvalues);
-        $option->availability = $optionvalues->availability ?? null;
-
-        // Trigger an event that booking option has been updated - only if it is NOT a template.
-        if (!isset($optionvalues->addastemplate) || $optionvalues->addastemplate == 0) {
-            $event = \mod_booking\event\bookingoption_updated::create(
-                    [
-                            'context' => $context,
-                            'objectid' => $optionid,
-                            'userid' => $USER->id,
-                            'other' => [
-                                'changes' => $changes ?? '',
-                            ],
-                    ]
-            );
-            $event->trigger();
-
-            cache_helper::purge_by_event('setbackeventlogtable');
-
-        }
-        // Finally, we need to check if any existing booking rules are affected.
-        if ($option->bookingid != 0) {
-            rules_info::execute_rules_for_option($optionid);
-        }
-
-        // At the very last moment, we invalidate caches.
-        booking_option::purge_cache_for_option($optionid);
-
-        return $optionid;
-    }
-}
-
-/**
- * Helper function to save entity relations for all associated optiondates.
- * @param stdClass &$optionvalues option values from form
- * @param int $optionid
- * @param bool $isimport for CSV or webservice import this needs to be true
- * */
-function save_entity_relations_for_optiondates_of_option(stdClass &$optionvalues, int $optionid, bool $isimport = false) {
-    global $DB;
-    if (class_exists('local_entities\entitiesrelation_handler')
-            && (!empty($optionvalues->er_saverelationsforoptiondates) || $isimport)) {
-
-        $erhandler = new entitiesrelation_handler('mod_booking', 'optiondate');
-
-        $entities = [];
-        if ($isimport) {
-            // If we import we still need to fetch the entity from the location field value.
-            // It can be either the entity name or the entity id.
-            if (!empty($optionvalues->location)) {
-                if (is_numeric($optionvalues->location)) {
-                    // It's the entity id.
-                    $entities = $erhandler->get_entities_by_id($optionvalues->location);
-                } else {
-                    // It's the entity name (NOT shortname).
-                    $entities = $erhandler->get_entities_by_name($optionvalues->location);
-                }
-                // If we have exactly one entity, we create the entities entry.
-                if (count($entities) === 1) {
-                    $entity = reset($entities);
-                    $optionvalues->local_entities_entityid = $entity->id;
-                }
-            }
-        }
-
-        $optiondateids = $DB->get_fieldset_sql(
-            "SELECT id FROM {booking_optiondates} WHERE optionid = :optionid",
-            ['optionid' => $optionid]
-        );
-        foreach ($optiondateids as $optiondateid) {
-            if (!empty($optionvalues->local_entities_entityid)) {
-                $erhandler->save_entity_relation($optiondateid, $optionvalues->local_entities_entityid);
-            } else {
-                // If entity was deleted from the option, we delete it form optiondates too.
-                $erhandler->delete_relation($optiondateid);
-            }
-        }
-    }
-}
-
-/**
- * Helper function to deal with the creation of multisessions (optiondates).
- */
-function deal_with_multisessions(&$optionvalues, $booking, $optionid, $context) {
-
-    global $DB;
-
-    // Deal with new optiondates (Multisessions).
-    // TODO: We should have an optiondates class to deal with all of this.
-    // As of now, we do it the hacky way.
-    for ($i = 1; $i < 100; ++$i) {
-
-        $starttimekey = 'ms' . $i . 'starttime';
-        $endtimekey = 'ms' . $i . 'endtime';
-        $daystonotify = 'ms' . $i . 'nt';
-
-        if (!empty($optionvalues->$starttimekey) && !empty($optionvalues->$endtimekey)) {
-            $optiondate = new stdClass();
-            $optiondate->bookingid = $booking->id;
-            $optiondate->optionid = $optionid;
-            $optiondate->coursestarttime = $optionvalues->$starttimekey;
-            $optiondate->courseendtime = $optionvalues->$endtimekey;
-            if (!empty($optionvalues->$daystonotify)) {
-                $optiondate->daystonotify = $optionvalues->$daystonotify;
-            }
-            $dateshandler = new dates_handler($optionid, $booking->id);
-            $optiondateid = $dateshandler->create_option_date($optiondate);
-
-            for ($j = 1; $j < 4; ++$j) {
-                $cfname = 'ms' . $i . 'cf' . $j . 'name';
-                $cfvalue = 'ms' . $i . 'cf'. $j . 'value';
-
-                if (!empty($optionvalues->$cfname)
-                    && !empty($optionvalues->$cfvalue)) {
-
-                    $customfield = new stdClass();
-                    $customfield->bookingid = $booking->id;
-                    $customfield->optionid = $optionid;
-                    $customfield->optiondateid = $optiondateid;
-                    $customfield->cfgname = $optionvalues->$cfname;
-                    $customfield->value = $optionvalues->$cfvalue;
-                    $DB->insert_record("booking_customfields", $customfield);
-                }
-            }
-        }
-    }
-}
-
-/**
  * Extend booking user navigation
+ *
+ * @param core_user\output\myprofile\tree $tree
+ * @param stdClass $user
+ * @param bool $iscurrentuser
+ * @param stdClass $course
+ *
+ * @return void
+ *
  */
 function booking_myprofile_navigation(core_user\output\myprofile\tree $tree, $user, $iscurrentuser, $course) {
     if ($iscurrentuser) {
@@ -1657,11 +923,20 @@ function booking_extend_settings_navigation(settings_navigation $settings, navig
         return;
     }
 
+    // Set the returnurl to navigate back to after form is saved.
+    $viewphpurl = new moodle_url('/mod/booking/view.php', ['id' => $cm->id]);
+    $returnurl = $viewphpurl->out();
+
     if (has_capability('mod/booking:updatebooking', $context)) {
         $navref->add(
             get_string('createnewbookingoption', 'booking'),
             // For a new booking option, optionid needs to be empty.
-            new moodle_url('/mod/booking/editoptions.php', ['id' => $cm->id, 'optionid' => '']),
+            new moodle_url('/mod/booking/editoptions.php',
+                ['id' => $cm->id,
+                'optionid' => '',
+                'returnto' => 'url',
+                'returnurl' => $returnurl,
+            ]),
                 navigation_node::TYPE_CUSTOM, null, 'nav_createnewbookingoption'
         );
     }
@@ -1760,13 +1035,6 @@ function booking_extend_settings_navigation(settings_navigation $settings, navig
                     new moodle_url('/mod/booking/editoptions.php',
                         ['id' => $cm->id, 'optionid' => -1, 'copyoptionid' => $optionid]),
                         navigation_node::TYPE_CUSTOM, null, 'nav_duplicatebooking');
-
-            if (has_capability('mod/booking:manageoptiondates', $context)) {
-                $navref->add(get_string('optiondatesmanager', 'booking'),
-                        new moodle_url('/mod/booking/optiondates.php',
-                            ['id' => $cm->id, 'optionid' => $optionid]),
-                            navigation_node::TYPE_CUSTOM, null, 'nav_optiondatesmanager');
-            }
         }
 
         if (has_capability ( 'mod/booking:subscribeusers', $context )) {
@@ -1846,7 +1114,7 @@ function booking_extend_settings_navigation(settings_navigation $settings, navig
 }
 
 /**
- * Check if logged in user is in teachers db.
+ * Check if logged in user is a teacher of the passed option.
  * @param mixed|int $optionoroptionid optional option class or optionid
  * @return true if is assigned as teacher otherwise return false
  */
@@ -2062,7 +1330,6 @@ function booking_activitycompletion($selectedusers, $booking, $cmid, $optionid) 
 /**
  * Return grade for given user or all users.
  *
- * @global object
  * @param stdClass $booking
  * @param int $userid optional user id, 0 means all users
  * @return array array of grades, false if none
@@ -2158,8 +1425,10 @@ function booking_grade_item_update($booking, $grades = null) {
 /**
  * Delete grade item
  *
- * @category grade
- * @return grade_item
+ * @param object $booking
+ *
+ * @return int
+ *
  */
 function booking_grade_item_delete($booking) {
     global $CFG;
@@ -2172,9 +1441,11 @@ function booking_grade_item_delete($booking) {
 /**
  * This function returns if a scale is being used by the booking instance
  *
- * @global object
+ * @param int $bookingid
  * @param int $scaleid negative number
+ *
  * @return bool
+ *
  */
 function booking_scale_used($bookingid, $scaleid) {
     global $DB;
@@ -2191,8 +1462,8 @@ function booking_scale_used($bookingid, $scaleid) {
 /**
  * Checks if scale is being used by any instance of forum This is used to find out if scale used anywhere
  *
- * @global object
- * @param $scaleid int
+ * @param int $scaleid
+ *
  * @return bool True if the scale is used by any booking instance
  */
 function booking_scale_used_anywhere($scaleid) {
@@ -2207,8 +1478,12 @@ function booking_scale_used_anywhere($scaleid) {
 /**
  * Return rating related permissions
  *
- * @param string $options the context id
- * @return array an associative array of the user's rating permissions
+ * @param int $contextid
+ * @param string $component
+ * @param string $ratingarea
+ *
+ * @return array|null an associative array of the user's rating permissions
+ *
  */
 function booking_rating_permissions($contextid, $component, $ratingarea) {
     $context = context::instance_by_id($contextid, MUST_EXIST);
@@ -2516,6 +1791,15 @@ function booking_delete_instance($id) {
     return $result;
 }
 
+/**
+ * Booking get option text.
+ *
+ * @param object $booking
+ * @param int $id
+ *
+ * @return string
+ *
+ */
 function booking_get_option_text($booking, $id) {
     global $DB, $USER;
     // Returns text string which is the answer that matches the id.
@@ -2539,7 +1823,9 @@ function booking_get_option_text($booking, $id) {
  * Implementation of the function for printing the form elements that control whether the course reset
  * functionality affects the booking.
  *
- * @param $mform form passed by reference
+ * @param object $mform form passed by reference
+ *
+ * @return void
  */
 function booking_reset_course_form_definition(&$mform) {
     $mform->addElement('header', 'bookingheader', get_string('modulenameplural', 'booking'));
@@ -2548,14 +1834,22 @@ function booking_reset_course_form_definition(&$mform) {
 
 /**
  * Course reset form defaults.
+ *
+ * @param stdClass $course
+ *
+ * @return array
+ *
  */
 function booking_reset_course_form_defaults($course) {
     return ['reset_booking' => 1];
 }
 
 /**
+ * Booking pretty duration.
  *
  * @param int $seconds
+ *
+ * @return string
  */
 function booking_pretty_duration($seconds) {
     $measures = ['days' => 24 * 60 * 60, 'hours' => 60 * 60, 'minutes' => 60];
@@ -2571,53 +1865,6 @@ function booking_pretty_duration($seconds) {
 }
 
 /**
- * THIS FUNCTION IS NEVER USED. CAN WE DELETE IT?
- *
- * Checks if user on waitinglist gets normal place if a user is deleted
- *
- * @param $optionid id of booking option
- * @param $booking booking object
- * @param $cancelleduserid user id that was deleted form booking option
- * @param $cmid course module id
- * @return mixed false if no user gets from waitinglist to booked list or userid of user now on booked list
- */
-// phpcs:ignore Squiz.PHP.CommentedOutCode.Found
-/*function booking_check_statuschange($optionid, $booking, $cancelleduserid, $cmid) {
-    global $DB;
-    if (booking_get_user_status($cancelleduserid, $optionid, $booking->id, $cmid) !== get_string('booked', 'booking')) {
-        return false;
-    }
-    // Backward compatibility hack TODO: remove.
-    if (!isset($booking->option[$optionid])) {
-        $option = $DB->get_record('booking_options',
-                array('bookingid' => $booking->id, 'id' => $optionid));
-    } else {
-        $option = $booking->option[$optionid];
-    }
-    if ($option->maxanswers == 0) {
-        return false; // No limit on bookings => no waiting list to manage.
-    }
-    $allresponses = $DB->get_records('booking_answers', array('optionid' => $optionid), 'timemodified', 'userid');
-    $context = context_module::instance($cmid);
-    $firstuseronwaitinglist = $option->maxanswers + 1;
-    $i = 1;
-    $sortedresponses = [];
-    foreach ($allresponses as $answer) {
-        if (has_capability('mod/booking:choose', $context, $answer->userid)) {
-            $sortedresponses[$i++] = $answer->userid;
-        }
-    }
-    if (count($sortedresponses) <= $option->maxanswers) {
-        return false;
-    } else if (isset($sortedresponses[$firstuseronwaitinglist])) {
-        return $sortedresponses[$firstuseronwaitinglist];
-    } else {
-        return false;
-    }
-}
-*/
-
-/**
  * Returns all other caps used in module
  */
 function booking_get_extra_capabilities() {
@@ -2625,88 +1872,14 @@ function booking_get_extra_capabilities() {
 }
 
 /**
- * Adds user as teacher (booking manager) to a booking option
+ * Booking show subcategories.
  *
- * @param int $userid
- * @param int $optionid
- * @param int $cmid
- * @param mixed $groupid the group object or group id
- * @param bool $doenrol true if we want to enrol the teacher into the relevant course
- * @return bool true if teacher was subscribed
- */
-function subscribe_teacher_to_booking_option(int $userid, int $optionid, int $cmid, $groupid = null,
-    bool $doenrol = true) {
-
-    global $DB, $USER;
-
-    $option = singleton_service::get_instance_of_booking_option($cmid, $optionid);
-    // Get settings of the booking instance (do not confuse with option settings).
-    $bookingsettings = singleton_service::get_instance_of_booking_settings_by_cmid($cmid);
-
-    // Event if teacher already exists in DB, we still might want to enrol it into a new course.
-    if ($doenrol) {
-        // We enrol teacher with the type defined in settings.
-        $option->enrol_user($userid, true, $bookingsettings->teacherroleid, true);
-
-        /* NOTE: In the future, we might need a teacher_enrolled event here (or inside enrol_user)
-        which indicates that a teacher has been enrolled into a Moodle course. */
-    }
-
-    if ($DB->record_exists("booking_teachers", ["userid" => $userid, "optionid" => $optionid])) {
-        return true;
-    }
-
-    $newteacherrecord = new stdClass();
-    $newteacherrecord->userid = $userid;
-    $newteacherrecord->optionid = $optionid;
-    $newteacherrecord->bookingid = $bookingsettings->id;
-
-    $inserted = $DB->insert_record("booking_teachers", $newteacherrecord);
-
-    // When inserting a new teacher, we also need to insert the teacher for each optiondate.
-    teachers_handler::subscribe_teacher_to_all_optiondates($optionid, $userid);
-
-    if (!empty($groupid)) {
-        groups_add_member($groupid, $userid);
-    }
-
-    if ($inserted) {
-        $event = \mod_booking\event\teacher_added::create([
-            'userid' => $USER->id,
-            'relateduserid' => $userid,
-            'objectid' => $optionid,
-            'context' => context_module::instance($cmid),
-        ]);
-        $event->trigger();
-    }
-
-    return $inserted;
-}
-
-/**
- * Removes teacher from the subscriber list.
+ * @param int $catid
+ * @param int $courseid
  *
- * @param int $userid
- * @param int $optionid
- * @param int $cmid
- * @return bool true if successful
+ * @return void
+ *
  */
-function unsubscribe_teacher_from_booking_option(int $userid, int $optionid, int $cmid) {
-    global $DB, $USER;
-
-    $event = \mod_booking\event\teacher_removed::create(
-            ['userid' => $USER->id, 'relateduserid' => $userid, 'objectid' => $optionid,
-                'context' => context_module::instance($cmid),
-            ]);
-    $event->trigger();
-
-    // Also delete the teacher from every optiondate.
-    teachers_handler::remove_teacher_from_all_optiondates($optionid, $userid);
-
-    return ($DB->delete_records('booking_teachers',
-            ['userid' => $userid, 'optionid' => $optionid]));
-}
-
 function booking_show_subcategories($catid, $courseid) {
     global $DB;
     $categories = $DB->get_records('booking_category', ['cid' => $catid]);
@@ -2723,75 +1896,6 @@ function booking_show_subcategories($catid, $courseid) {
         echo '</ul>';
     }
 }
-
-/**
- * Returns list of user objects that are subscribed to this booking
- *
- * @global object
- * @global object
- * @param object $course the course
- * @param booking $booking the booking
- * @param int $groupid group id, or 0 for all.
- * @param object $context the booking context, to save re-fetching it where possible.
- * @param string $fields requested user fields (with "u." table prefix)
- * @return array list of users.
- */
-function booking_subscribed_teachers($course, $optionid, $id, $groupid = 0, $context = null,
-        $fields = null) {
-    global $CFG, $DB;
-
-    if (empty($context)) {
-        $cm = get_coursemodule_from_id('booking', $id);
-        $context = context_module::instance($cm->id);
-    }
-
-    if ($CFG->version >= 2021051700) {
-        // This only works in Moodle 3.11 and later.
-        $allnames = \core_user\fields::for_identity($context)->with_userpic()->get_sql('u')->selects;
-        $allnames = trim($allnames, ', ');
-    } else {
-        // This is deprecated in Moodle 3.11 and later.
-        $extrauserfields = get_extra_user_fields($context);
-        $allnames = user_picture::fields('u', $extrauserfields);
-    }
-
-    if (empty($fields)) {
-        $fields = "u.id,
-                u.username,
-                $allnames,
-                u.maildisplay,
-                u.mailformat,
-                u.maildigest,
-                u.imagealt,
-                u.email,
-                u.emailstop,
-                u.city,
-                u.country,
-                u.lastaccess,
-                u.lastlogin,
-                u.picture,
-                u.timezone,
-                u.theme,
-                u.lang,
-                u.trackforums,
-                u.mnethostid";
-    }
-
-    // Only active enrolled users or everybody on the frontpage.
-    $params['optionid'] = $optionid;
-    $results = $DB->get_records_sql(
-            "SELECT $fields
-                    FROM {user} u
-                    JOIN {booking_teachers} s ON s.userid = u.id
-                    WHERE s.optionid = :optionid
-                    ORDER BY u.email ASC", $params);
-
-    // Guest user should never be subscribed to a forum.
-    unset($results[$CFG->siteguest]);
-
-    return $results;
-}
-
 
 /**
  * This will create the options list on the coursepage.
@@ -2827,7 +1931,9 @@ function mod_booking_cm_info_view(cm_info $cm) {
 
 /**
  * Helper function to check if a string is valid JSON.
- * @param $string the string to check
+ *
+ * @param string $string the string to check
+ *
  * @return bool true if valid json
  */
 function is_json($string) {

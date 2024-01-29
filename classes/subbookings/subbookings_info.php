@@ -53,7 +53,8 @@ class subbookings_info {
 
         if (get_config('booking', 'showsubbookings') && wb_payment::pro_version_is_activated()) {
             // Add header to Element.
-            $mform->addElement('header', 'bookingsubbookingsheader', get_string('bookingsubbookingsheader', 'mod_booking'));
+            $mform->addElement('header', 'bookingsubbookingsheader',
+            '<i class="fa fa-fw fa-sitemap" aria-hidden="true"></i>&nbsp;' . get_string('bookingsubbookingsheader', 'mod_booking'));
 
             if (!empty($formdata['optionid'])) {
                 // Add a list of existing subbookings, including an edit and a delete button.
@@ -151,7 +152,7 @@ class subbookings_info {
 
     /**
      * Save all booking subbookings.
-     * @param stdClass &$data reference to the form data
+     * @param stdClass $data reference to the form data
      * @return void
      */
     public static function save_subbooking(stdClass &$data) {
@@ -361,8 +362,8 @@ class subbookings_info {
      *
      * @param string $area
      * @param int $itemid
-     * @param int $userid
      * @param int $status
+     * @param int $userid
      * @return bool
      */
     public static function save_response(string $area, int $itemid, int $status, $userid = 0):bool {

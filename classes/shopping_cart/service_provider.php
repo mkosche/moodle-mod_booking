@@ -361,8 +361,15 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
 
             $bookingid = $optionsettings->bookingid;
 
+            // Check if cancelling was disabled for the booking option or for the whole booking instance.
             if (booking_option::get_value_of_json_by_key($itemid, 'disablecancel') ||
                 booking::get_value_of_json_by_key($bookingid, 'disablecancel')) {
+                $allowedtocancel = false;
+            }
+            // Check if the option has its own canceluntil date and if it has already passed.
+            $now = time();
+            $canceluntil = booking_option::get_value_of_json_by_key($itemid, 'canceluntil');
+            if (!empty($canceluntil) && $now > $canceluntil) {
                 $allowedtocancel = false;
             }
         }
@@ -402,6 +409,23 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
         if ($area == "option") {
 
             $settings = singleton_service::get_instance_of_booking_option_settings($itemid);
+
+            $ba = singleton_service::get_instance_of_booking_answers($settings);
+
+            // If the user is in principle allowed to overbook...
+            // ... AND the overbook setting is set in the instance, overbooking is possible.
+
+            if ($ba->is_fully_booked()) {
+                if (empty(get_config('booking', 'allowoverbooking'))
+                || !has_capability('mod/booking:canoverbook', context_system::instance())) {
+                    return [
+                        'allow' => false,
+                        'info' => 'fullybooked',
+                        'itemname' => $settings->get_title_with_prefix() ?? '',
+                    ];
+                }
+            }
+
             if (!booking_option::has_price_set($itemid, $userid)) {
                 return [
                     'allow' => true,

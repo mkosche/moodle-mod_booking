@@ -84,10 +84,17 @@ class cancelmyself implements bo_condition {
         // This is the return value. Not available to begin with.
         $isavailable = false;
 
-        // If cancelling was disabled in option or for the whole instance...
+        // If cancelling was disabled in the booking option or for the whole instance...
         // ...then we do not show the cancel button.
         if (booking_option::get_value_of_json_by_key($optionid, 'disablecancel')
             || booking::get_value_of_json_by_key($settings->bookingid, 'disablecancel')) {
+            return true;
+        }
+
+        // Check if the option has its own canceluntil date and if it has already passed.
+        $now = time();
+        $canceluntil = booking_option::get_value_of_json_by_key($optionid, 'canceluntil');
+        if (!empty($canceluntil) && $now > $canceluntil) {
             return true;
         }
 
@@ -136,7 +143,7 @@ class cancelmyself implements bo_condition {
      * ... as they are not necessary, but return true when the booking policy is not yet answered.
      * Hard block is only checked if is_available already returns false.
      *
-     * @param booking_option_settings $booking_option_settings
+     * @param booking_option_settings $settings
      * @param int $userid
      * @return bool
      */
@@ -154,9 +161,9 @@ class cancelmyself implements bo_condition {
      * (when displaying all information about the activity) and 'student' cases
      * (when displaying only conditions they don't meet).
      *
-     * @param bool $full Set true if this is the 'full information' view
      * @param booking_option_settings $settings Item we're checking
      * @param int $userid User ID to check availability for
+     * @param bool $full Set true if this is the 'full information' view
      * @param bool $not Set true if we are inverting the condition
      * @return array availability and Information string (for admin) about all restrictions on
      *   this item
@@ -206,6 +213,7 @@ class cancelmyself implements bo_condition {
      * @param int $userid
      * @param bool $full
      * @param bool $not
+     * @param bool $fullwidth
      * @return array
      */
     public function render_button(booking_option_settings $settings,
@@ -215,7 +223,7 @@ class cancelmyself implements bo_condition {
         if ($userid === null) {
             $userid = $USER->id;
         }
-        $label = $this->get_description_string(false);
+        $label = $this->get_description_string();
 
         return bo_info::render_button($settings, $userid, $label,
             'btn btn-light btn-sm',
@@ -225,11 +233,9 @@ class cancelmyself implements bo_condition {
     /**
      * Helper function to return localized description strings.
      *
-     * @param bool $isavailable
-     * @param bool $full
      * @return string
      */
-    private function get_description_string($isavailable) {
+    private function get_description_string() {
         return get_string('cancelsign', 'mod_booking') . "&nbsp;" .
             get_string('cancelmyself', 'mod_booking');
     }

@@ -246,7 +246,6 @@ class dates_handler {
      * Transform each optiondate and save.
      *
      * @param stdClass $fromform form data
-     * @param array $optiondates array of optiondates as strings (e.g. "11646647200-1646650800")
      */
     public function save_from_form(stdClass $fromform) {
         global $DB;
@@ -297,7 +296,7 @@ class dates_handler {
      * Get date array for a specific weekday and time between two dates.
      *
      * @param int $semesterid
-     * @param string $reoccuringdatestring
+     * @param string $reoccurringdatestring
      * @return array
      */
     public static function get_optiondate_series(int $semesterid, string $reoccurringdatestring): array {
@@ -508,7 +507,7 @@ class dates_handler {
     /**
      * Check if the entered reoccuring date string is in a valid format.
      *
-     * @param string $reoccuringdatestring e.g. Monday, 10:00-11:00 or Sun, 12:00-13:00
+     * @param string $reoccurringdatestring e.g. Monday, 10:00-11:00 or Sun, 12:00-13:00
      *
      * @return bool
      */
@@ -567,51 +566,37 @@ class dates_handler {
         $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
         $bookingid = $booking->id;
 
-        $DB->delete_records('booking_optiondates', ['bookingid' => $bookingid]);
-        // If optiondates are deleted we also have to delete the associated entries in booking_optiondates_teachers.
-        teachers_handler::delete_booking_optiondates_teachers_by_bookingid($bookingid);
+        // Lastly, we also need to change the semester for the booking instance itself!
+        $bookinginstancerecord = $DB->get_record('booking', ['id' => $bookingid]);
+        $bookinginstancerecord->semesterid = $semesterid;
+        $DB->update_record('booking', $bookinginstancerecord);
+
+        // When updating an instance, we need to invalidate the cache for booking instances.
+        cache_helper::invalidate_by_event('setbackbookinginstances', [$cmid]);
+        cache_helper::purge_by_event('setbackoptionsettings');
 
         // Now we run through all the bookingoptions.
         $options = $DB->get_records('booking_options', ["bookingid" => $bookingid]);
 
-        foreach ($options as $optionvalues) {
+        foreach ($options as $option) {
 
-            // Set the id of the option correctly, so that update will work.
-            $optionvalues->optionid = $optionvalues->id;
+            try {
+                $bo = singleton_service::get_instance_of_booking_option($cmid, $option->id);
 
-            // Save the semesterid within every option.
-            $optionvalues->semesterid = $semesterid;
+                if (!empty($bo->settings->dayofweektime)) {
+                    $bo->recreate_date_series($semesterid);
 
-            if (empty($optionvalues->dayofweektime)) {
-                continue;
-            }
-
-            $msdates = self::get_optiondate_series($semesterid, $optionvalues->dayofweektime);
-            $counter = 1;
-            if (isset($msdates['dates'])) {
-                foreach ($msdates['dates'] as $msdate) {
-                    $startkey = 'ms' . $counter . 'starttime';
-                    $endkey = 'ms' . $counter . 'endtime';
-                    $optionvalues->$startkey = $msdate->starttimestamp;
-                    $optionvalues->$endkey = $msdate->endtimestamp;
-                    $counter++;
+                    mtrace('Recreated dates for optionid ' . $option->id);
                 }
+            } catch (Exception $e) {
+                mtrace('Failed to recreated dates for optionid ' . $option->id, json_encode($e));
             }
-            $context = context_module::instance($cmid);
-            booking_update_options($optionvalues, $context);
         }
 
-        // Lastly, we also need to change the semester for the booking instance itself!
-        if ($bookinginstancerecord = $DB->get_record('booking', ['id' => $bookingid])) {
-            $bookinginstancerecord->semesterid = $semesterid;
-            $DB->update_record('booking', $bookinginstancerecord);
-        }
-
-        // When updating an instance, we need to invalidate the cache for booking instances.
-        cache_helper::invalidate_by_event('setbackbookinginstances', [$cmid]);
         // Also purge caches for options table and booking_option_settings.
         cache_helper::purge_by_event('setbackoptionstable');
         cache_helper::purge_by_event('setbackoptionsettings');
+
     }
 
     /**
@@ -868,7 +853,7 @@ class dates_handler {
             }
 
         } else {
-            // Without weekays.
+            // Without weekdays.
             $date->startdate = userdate($starttime, $strftimedate); // 3. February 2023.
             $date->startdatetime = userdate($starttime, $strftimedatetime); // 3. February 2023, 11:45.
             $date->datestring = $date->startdatetime;

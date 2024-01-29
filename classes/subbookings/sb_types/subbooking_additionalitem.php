@@ -125,7 +125,7 @@ class subbooking_additionalitem implements booking_subbooking {
 
         // Add price.
         $price = new price('subbooking', $sboid);
-        $price->add_price_to_mform($mform);
+        $price->add_price_to_mform($mform, true); // Second param true means no price formula here!
 
     }
 
@@ -140,8 +140,10 @@ class subbooking_additionalitem implements booking_subbooking {
 
     /**
      * Save the JSON for timeslot subbooking defined in form.
+     *
      * The role has to determine the handler for condtion and action and get the right json object.
-     * @param stdClass &$data form data reference
+     *
+     * @param stdClass $data form data reference
      */
     public function save_subbooking(stdClass &$data) {
         global $DB, $USER;
@@ -214,7 +216,8 @@ class subbooking_additionalitem implements booking_subbooking {
 
     /**
      * Sets the subbooking defaults when loading the form.
-     * @param stdClass &$data reference to the default values
+     *
+     * @param stdClass $data reference to the default values
      * @param stdClass $record a record from booking_subbookings
      */
     public function set_defaults(stdClass &$data, stdClass $record) {
@@ -245,6 +248,9 @@ class subbooking_additionalitem implements booking_subbooking {
             'mod_booking',
             'subbookings',
             $record->id);
+
+        $price = new price('subbooking', $record->id);
+        $price->set_data($data);
     }
 
     /**

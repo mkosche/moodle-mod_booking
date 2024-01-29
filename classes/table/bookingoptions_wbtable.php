@@ -14,12 +14,21 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Search results for managers are shown in a table (student search results use the template searchresults_student).
+ *
+ * @package mod_booking
+ * @copyright 2023 Wunderbyte GmbH
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace mod_booking\table;
 
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
+use cache;
 use coding_exception;
 use context_system;
 use context_module;
@@ -41,7 +50,11 @@ use mod_booking\singleton_service;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Search results for managers are shown in a table (student search results use the template searchresults_student).
+ * Class to handle search results for managers are shown in a table.
+ *
+ * @package mod_booking
+ * @copyright 2023 Wunderbyte GmbH
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class bookingoptions_wbtable extends wunderbyte_table {
 
@@ -108,6 +121,14 @@ class bookingoptions_wbtable extends wunderbyte_table {
         }
     }
 
+    /**
+     * Column for image.
+     *
+     * @param object $values
+     *
+     * @return void
+     *
+     */
     public function col_image($values) {
 
         $settings = singleton_service::get_instance_of_booking_option_settings($values->id, $values);
@@ -322,6 +343,13 @@ class bookingoptions_wbtable extends wunderbyte_table {
         $optionid = $values->id;
         $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
         $cmid = $settings->cmid;
+        $bookingsettings = singleton_service::get_instance_of_booking_settings_by_cmid($cmid);
+
+        if (empty($bookingsettings->ratings)) {
+            return '';
+        }
+
+        // Todo: Ratings need to be cached for acceptable performance.
         $context = context_module::instance($cmid);
 
         $ratingshtml = '';
@@ -430,18 +458,27 @@ class bookingoptions_wbtable extends wunderbyte_table {
 
         $settings = singleton_service::get_instance_of_booking_option_settings($values->id, $values);
 
-        if ($this->is_downloading()) {
-            return $settings->location;
-        }
-
         if (isset($settings->entity) && (count($settings->entity) > 0)) {
 
             $url = new moodle_url('/local/entities/view.php', ['id' => $settings->entity['id']]);
             // Full name of the entity (NOT the shortname).
-            $nametobeshown = $settings->entity['name'];
+
+            if (!empty($settings->entity['parentname'])) {
+                $nametobeshown = $settings->entity['parentname'] . " (" . $settings->entity['name'] . ")";
+            } else {
+                $nametobeshown = $settings->entity['name'];
+            }
+
+            if ($this->is_downloading()) {
+                // No hyperlink when downloading.
+                return $nametobeshown;
+            }
+
+            // Add link to entity.
             return html_writer::tag('a', $nametobeshown, ['href' => $url->out(false)]);
         }
 
+        // If no entity is set, we show the value stored in location.
         return $settings->location;
     }
 
@@ -542,9 +579,17 @@ class bookingoptions_wbtable extends wunderbyte_table {
             $ret = implode(' | ', $datestrings);
         } else {
             // Use the renderer to output this column.
-            $data = new \mod_booking\output\col_coursestarttime($optionid, $booking);
-            $output = singleton_service::get_renderer('mod_booking');
-            $ret = $output->render_col_coursestarttime($data);
+            $lang = current_language();
+
+            $cachekey = "sessiondates$optionid$lang";
+            $cache = cache::make($this->cachecomponent, $this->rawcachename);
+
+            if (!$ret = $cache->get($cachekey)) {
+                $data = new \mod_booking\output\col_coursestarttime($optionid, $booking);
+                $output = singleton_service::get_renderer('mod_booking');
+                $ret = $output->render_col_coursestarttime($data);
+                $cache->set($cachekey, $ret);
+            }
         }
         return $ret;
     }
@@ -645,19 +690,6 @@ class bookingoptions_wbtable extends wunderbyte_table {
                         ]),
                     $OUTPUT->pix_icon('t/editstring', get_string('editbookingoption', 'mod_booking')) .
                     get_string('editbookingoption', 'mod_booking')) . '</div>';
-
-            if (has_capability('mod/booking:manageoptiondates', $context)) {
-                // Multiple dates session.
-                $ddoptions[] = '<div class="dropdown-item">' .
-                    html_writer::link(new moodle_url('/mod/booking/optiondates.php',
-                        ['id' => $cmid, 'optionid' => $optionid,
-                        'returnto' => 'url',
-                        'returnurl' => $returnurl,
-                        ]),
-                        $OUTPUT->pix_icon('i/scheduled',
-                            get_string('optiondatesmanager', 'booking')) .
-                        get_string('optiondatesmanager', 'booking')) . '</div>';
-            }
 
             // Book other users.
             if (has_capability('mod/booking:bookforothers', $context) &&
@@ -890,17 +922,42 @@ class bookingoptions_wbtable extends wunderbyte_table {
      * "description" value.
      *
      * @param object $values Contains object with all the values of record.
-     * @return string a string containing the description
+     * @return string $ret the return string
      * @throws coding_exception
      */
     public function col_description($values) {
+
         $description = $values->description;
+
         // If we download, we want to show text only without HTML tags.
         if ($this->is_downloading()) {
-            $ret = strip_tags($description);
-        } else {
-            $ret = html_writer::div($description);
+            $description = strip_tags($description, '<br>');
+            $description = str_replace('<br>', '\r\n', $description);
+            return strip_tags($description);
         }
+
+        $ret = $description;
+
+        if (!empty(get_config('mod_booking', 'collapsedescriptionmaxlength'))) {
+
+            $maxlength = (int)get_config('mod_booking', 'collapsedescriptionmaxlength');
+
+            // Show collapsible for long descriptions.
+            $shortdescription = strip_tags($description, '<br>');
+            if (strlen($shortdescription) > $maxlength) {
+                $shortdescription = substr($shortdescription, 0, $maxlength) . '...';
+                $ret =
+                    '<div>' . $shortdescription .
+                        '<a data-toggle="collapse" href="#collapseDescription' . $values->id . '" role="button"
+                            aria-expanded="false" aria-controls="collapseDescription"> ' .
+                            get_string('showmore', 'mod_booking') . '</a>
+                    </div>
+                    <div class="collapse" id="collapseDescription' . $values->id . '">
+                        <div class="card card-body border-0">' . $description . '</div>
+                    </div>';
+            }
+        }
+
         return $ret;
     }
 

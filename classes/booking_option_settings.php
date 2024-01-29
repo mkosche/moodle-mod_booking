@@ -264,6 +264,12 @@ class booking_option_settings {
     /** @var string $costcenter Cost center which is stored in a booking option custom field. */
     public $costcenter = ''; // Default is an empty string.
 
+    /** @var int $canceluntil each booking option can override the canceluntil date with its own date */
+    public $canceluntil = 0;
+
+    /** @var int $useprice flag that indicates if we use price or not */
+    public $useprice = null;
+
     /**
      * Constructor for the booking option settings class.
      * The constructor can take the dbrecord stdclass which is the initial DB request for this option.
@@ -308,6 +314,7 @@ class booking_option_settings {
      * If we have passed on the cached object, we use this one.
      *
      * @param int $optionid
+     * @param object|null $dbrecord
      * @return stdClass|null
      */
     private function set_values(int $optionid, object $dbrecord = null) {
@@ -416,10 +423,13 @@ class booking_option_settings {
                 $this->priceformulaoff = 0; // Default: Turned on.
             }
 
+            // Some fields are stored in JSON.
             if (!empty($dbrecord->json)) {
-                $this->load_bookingactions($dbrecord);
+                $this->load_data_from_json($dbrecord);
             } else {
                 $this->boactions = [];
+                $this->canceluntil = 0;
+                $this->useprice = null; // Important: Use null as default so it will also work with old DB records.
             }
 
             // If the course module id (cmid) is not yet set, we load it. //TODO: bookingid 0 bei option templates berücksichtigen!!
@@ -586,7 +596,7 @@ class booking_option_settings {
         global $DB;
         // Multi-sessions.
         if (!$this->sessions = $DB->get_records_sql(
-            "SELECT id, id optiondateid, coursestarttime, courseendtime
+            "SELECT id, id optiondateid, coursestarttime, courseendtime, daystonotify
             FROM {booking_optiondates}
             WHERE optionid = ?
             ORDER BY coursestarttime ASC", [$optionid])) {
@@ -594,10 +604,16 @@ class booking_option_settings {
             // If there are no multisessions, but we still have the option's ...
             // ... coursestarttime and courseendtime, then store them as if they were a session.
             if (!empty($this->coursestarttime) && !empty($this->courseendtime)) {
+
+                // Days to notify comes from the booking instance.
+
+                $bookingsettings = singleton_service::get_instance_of_booking_settings_by_bookingid($this->bookingid);
+
                 $singlesession = new stdClass;
                 $singlesession->id = 0;
                 $singlesession->coursestarttime = $this->coursestarttime;
                 $singlesession->courseendtime = $this->courseendtime;
+                $singlesession->daystonotify = $bookingsettings->daystonotify ?? 0;
                 $this->sessions[] = $singlesession;
             } else {
                 // Else we have no sessions.
@@ -660,8 +676,7 @@ class booking_option_settings {
 
     /**
      * Function to render a list of teachers.
-     *
-     * @param int $optionid
+     * @return string
      */
     public function render_list_of_teachers() {
         global $PAGE;
@@ -726,7 +741,7 @@ class booking_option_settings {
 
     /**
      * Function to generate the optiondates-teachers-report URL.
-     * @param int $cmid course module id
+     *
      * @param int $optionid option id
      */
     private function generate_optiondatesteachers_url(int $optionid) {
@@ -915,7 +930,7 @@ class booking_option_settings {
      * @param stdClass $dbrecord
      * @return void
      */
-    private function load_bookingactions(stdClass &$dbrecord) {
+    private function load_data_from_json(stdClass &$dbrecord) {
 
         // We might need to only now read the json object, but we want to do it only once.
         if (empty($dbrecord->jsonobject)) {
@@ -930,12 +945,27 @@ class booking_option_settings {
                 $this->jsonobject->boactions = $this->boactions;
                 $dbrecord->boactions = $this->boactions;
             }
+
+            // Canceluntil date is also stored in JSON.
+            if (!empty($this->jsonobject->canceluntil)) {
+                $this->canceluntil = (int)$this->jsonobject->canceluntil;
+                $this->jsonobject->canceluntil = $this->canceluntil;
+                $dbrecord->canceluntil = $this->canceluntil;
+            }
+
+            // Useprice flag indicates if the booking option uses a price.
+            if (!empty($this->jsonobject->useprice)) {
+                $this->useprice = (int)$this->jsonobject->useprice;
+                $this->jsonobject->useprice = $this->useprice;
+                $dbrecord->useprice = $this->useprice;
+            }
         } else {
             $this->boactions = $dbrecord->boactions ?? null;
+            $this->canceluntil = $dbrecord->canceluntil ?? 0;
+            $this->useprice = $dbrecord->useprice ?? null;
             $this->jsonobject = $dbrecord->jsonobject ?? null;
         }
     }
-
 
     /**
      * Returns the cached settings as stClass.
@@ -971,7 +1001,7 @@ class booking_option_settings {
      * The table is joined via bo.id=cfd.instanceid.
      * To be able to filter for the same param twice, we use this structure for searchparams [[$fieldnmae => $fieldvalue]]
      *
-     * @param array $searchparams
+     * @param array $filterarray
      * @return array
      */
     public static function return_sql_for_customfield(array &$filterarray = []): array {
@@ -1102,6 +1132,14 @@ class booking_option_settings {
         return [$select, $from, $where, $params];
     }
 
+    /**
+     * Returns sql for imagefiles.
+     *
+     * @param array $searchparams
+     *
+     * @return array
+     *
+     */
     public static function return_sql_for_imagefiles($searchparams = []): array {
 
         global $DB;

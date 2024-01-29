@@ -18,7 +18,8 @@
  * Defines message providers (types of messages being sent)
  *
  * @package mod_booking
- * @copyright 2021 Georg Maißer
+ * @copyright 2023 Wunderbyte GmbH <info@wunderbyte.at>
+ * @author Georg Maißer
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -34,7 +35,7 @@ class behat_booking extends behat_base {
      * Create booking option in booking instance
      * @Given /^I create booking option "(?P<optionname_string>(?:[^"]|\\")*)" in "(?P<instancename_string>(?:[^"]|\\")*)"$/
      * @param string $optionname
-     * @param string $playerbname
+     * @param string $instancename
      * @return void
      */
     public function i_create_booking_option($optionname, $instancename) {
@@ -66,9 +67,9 @@ class behat_booking extends behat_base {
     }
 
     /**
-     * Get a booking by name.
+     * Get a booking by booking instance name.
      *
-     * @param string $name booking name.
+     * @param string $name booking instance name.
      * @return stdClass the corresponding DB row.
      */
     protected function get_booking_by_name(string $name): stdClass {

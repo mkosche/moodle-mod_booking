@@ -25,6 +25,7 @@
 
 namespace mod_booking\output;
 
+use mod_booking\singleton_service;
 use renderer_base;
 use renderable;
 use templatable;
@@ -44,6 +45,12 @@ class bookit_button implements renderable, templatable {
 
     /**
      * @param array $data
+     */
+    /**
+     * Constructor.
+     *
+     * @param array $data
+     *
      */
     public function __construct(array $data = []) {
 
@@ -71,6 +78,13 @@ class bookit_button implements renderable, templatable {
 
         if (empty($data['componentname'])) {
             $data['componentname'] = 'mod_booking';
+        }
+
+        $user = singleton_service::get_instance_of_user($data['userid']);
+        $pricecategoryidentifier = singleton_service::get_pricecategory_for_user($user) ?? '';
+
+        if (empty($data['pricecategoryidentifier'])) {
+            $data['pricecategoryidentifier'] = $pricecategoryidentifier;
         }
 
         $this->data = $data;

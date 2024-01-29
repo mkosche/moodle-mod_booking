@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * German translation of the booking module
+ *
+ * @package mod_booking
+ * @copyright 2023 Wunderbyte GmbH <info@wunderbyte.at>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 global $CFG;
 
 // General strings.
@@ -32,6 +40,7 @@ $string['bookings'] = 'Buchungen';
 $string['cancelallusers'] = 'Storniere Buchung für alle Nutzer:innen';
 $string['cancelmyself'] = 'Wieder abmelden';
 $string['cancelsign'] = '<i class="fa fa-ban" aria-hidden="true"></i>';
+$string['canceluntil'] = 'Stornieren nur bis zu bestimmtem Zeitpunkt erlauben';
 $string['close'] = 'Schließen';
 $string['confirmoptioncreation'] = 'Wollen Sie diese Buchungsoption splitten sodass aus jedem Einzeltermin eine eigene
  Buchungsoption erstellt wird?';
@@ -41,6 +50,10 @@ $string['updatebooking'] = 'Update Buchung';
 $string['booking:manageoptiontemplates'] = "Buchungsoptionsvorlagen verwalten";
 $string['booking:cantoggleformmode'] = 'Nutzer:in darf alle Einstellungen verwalten';
 $string['booking:overrideboconditions'] = 'Nutzer:in darf buchen auch wenn Verfügbarkeit false zurückliefert.';
+$string['collapsedescriptionoff'] = 'Beschreibungen nicht einklappen';
+$string['collapsedescriptionmaxlength'] = 'Beschreibungen einklappen (Zeichenanzahl)';
+$string['collapsedescriptionmaxlength_desc'] = 'Geben Sie die maximale Anzahl an Zeichen, die eine Beschreibung haben darf, ein.
+Beschreibungen, die länger sind werden eingeklappt.';
 $string['confirmchangesemester'] = 'JA, ich möchte wirklich alle Termine der Buchungsinstanz löschen und neue erstellen.';
 $string['course'] = 'Moodle-Kurs';
 $string['courses'] = 'Kurse';
@@ -50,12 +63,14 @@ $string['dayofweek'] = 'Wochentag';
 $string['deduction'] = 'Abzug';
 $string['deductionreason'] = 'Grund für den Abzug';
 $string['deductionnotpossible'] = 'Da alle Trainer:innen bei diesem Termin anwesend waren kann kein Abzug eingetragen werden.';
+$string['defaultoptionsort'] = 'Standardsortierung nach Spalte';
 $string['doyouwanttobook'] = 'Wollen Sie <b>{$a}</b> buchen?';
 $string['from'] = 'Ab';
 $string['gotomanageresponses'] = '&lt;&lt; Buchungen verwalten';
 $string['gotomoodlecourse'] = 'Zum Moodle-Kurs';
 $string['limitfactor'] = 'Buchungslimit-Faktor';
 $string['messageprovider:bookingconfirmation'] = "Buchungsbestätigungen";
+$string['name'] = 'Name';
 $string['noselection'] = 'Keine Auswahl';
 $string['optionsfield'] = 'Buchungsoptionsfeld';
 $string['optionsfields'] = 'Buchungsoptionsfelder';
@@ -71,6 +86,7 @@ $string['rowupdated'] = 'Zeile wurde aktualisiert.';
 $string['search'] = 'Suche...';
 $string['semesterid'] = 'SemesterID';
 $string['sendmailtoallbookedusers'] = 'E-Mail an alle gebuchten Nutzer:innen senden';
+$string['showmore'] = 'Zeige mehr';
 $string['sortorder'] = 'Sortierreihenfolge';
 $string['sortorder:asc'] = 'A&rarr;Z';
 $string['sortorder:desc'] = 'Z&rarr;A';
@@ -95,7 +111,7 @@ $string['userprofilefield'] = "Profilfeld";
 $string['usersmatching'] = 'Gefundene Nutzer:innen';
 $string['allmoodleusers'] = 'Alle Nutzer:innen dieser Website';
 $string['enrolledusers'] = 'In den Kurs eingeschriebene Nutzer:innen';
-$string['nopriceisset'] = 'Kein Preis vorhanden';
+$string['nopriceisset'] = 'Kein Preis für Preiskategorie {$a} vorhanden';
 
 // Badges.
 $string['badge:pro'] = '<span class="badge bg-success text-light"><i class="fa fa-cogs" aria-hidden="true"></i> PRO</span>';
@@ -171,7 +187,7 @@ $string['booking:canseeinvisibleoptions'] = 'Unsichtbare Buchungsoptionen sehen.
 $string['booking:changelockedcustomfields'] = 'Kann gesperrte benutzerdefinierte Buchungsoptionsfelder verändern.';
 $string['manageoptiontemplates'] = 'Kann Buchungsoptionsvorlagen erstellen';
 $string['bookingfull'] = 'Ausgebucht';
-$string['bookingname'] = 'Buchungsbezeichnung';
+$string['bookingname'] = 'Buchungsinstanzname';
 $string['bookingopen'] = 'Offen';
 $string['bookingoptionsmenu'] = 'Buchungsoptionen';
 $string['bookingtext'] = 'Buchungsbeschreibung';
@@ -191,6 +207,8 @@ $string['bookingoption_created'] = 'Buchungsoption angelegt';
 $string['bookingoption_updated'] = 'Buchungsoption upgedatet';
 $string['bookingoption_deleted'] = 'Buchungsoption gelöscht';
 $string['bookinginstance_updated'] = 'Buchungsinstanz upgedated';
+$string['records_imported'] = 'Buchungsoptionen importiert via CSV';
+$string['records_imported_description'] = '{$a} Buchungsoptionen importiert via CSV';
 
 $string['eventreport_viewed'] = 'Report angesehen';
 $string['eventuserprofilefields_updated'] = 'Nutzerprofil aktualisiert';
@@ -221,7 +239,8 @@ $string['spaceleft'] = 'Platz verfügbar';
 $string['spacesleft'] = 'Plätze verfügbar';
 $string['subscribersto'] = 'Trainer:innen für \'{$a}\'';
 $string['taken'] = 'gebucht';
-$string['teachers'] = 'Trainer:innen: ';
+$string['teachers'] = 'Trainer:innen';
+$string['teacher_s'] = 'Trainer:in(nen)';
 $string['timerestrict'] = 'Buchungsoption auf diesen Zeitraum beschränken: Diese Option ist veraltet und sollte nicht mehr verwendet werden. Stattdessen verwenden Sie bitte die Optionen unter "Voraussetzungen", um die Buchungen für einen bestimmten Zeitraum zu beschränken.';
 $string['restrictanswerperiodopening'] = 'Buchen erst ab einem bestimmten Zeitpunkt ermöglichen';
 $string['restrictanswerperiodclosing'] = 'Buchen nur bis zu einem bestimmten Zeitpunkt ermöglichen';
@@ -264,6 +283,7 @@ $string['scgfselectgroups'] = 'Gruppe(n) auswählen';
 
 // Bookingform.
 $string['address'] = 'Adresse';
+$string['general'] = 'Allgemein';
 $string['advancedoptions'] = 'Erweiterte Einstellungen';
 $string['btnbooknowname'] = 'Bezeichnung des Buttons "Jetzt buchen"';
 $string['btncacname'] = 'Bezeichnung des Buttons "Aktivitätsabschluss bestätigen"';
@@ -979,7 +999,7 @@ $string['signinonesession'] = 'Termin(e) im Header anzeigen';
 $string['signinaddemptyrows'] = 'Leeren Zeilen hinzufügen';
 $string['signinextrasessioncols'] = 'Extra-Spalten für Termine hinzufügen';
 $string['signinadddatemanually'] = 'Datum händisch eintragen';
-$string['signinhidedate'] = 'Datum ausblenden';
+$string['signinhidedate'] = 'Termine ausblenden';
 $string['includeteachers'] = 'Trainer:innen in Unterschriftenliste anführen';
 $string['choosepdftitle'] = 'Wählen Sie einen Titel für die Unterschriftenliste';
 $string['additionalfields'] = 'Zusätzliche Felder';
@@ -1028,11 +1048,11 @@ $string['removeuseronunenrol'] = 'Nutzer/in von Buchungsoption autom. entfernen 
 $string['editbookingoption'] = 'Buchungsoption bearbeiten';
 $string['createnewbookingoption'] = 'Neue Buchungsoption';
 $string['createnewbookingoptionfromtemplate'] = 'Neue Buchungsoption von Vorlage erstellen';
-$string['choosecourse'] = 'Einen Kurs auswählen';
-$string['choosecourse_help'] = 'Wählen Sie "Neuer Kurs", wenn Sie wollen, dass ein neuer Moodle-Kurs für diese Buchungsoption angelegt werden soll.';
+$string['connectedmoodlecourse'] = 'Verbundener Moodle-Kurs';
+$string['connectedmoodlecourse_help'] = 'Wählen Sie "Neuen Kurs erstellen...", wenn Sie wollen, dass ein neuer Moodle-Kurs für diese Buchungsoption angelegt werden soll.';
 $string['courseendtime'] = 'Kursende';
 $string['coursestarttime'] = 'Kursbeginn';
-$string['newcourse'] = 'Neuer Kurs';
+$string['newcourse'] = 'Neuen Kurs erstellen...';
 $string['donotselectcourse'] = 'Kein Kurs ausgewählt';
 $string['donotselectinstitution'] = 'Keine Institution ausgewählt';
 $string['donotselectlocation'] = 'Kein Ort ausgewählt';
@@ -1076,6 +1096,15 @@ $string['toggleformmode_expert'] = '<i class="fa fa-expand" aria-hidden="true"><
 $string['bookingoptionimage'] = 'Bild hochladen';
 $string['submitandgoback'] = 'Speichern und zurück';
 $string['bookingoptionprice'] = 'Preis';
+
+// We removed this, but keep it for now as we might need these strings again.
+// phpcs:ignore Squiz.PHP.CommentedOutCode.Found
+/*$string['er_saverelationsforoptiondates'] = 'Entity auch für jeden Termin speichern';
+$string['confirm:er_saverelationsforoptiondates'] = '<span class="text-danger">
+<b>Achtung:</b> Diese Buchungsoption hat Termine mit unterschiedlichen Entities.
+Wollen Sie wirklich ALLE Termine mit der ausgewählten Entity überschreiben?</span>';
+$string['error:er_saverelationsforoptiondates'] = 'Bitte bestätigen Sie, dass Sie abweichende Entities überschreiben wollen.';*/
+
 $string['pricecategory'] = 'Preiskategorie';
 $string['pricecurrency'] = 'Währung';
 $string['optionvisibility'] = 'Sichtbarkeit';
@@ -1107,6 +1136,54 @@ $string['nouserfound'] = 'Kein/e User/in gefunden: ';
 $string['import_failed'] = 'Der CSV-Import wurde aufgrund folgendes Fehlers nicht durchgeführt: ';
 $string['import_partial'] = 'Der CSV-Import wurde nur teilweise durchgeführt. Bei folgenden Zeilen traten Fehler auf und sie wurden nicht importiert: ';
 $string['importinfo'] = 'Import info: Folgende Spalten können importiert werden (Erklärung des Spaltennamens in Klammern)';
+$string['coursedoesnotexist'] = 'Die Kursnummer {$a} existiert nicht';
+
+// New importer.
+$string['importcsv'] = 'CSV Importer';
+$string['import_identifier'] = 'Einzigartiger Identifikator einer Buchungsoption';
+$string['import_tileprefix'] = 'Prefix (z.b. Kursnummer)';
+$string['import_title'] = 'Titel einer Buchungsoption';
+$string['import_text'] = 'Titel einer Buchungsoption (Synonym zu text)';
+$string['import_location'] = 'Ort einer Buchungsoption. Wird automatisch bei 100% Übereinstimmung mit dem Klarnamen einer "Entity" (local_entities) verknüpft. Auch die ID Nummer einer Entity kann hier eingegeben werden.';
+$string['import_identifier'] = 'Einzigartiger Identifikator einer Buchungsoption';
+$string['import_maxanswers'] = 'Maximale Anzahl von Buchungen pro Buchungsoption';
+$string['import_maxoverbooking'] = 'Maximale Anzahl an Wartelistenplätzen pro Buchungsoption';
+$string['import_coursenumber'] = 'Moodle ID Nummer eines Moodle Kurses, in den die Buchenden eingeschrieben werden';
+$string['import_courseshortname'] = 'Kurzname eines Moodle Kurses, in den die Buchenden eingeschrieben werden';
+$string['import_addtocalendar'] = 'Zum Moodle Kalender hinzufügen';
+$string['import_dayofweek'] = 'Wochentag einer Buchungsoption, z.B. Montag';
+$string['import_dayofweektime'] = 'Wochentag und Zeit einer Buchungsoption, z.B. Montag, 10:00 - 12:00';
+$string['import_dayofweekstarttime'] = 'Anfangszeit eines Kurses, z.B. 10:00';
+$string['import_dayofweekendtime'] = 'Endzeit eines Kurses, z.B. 12:00';
+$string['import_description'] = 'Beschreibung der Buchungsoption';
+$string['import_default'] = 'Standardpreis einer Buchungsoption. Nur wenn der Standardpreis gesetzt ist, können weitere Preise angegeben werden. Die Spalten müssen dafür den Kurznamen der Buchungskategorien entsprechen.';
+$string['import_teacheremail'] = 'E-Mail Adressen von Nutzerinnen auf der Plattform, die als LehrerInnen in den Buchungsoptionen hinterlegt werden können. Bei mehreren e-mail Adressen Komma als Trennzeichen verwenden (aufpassen auf "Escape" bei Komma getrennten CSV!)';
+$string['import_useremail'] = 'E-Mail Adressen von Nutzerinnen auf der Plattform, die diese Buchungsoption gebucht haben. Bei mehreren e-mail Adressen Komma als Trennzeichen verwenden (aufpassen auf "Escape" bei Komma getrennten CSV!)';
+
+$string['importsuccess'] = 'Import war erfolgreich. Es wurden {$a} Datensatz/Datensätze bearbeitet.';
+$string['importfailed'] = 'Import fehlgeschlagen.';
+$string['dateparseformat'] = 'Format des Datums';
+$string['dateparseformat_help'] = 'Bitte Datum so wie es im CSV definiert wurde verwenden. Hilfe unter <a href="http://php.net/manual/en/function.date.php">Datumsdokumentation</a> für diese Einstellung.';
+$string['defaultdateformat'] = 'j.n.Y H:i:s';
+$string['importcolumnsinfos'] = 'Informationen zu Importfeldern:';
+$string['mandatory'] = 'verpflichtend';
+$string['optional'] = 'optional';
+$string['format'] = 'Format';
+$string['openformat'] = 'offenes Format';
+$string['downloaddemofile'] = 'Demofile herunterladen';
+$string['updatedrecords'] = '{$a} Eintrag/Einträge aktualisiert.';
+$string['addedrecords'] = '{$a} Eintrag/Einträge hinzugefügt.';
+$string['callbackfunctionnotdefined'] = 'Callback Funktion nicht definiert.';
+$string['callbackfunctionnotapplied'] = 'Callback Funktion konnte nicht angewandt werden.';
+$string['ifdefinedusedtomatch'] = 'Wenn angegeben findet der Abgleich über diesen Wert statt.';
+$string['fieldnamesdontmatch'] = 'Die importierten Spaltennamen entsprechen nicht der Vorgabe.';
+$string['checkdelimiteroremptycontent'] = 'Überprüfen Sie ob Daten vorhanden und durch das angegebene Zeichen getrennt sind.';
+$string['wronglabels'] = 'Die importierten Spaltennamen entsprechen nicht der Vorgabe. {$a} kann nicht importiert werden.';
+$string['missinglabel'] = 'Im importierten File fehlt die verpflichtede Spalte {$a}. Daten können nicht importiert werden.';
+$string['nolabels'] = 'Keine Spaltennamen definiert.';
+$string['checkdelimiter'] = 'Überprüfen Sie die Spaltennamen durch das angegebene Zeichen getrennt sind.';
+$string['dataincomplete'] = 'Der Datensatz mit "componentid" {$a->id} ist unvollständig und konnte nicht gänzlich eingefügt werden. Überprüfen Sie das Feld "{$a->field}".';
+$string['modelinformation'] = 'Dieses Feld ist notwendig, um Fragen vollständig zu erfassen. Ist das Feld leer, kann die Frage lediglich einer Skala zugeordnet werden.';
 
 // Confirmation mail.
 $string['days'] = '{$a} Tage';
@@ -1311,8 +1388,8 @@ $string['sendmessage'] = 'Nachricht senden';
 
 // Teachers_handler.php.
 $string['teachersforoption'] = 'Trainer:innen';
-$string['teachersforoption_help'] = '<b>ACHTUNG:</b> Wenn Sie hier Trainer:innen hinzufügen werden diese im Training-Journal <b>zu JEDEM EINZELNEN Termin hinzugefügt</b>.
-Wenn Sie hier Trainer:innen löschen, werden diese im Training-Journal <b>von JEDEM EINZELNEN Termin entfernt</b>.';
+$string['teachersforoption_help'] = '<b>ACHTUNG:</b> Wenn Sie hier Trainer:innen hinzufügen werden diese im Training-Journal <b>zu JEDEM ZUKÜNFTIGEN Termin hinzugefügt</b>.
+Wenn Sie hier Trainer:innen löschen, werden diese im Training-Journal <b>von JEDEM ZUKÜNFTIGEN Termin entfernt</b>.';
 $string['info:teachersforoptiondates'] = 'Wechseln Sie zum <a href="{$a}" target="_self">Trainingsjournal</a>, um die Trainer:innen für spezifische Termine zu protokollieren.';
 
 // Lib.php.
@@ -1382,7 +1459,7 @@ $string['newoptiondate'] = 'Neuen Termin anlegen...';
 $string['dateandtime'] = 'Datum und Uhrzeit';
 $string['sessionnotifications'] = 'E-Mail-Benachrichtigungen für Einzeltermine';
 $string['customfields'] = 'Benutzerdefinierte Felder';
-$string['addcustomfield'] = 'Benutzerdefiniertes Feld hinzufügen';
+$string['addcustomfieldorcomment'] = 'Kommentar oder benutzerdefiniertes Feld hinzufügen';
 $string['customfieldname'] = 'Feldname';
 $string['customfieldname_help'] = 'Sie können einen beliebigen Feldnamen angeben. <br>
                                     Die Spezial-Feldnamen
@@ -1404,9 +1481,14 @@ $string['deletecustomfield'] = 'Feld löschen?';
 $string['deletecustomfield_help'] = 'Achtung: Wenn Sie diese Checkbox aktivieren, wird das zugehörige Feld beim Speichern gelöscht!';
 $string['erroremptycustomfieldname'] = 'Name des Felds darf nicht leer sein.';
 $string['erroremptycustomfieldvalue'] = 'Wert des Felds darf nicht leer sein.';
-$string['daystonotifysession'] = 'Wie viele Tage vor Beginn dieser Session soll an die Teilnehmenden eine Benachrichtigung gesendet werden?';
-$string['daystonotifysession_help'] = "Geben Sie 0 ein, um die E-Mail-Benachrichtigung für diese Session zu deaktivieren.";
+$string['daystonotifysession'] = 'Benachrichtigung n Tage vor Beginn';
+$string['daystonotifysession_help'] = "Wie viele Tage vor Beginn dieser Session soll an die Teilnehmenden eine Benachrichtigung gesendet werden?
+Geben Sie 0 ein, um die E-Mail-Benachrichtigung für diese Session zu deaktivieren.";
 $string['nocfnameselected'] = "Nichts ausgewählt. Tippen Sie einen neuen Namen oder wählen Sie einen aus der Liste.";
+$string['bigbluebuttonmeeting'] = 'BigBlueButton-Meeting';
+$string['zoommeeting'] = 'Zoom-Meeting';
+$string['teamsmeeting'] = 'Teams-Meeting';
+$string['addcomment'] = 'Kommentar hinzufügen...';
 
 // File: settings.php.
 $string['bookingsettings'] = 'Buchung: Einstellungen';
@@ -1562,7 +1644,7 @@ erstellt werden, können Sie diese Einstellung standardmäßig ausschalten und s
 $string['automaticcoursecreation'] = 'Automatische Erstellung von Moodle-Kursen ' . $string['badge:pro'];
 $string['newcoursecategorycfield'] = 'Benutzerdefiniertes Buchungsoptionsfeld für Kurskategorie';
 $string['newcoursecategorycfielddesc'] = 'Wählen Sie ein benutzerdefiniertes Buchungsoptionsfeld, das verwendet werden soll,
- um die Kurskategorie von automatisch erstellten Kursen festzulegen. Kurse können mit dem Eintrag "Neuer Kurs" im Menü "Einen Kurs auswählen"
+ um die Kurskategorie von automatisch erstellten Kursen festzulegen. Kurse können mit dem Eintrag "Neuen Kurs erstellen..." im Menü "Einen Kurs auswählen"
  des Formulars zum Anlegen von Buchungsoptionen automatisch erstellt werden.';
 
 $string['allowoverbooking'] = 'Überbuchen erlauben';
@@ -1910,6 +1992,8 @@ $string['manageresponses'] = 'Buchungen verwalten';
 
 // Bo conditions.
 $string['availabilityconditions'] = 'Verfügbarkeit einschränken';
+$string['apply'] = 'Anwenden';
+$string['delete'] = 'Löschen';
 
 $string['bo_cond_alreadybooked'] = 'alreadybooked: Von diesem User bereits gebucht';
 $string['bo_cond_alreadyreserved'] = 'alreadyreserved: Von diesem User bereits in den Warenkorb gelegt';
@@ -2261,6 +2345,7 @@ $string['booking:bookforothers'] = "Für andere buchen";
 $string['booking:canoverbook'] = "Darf überbuchen";
 $string['booking:canreviewsubstitutions'] = "Kann Vertretungen als kontrolliert markieren";
 $string['booking:conditionforms'] = "Formulare von Buchungsbedingungen abschicken (z.B. Buchungsbedingungen oder Zusatzbuchungen)";
+$string['booking:view'] = 'Darf Buchungsinstanzen sehen';
 $string['booking:viewreports'] = 'Zugang um gewisse Buchungsberichte zu sehen';
 $string['booking:manageoptiondates'] = 'Bearbeite Termine';
 $string['booking:limitededitownoption'] = 'Weniger als addeditownoption, nur sehr beschränktes Editieren eigener Optionen erlaubt.';
@@ -2381,3 +2466,8 @@ $string['actionoperator:set'] = 'Ersetzen';
 $string['actionoperator:subtract'] = 'Minus';
 $string['actionoperator'] = 'Aktion';
 $string['actionoperator:adddate'] = 'Füge Zeitraum hinzu';
+
+// Dates class.
+$string['adddatebutton'] = "Füge Datum hinzu";
+$string['nodatesstring'] = "Aktuell gibt es keine Daten zu dieser Buchungsoption";
+$string['nodatesstring_desc'] = "no dates";

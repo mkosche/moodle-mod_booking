@@ -18,7 +18,8 @@
  * Import booking options via webservice.
  *
  * @package mod_booking
- * @copyright 2021 Georg Maisser <georg.maisser@wunderbyte.at>
+ * @copyright 2023 Wunderbyte GmbH <info@wunderbyte.at>
+ * @author Georg Maisser <georg.maisser@wunderbyte.at>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 namespace mod_booking\utils;
@@ -29,6 +30,7 @@ use stdClass;
 use mod_booking\booking_option;
 use mod_booking\customfield\booking_handler;
 use mod_booking\singleton_service;
+use mod_booking\teachers_handler;
 use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
@@ -37,7 +39,12 @@ global $CFG;
 
 /**
  * Class webservice_import
+ *
  * Import controller for webservice imports
+ *
+ * @package mod_booking
+ * @copyright 2023 Wunderbyte GmbH <info@wunderbyte.at>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class webservice_import {
 
@@ -57,7 +64,7 @@ class webservice_import {
      * This function verifies if the given data should be merged with an existing booking option.
      * If so, we merge.
      * If not, we create a new booking option.
-     * @param $data
+     * @param mixed $data
      * @return int[]
      * @throws \coding_exception
      * @throws \moodle_exception
@@ -83,8 +90,8 @@ class webservice_import {
         $data->bookingid = $bookingid;
         $this->cm = get_coursemodule_from_instance('booking', $bookingid);
 
-        if (!isset($data->bookingcmid)) {
-            $data->bookingcmid = $this->cm->id;
+        if (!isset($data->cmid)) {
+            $data->cmid = $this->cm->id;
         }
 
         // This will set the bookingoption to update (if there is one, else it will be null).
@@ -97,24 +104,20 @@ class webservice_import {
             // Create new booking option.
             $context = \context_module::instance($this->cm->id);
         } else {
+            $data->id = $bookingoption->id;
             $context = $bookingoption->booking->context;
         }
+        $data->importing = 1;
 
-        $bookingoptionid = booking_update_options($data, $context);
-
-        // Now that we have the option id, also from new users, we can add the teacher.
-
-        $this->add_teacher_to_bookingoption($bookingoptionid, $data);
-
-        $this->add_customfields_to_bookingoption($bookingoptionid, $data);
+        $bookingoptionid = booking_option::update($data, $context);
 
         return ['status' => 1];
     }
 
     /**
      * Function to update option. It is used to add teacher, to inscribe users or to add multisession date.
-     * @param $data
-     * @param $bookingoption
+     * @param mixed $data
+     * @param mixed $bookingoption
      */
     public function update_option(&$data, $bookingoption) {
 
@@ -123,7 +126,7 @@ class webservice_import {
     /**
      * Verify if we have enough overlapping with an existing booking option so we can update.
      * Returns 0 if we have to create a new option, else bookingoptionid.
-     * @param $data
+     * @param mixed $data
      * @return booking_option|null
      */
     private function check_if_update_option(&$data): ?booking_option {
@@ -184,7 +187,7 @@ class webservice_import {
 
     /**
      * There are several ways to find out to which booking instance we should add this booking option.
-     * @param $data
+     * @param mixed $data
      * @return int|null
      */
     private function return_booking_id(&$data): ?int {
@@ -244,7 +247,8 @@ class webservice_import {
 
     /**
      * Remapping changes the name of keys and transforms dates.
-     * @param $data
+     * @param mixed $data
+     * @param mixed $bookingoption
      * @throws \moodle_exception
      */
     private function remap_data(&$data, $bookingoption) {
@@ -263,10 +267,6 @@ class webservice_import {
         if (!empty($data->courseendtime) && empty($data->coursestarttime)) {
             throw new \moodle_exception('startendtimeerror', 'mod_booking', null, null,
                 'You provided courseendtime but coursestarttime is missing.');
-        }
-
-        if ($bookingoption) {
-            $data->optionid = $bookingoption->option->id;
         }
 
         // For mergeparams 1 and 2 both start time and end time need to be provided.
@@ -289,92 +289,10 @@ class webservice_import {
             // Check if it's no multisession.
             if (empty($data->mergeparam)) {
                 $data->startendtimeknown = 1;
-                $data->coursestarttime = strtotime($data->coursestarttime);
-                $data->courseendtime = strtotime($data->courseendtime);
             } else if ($data->mergeparam == 1 || $data->mergeparam == 2 || $data->mergeparam == 3) {
 
                 $data->startendtimeknown = 1;
-
-                $data->coursestarttime = strtotime($data->coursestarttime);
-                $data->courseendtime = strtotime($data->courseendtime);
-
-                $createnewdates = true;
-                foreach ($bookingoption->settings->sessions as $session) {
-                    $data->stillexistingdates[$session->id] = "$session->coursestarttime - $session->courseendtime";
-
-                    if ("$data->coursestarttime - $data->courseendtime" == "$session->coursestarttime - $session->courseendtime") {
-                        $createnewdates = false;
-                    }
-                }
-                if ($createnewdates) {
-                    $data->newoptiondates[] = "$data->coursestarttime - $data->courseendtime";
-                }
-
             }
-        }
-        // We need the limitanswers key if there are maxanswers.
-        if (isset($data->maxanswers)) {
-            $data->limitanswers = 1;
-            // To make sure overbooking is not null, we set it here.
-            if (!isset($data->maxoverbooking)) {
-                $data->maxoverbooking = 0;
-            }
-        }
-
-        // Make sure minanswers is not null.
-        if (!isset($data->minanswers)) {
-            $data->minanswers = 0;
-        }
-
-        // Set booking closing time.
-        if (!empty($data->bookingclosingtime)) {
-            $data->restrictanswerperiodclosing = 1;
-            $data->bookingclosingtime = strtotime($data->bookingclosingtime);
-        }
-
-        // Set booking opening time.
-        if (!empty($data->bookingopeningtime)) {
-            $data->restrictanswerperiodopening = 1;
-            $data->bookingopeningtime = strtotime($data->bookingopeningtime);
-        }
-
-        if (!empty($data->responsiblecontact)) {
-
-            if (!$user = $DB->get_record('user',
-                            ['suspended' => 0, 'deleted' => 0, 'confirmed' => 1, 'email' => $data->responsiblecontact],
-                            'id', IGNORE_MULTIPLE)
-                ) {
-                throw new \moodle_exception('responsiblecontactnotsubscribed', 'mod_booking', null, null,
-                'The contact with email ' . $data->responsiblecontact .
-                ' does not exist in the target database.');
-            } else {
-                $data->responsiblecontact = $user->id;
-            }
-
-        }
-
-        if (!empty($data->boavenrolledincourse)) {
-
-            $items = explode(',', $data->boavenrolledincourse);
-
-            list($inorequal, $params) = $DB->get_in_or_equal($items, SQL_PARAMS_NAMED);
-            $sql = "SELECT id
-                    FROM {course}
-                    WHERE shortname $inorequal";
-            $courses = $DB->get_records_sql($sql, $params);
-
-            $data->bo_cond_enrolledincourse_courseids = array_keys($courses);
-            $data->bo_cond_enrolledincourse_restrict = 1;
-            unset($data->boavenrolledincourse);
-        }
-
-        if (!empty($data->enroltocourseshortname)) {
-
-            if ($courseid = $DB->get_field('course', 'id', ['shortname' => $data->enroltocourseshortname])) {
-                $data->courseid = $courseid;
-                unset($data->enroltocourseshortname);
-            }
-
         }
     }
 
@@ -392,6 +310,7 @@ class webservice_import {
     }
 
     /**
+     * Add customfields to booking option.
      *
      * @param mixed $optionid
      * @param mixed $data
@@ -437,7 +356,8 @@ class webservice_import {
         $userid = reset($userids);
 
         // Try to subscribe teacher to booking option and throw an error if not successful.
-        if (!subscribe_teacher_to_booking_option($userid, $optionid, $this->cm->id)) {
+        $teacherhandler = new teachers_handler($optionid);
+        if (!$teacherhandler->subscribe_teacher_to_booking_option($userid, $optionid, $this->cm->id)) {
             throw new \moodle_exception('teachernotsubscribed', 'mod_booking', null, null,
                 'The teacher with e-mail ' . $data->teacheremail .
                 ' could not be subscribed to the option with optionid ' . $optionid);

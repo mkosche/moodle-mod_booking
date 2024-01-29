@@ -76,7 +76,7 @@ class send_mail implements booking_rule_action {
      * Only customizable functions need to return their necessary form elements.
      *
      * @param MoodleQuickForm $mform
-     * @param int $optionid
+     * @param array $repeateloptions
      * @return void
      */
     public function add_action_to_mform(MoodleQuickForm &$mform, array &$repeateloptions) {
@@ -105,7 +105,7 @@ class send_mail implements booking_rule_action {
 
     /**
      * Save the JSON for all sendmail_daysbefore rules defined in form.
-     * @param stdClass &$data form data reference
+     * @param stdClass $data form data reference
      */
     public function save_action(stdClass &$data) {
         global $DB;
@@ -128,7 +128,7 @@ class send_mail implements booking_rule_action {
 
     /**
      * Sets the rule defaults when loading the form.
-     * @param stdClass &$data reference to the default values
+     * @param stdClass $data reference to the default values
      * @param stdClass $record a record from booking_rules
      */
     public function set_defaults(stdClass &$data, stdClass $record) {

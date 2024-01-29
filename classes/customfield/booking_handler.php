@@ -84,10 +84,9 @@ class booking_handler extends \core_customfield\handler {
     /**
      * Saves the given data for custom fields, must be called after the instance is saved and id is present
      *
-     *
-     * @param int $instance id received from a form
+     * @param int $instanceid id received from a form
      * @param string $shortname of a given customfield
-     * @param mixed @value new value of a given custom field
+     * @param mixed $value new value of a given custom field
      */
     public function field_save($instanceid, $shortname, $value) {
 
@@ -142,6 +141,17 @@ class booking_handler extends \core_customfield\handler {
     }
 
 
+    /**
+     * Instance form definition
+     *
+     * @param \MoodleQuickForm $mform
+     * @param int $instanceid
+     * @param string|null $headerlangidentifier
+     * @param string|null $headerlangcomponent
+     *
+     * @return void
+     *
+     */
     public function instance_form_definition(\MoodleQuickForm $mform, int $instanceid = 0,
     ?string $headerlangidentifier = null, ?string $headerlangcomponent = null) {
 
@@ -173,7 +183,9 @@ class booking_handler extends \core_customfield\handler {
                     }
                 }
                 if ($showheader) {
-                    $mform->addElement('header', 'category_' . $categoryid, $categoryname);
+                    $mform->addElement('header', 'category_' . $categoryid,
+                        '<i class="fa fa-fw fa-puzzle-piece" aria-hidden="true"></i>&nbsp;' .
+                        $categoryname);
                 }
 
                 $lastcategoryid = $categoryid;
@@ -345,5 +357,78 @@ class booking_handler extends \core_customfield\handler {
         }
 
         return $errors;
+    }
+
+    /**
+     * When importing, we only want to load stored values when they are not present in import.
+     *
+     * Example:
+     *   $instance = $DB->get_record(...);
+     *   // .... prepare editor, filemanager, add tags, etc.
+     *   $handler->instance_form_before_set_data($instance);
+     *   $form->set_data($instance);
+     *
+     * @param stdClass $instance the instance that has custom fields, if 'id' attribute is present the custom
+     *    fields for this instance will be added, otherwise the default values will be added.
+     */
+    public function instance_form_before_set_data_on_import(stdClass $instance) {
+        $instanceid = !empty($instance->id) ? $instance->id : 0;
+        $fields = api::get_instance_fields_data($this->get_editable_fields($instanceid), $instanceid);
+
+        foreach ($fields as $formfield) {
+
+            $shortname = $formfield->get_field()->get('shortname');
+            if (isset($instance->{$shortname})) {
+                $instance->{$formfield->get_form_element_name()} = $instance->{$shortname};
+                unset($instance->{$shortname});
+            } else {
+                // If it's not set, we can go on with the stored values.
+                $formfield->instance_form_before_set_data($instance);
+            }
+        }
+    }
+
+    /**
+     * Saves the given data for custom fields, must be called after the instance is saved and id is present
+     *
+     * Example:
+     *   if ($data = $form->get_data()) {
+     *     // ... save main instance, set $data->id if instance was created.
+     *     $handler->instance_form_save($data);
+     *     redirect(...);
+     *   }
+     *
+     * @param stdClass $instance data received from a form
+     * @param bool $isnewinstance if this is call is made during instance creation
+     */
+    public function instance_form_save(stdClass $instance, bool $isnewinstance = false) {
+        if (empty($instance->id)) {
+            throw new \coding_exception('Caller must ensure that id is already set in data before calling this method');
+        }
+        if (!preg_grep('/^customfield_/', array_keys((array)$instance))) {
+            // For performance.
+            return;
+        }
+        $editablefields = $this->get_editable_fields($isnewinstance ? 0 : $instance->id);
+        $fields = api::get_instance_fields_data($editablefields, $instance->id);
+        foreach ($fields as $data) {
+            if (!$data->get('id')) {
+                $data->set('contextid', $this->get_instance_context($instance->id)->id);
+            }
+
+            // Fix for dynamic custom fields that allow multiple values (multiselect).
+            $shortname = $data->get_field()->get('shortname');
+            $multiselect = $data->get_field()->get_configdata_property('multiselect');
+            $key = "customfield_$shortname";
+            if ($multiselect == "1" && is_string($instance->{$key})) {
+                // Convert them into an array, so everything works as expected.
+                $values = explode(',', $instance->{$key});
+                $instance->{$key} = $values;
+            }
+
+            $data->instance_form_save($instance);
+
+            $elementname = $data->get_form_element_name();
+        }
     }
 }

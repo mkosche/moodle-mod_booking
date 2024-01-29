@@ -14,10 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Price class.
+ *
+ * @package mod_booking
+ * @copyright 2022 Georg Maißer <info@wunderbyte.at>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace mod_booking;
 
 use cache_helper;
 use context_system;
+use dml_exception;
 use mod_booking\option\dates_handler;
 use MoodleQuickForm;
 use stdClass;
@@ -29,8 +38,11 @@ use mod_booking\booking_campaigns\campaigns_info;
 use mod_booking\booking_campaigns\booking_campaign;
 use User;
 
+define('MOD_BOOKING_FORM_PRICEGROUP', 'pricegroup_');
+define('MOD_BOOKING_FORM_PRICE', 'bookingprice_');
+
 /**
- * Price class.
+ * Class to handle prices.
  *
  * @package mod_booking
  * @copyright 2022 Georg Maißer <info@wunderbyte.at>
@@ -85,6 +97,7 @@ class price {
         }
         if ($showpriceheader) {
             $mform->addElement('header', 'bookingoptionprice',
+                '<i class="fa fa-fw fa-money" aria-hidden="true"></i>&nbsp;' .
                 get_string('bookingoptionprice', 'booking'));
         }
 
@@ -97,7 +110,6 @@ class price {
             null, null, [0, 1]);
 
         if (get_config('booking', 'priceisalwayson')) {
-            $mform->setDefault('useprice', 1);
             $mform->hardFreeze('useprice');
         } else {
             $useprice = false;
@@ -107,40 +119,14 @@ class price {
         foreach ($this->pricecategories as $pricecategory) {
             $formgroup = [];
 
-            $priceelement = $mform->createElement('float', 'bookingprice_' . $pricecategory->identifier);
+            $priceelement = $mform->createElement('float', MOD_BOOKING_FORM_PRICE . $pricecategory->identifier);
             $formgroup[] = $priceelement;
 
             $currencyelement = $mform->createElement('static', 'bookingpricecurrency', '', get_config('booking', 'globalcurrency'));
             $formgroup[] = $currencyelement;
 
-            $mform->addGroup($formgroup, 'pricegroup_' . $pricecategory->identifier, $pricecategory->name);
-            $mform->disabledIf('pricegroup_' . $pricecategory->identifier, 'useprice', 'neq', 1);
-            // Determine the correct array identifier.
-            $pricearrayidentifier = 'pricegroup_' . $pricecategory->identifier .
-                '[' . 'bookingprice_' . $pricecategory->identifier . ']';
-
-            if (!empty($this->itemid) && $existingprice = $DB->get_field('booking_prices', 'price',
-                ['area' => $this->area, 'itemid' => $this->itemid, 'pricecategoryidentifier' => $pricecategory->identifier])) {
-                // If there already are saved prices, we use them.
-                $mform->setDefault($pricearrayidentifier, $existingprice);
-
-                // If there is at least one price in DB, we don't use the defaults anymore.
-                // This is to prevent unvoluntarily overriding empty price fields with default prices.
-                $defaultexists = true;
-                $useprice = true;
-            } else if (!$defaultexists) {
-                // Else we use the price category default values.
-                $mform->setDefault($pricearrayidentifier, $pricecategory->defaultvalue);
-            }
-        }
-
-        // We only need this, if price is not always on by default.
-        if (!get_config('booking', 'priceisalwayson')) {
-            if ($useprice) {
-                $mform->setDefault('useprice', 1);
-            } else {
-                $mform->setDefault('useprice', 0);
-            }
+            $mform->addGroup($formgroup, MOD_BOOKING_FORM_PRICEGROUP . $pricecategory->identifier, $pricecategory->name);
+            $mform->disabledIf(MOD_BOOKING_FORM_PRICEGROUP . $pricecategory->identifier, 'useprice', 'neq', 1);
         }
 
         // Only when there is an actual price formula, we do apply it.
@@ -154,7 +140,6 @@ class price {
             $mform->addElement('advcheckbox', 'priceformulaoff', get_string('priceformulaoff', 'mod_booking'),
             null, null, [0, 1]);
             $mform->addHelpButton('priceformulaoff', 'priceformulaoff', 'mod_booking');
-            $mform->setDefault('priceformulaoff', 0);
 
             $formulaobj = new stdClass;
             $formulaobj->formula = $priceformula;
@@ -169,15 +154,65 @@ class price {
 
             // Manual factor (multiplier).
             $mform->addElement('float', 'priceformulamultiply', get_string('priceformulamultiply', 'mod_booking'), null);
-            $mform->setDefault('priceformulamultiply', 1);
             $mform->addHelpButton('priceformulamultiply', 'priceformulamultiply', 'mod_booking');
             $mform->hideIf('priceformulamultiply', 'priceformulaisactive', 'noteq', 1);
 
             // Absolute value (summand).
             $mform->addElement('float', 'priceformulaadd', get_string('priceformulaadd', 'mod_booking'), null);
-            $mform->setDefault('priceformulaadd', 0);
             $mform->addHelpButton('priceformulaadd', 'priceformulaadd', 'mod_booking');
             $mform->hideIf('priceformulaadd', 'priceformulaisactive', 'noteq', 1);
+        }
+    }
+
+    /**
+     * Set data function.
+     * @param stdClass $data reference to formdata
+     * @return void
+     * @throws dml_exception
+     */
+    public function set_data(stdClass &$data) {
+        global $DB;
+        foreach ($this->pricecategories as $pricecategory) {
+
+            $pricegroup = MOD_BOOKING_FORM_PRICEGROUP . $pricecategory->identifier;
+            $priceidentifier = MOD_BOOKING_FORM_PRICE . $pricecategory->identifier;
+
+            // We don't want to override set values, only when there are no values present.
+            if (!empty($data->{$pricegroup}[$priceidentifier])) {
+                continue;
+            }
+
+            // Get price for current option.
+            $existingprice = $DB->get_field('booking_prices', 'price',
+                ['area' => $this->area, 'itemid' => $this->itemid, 'pricecategoryidentifier' => $pricecategory->identifier]);
+
+            $data->{$pricegroup}[$priceidentifier] = $existingprice ? $existingprice : $pricecategory->defaultvalue ?? 0;
+
+            if (!empty($data->importing)) {
+                // If we have at least one price during import, we set useprice to 1.
+                $data->useprice = 1;
+            }
+        }
+
+        // Only when there is an actual price formula, we do apply it.
+        $priceformula = get_config('booking', 'defaultpriceformula');
+        if (!empty($priceformula) && is_json($priceformula)) {
+            // Get Settings.
+            if (!empty($data->id) && ($data->id > 0)) {
+
+                $optionid = $data->id;
+                $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
+
+                $data->priceformulaoff = $settings->priceformulaoff;
+                $data->priceformulaadd = $settings->priceformulaadd;
+                $data->priceformulamultiply = $settings->priceformulamultiply;
+            } else {
+                // Default values.
+                $data->priceformulaoff = 0;
+                $data->priceformulaadd = 0;
+                $data->priceformulamultiply = 1;
+
+            }
         }
     }
 
@@ -359,10 +394,10 @@ class price {
 
     /**
      * Applies the unit length factor from settings to the price formula.
+     *
      * Example: A booking option lasting 90 minutes will have a factor of 2,
      * if the educationalunitinminutes (config setting) ist set to 45 min.
      *
-     * @param stdClass $unitobject
      * @param array $dayinfo
      * @param float $price
      * @return void
@@ -430,7 +465,6 @@ class price {
     /**
      * Interprets the entity part of the jsonobject and applies the multiplier to the price, if necessary.
      *
-     * @param array $entityobjects
      * @param stdClass $fromform
      * @param float $price
      * @return void
@@ -506,6 +540,14 @@ class price {
         }
     }
 
+    /**
+     * Save from form
+     *
+     * @param stdClass $fromform
+     *
+     * @return void
+     *
+     */
     public function save_from_form(stdClass $fromform) {
 
         $currency = get_config('booking', 'globalcurrency');
@@ -525,10 +567,10 @@ class price {
                 $price += $fromform->priceformulaadd;
 
             } else {
-                if (isset($fromform->{'pricegroup_' . $pricecategory->identifier})) {
+                if (isset($fromform->{MOD_BOOKING_FORM_PRICEGROUP . $pricecategory->identifier})) {
                     // Price formula is not active, just save the values from form.
-                    $pricegroup = $fromform->{'pricegroup_' . $pricecategory->identifier};
-                    $price = $pricegroup['bookingprice_' . $pricecategory->identifier];
+                    $pricegroup = $fromform->{MOD_BOOKING_FORM_PRICEGROUP . $pricecategory->identifier};
+                    $price = $pricegroup[MOD_BOOKING_FORM_PRICE . $pricecategory->identifier];
                 }
             }
 
@@ -538,6 +580,39 @@ class price {
             }
 
             self::add_price($this->area, $this->itemid, $pricecategory->identifier, $price, $currency);
+        }
+    }
+
+    /**
+     * Form validation
+     *
+     * @param array $data
+     * @param array $errors
+     *
+     * @return void
+     *
+     */
+    public function validation(array $data, array &$errors) {
+
+        global $DB;
+
+        // Price validation.
+        if ($data["useprice"] == 1) {
+            $pricecategories = $DB->get_records_sql("SELECT * FROM {booking_pricecategories} WHERE disabled = 0");
+            foreach ($pricecategories as $pricecategory) {
+                // Check for negative prices, they are not allowed.
+                if (isset($data["pricegroup_$pricecategory->identifier"]["bookingprice_$pricecategory->identifier"]) &&
+                    $data["pricegroup_$pricecategory->identifier"]["bookingprice_$pricecategory->identifier"] < 0) {
+                    $errors["pricegroup_$pricecategory->identifier"] =
+                        get_string('error:negativevaluenotallowed', 'mod_booking');
+                }
+                // If checkbox to use prices is turned on, we do not allow empty strings as prices!
+                if (isset($data["pricegroup_$pricecategory->identifier"]["bookingprice_$pricecategory->identifier"]) &&
+                    $data["pricegroup_$pricecategory->identifier"]["bookingprice_$pricecategory->identifier"] === "") {
+                    $errors["pricegroup_$pricecategory->identifier"] =
+                        get_string('error:pricemissing', 'mod_booking');
+                }
+            }
         }
     }
 

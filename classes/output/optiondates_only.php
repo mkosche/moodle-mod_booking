@@ -60,10 +60,6 @@ class optiondates_only implements renderable, templatable {
 
         $sessions = dates_handler::return_dates_with_strings($settings, '', true);
 
-        $dateformat = get_string('strftimedate', 'langconfig');
-        $timeformat = get_string('strftimetime', 'langconfig');
-        $datetimeformat = get_string('strftimedatetime', 'langconfig');
-
         $numberofsessions = count($sessions);
 
         $this->onesession = $numberofsessions === 1;
@@ -82,6 +78,14 @@ class optiondates_only implements renderable, templatable {
         $this->sessions = $sessions;
     }
 
+    /**
+     * Export for template
+     *
+     * @param renderer_base $output
+     *
+     * @return void
+     *
+     */
     public function export_for_template(renderer_base $output) {
 
         return [

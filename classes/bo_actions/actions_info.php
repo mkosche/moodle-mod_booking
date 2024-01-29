@@ -28,6 +28,7 @@ namespace mod_booking\bo_actions;
 use context_module;
 use core_analytics\action;
 use core_component;
+use mod_booking\booking_option;
 use mod_booking\booking_option_settings;
 use mod_booking\output\actionslist;
 use mod_booking\singleton_service;
@@ -57,9 +58,12 @@ class actions_info {
 
         if (get_config('booking', 'showboactions') && wb_payment::pro_version_is_activated()) {
             // Add header to Element.
-            $mform->addElement('header', 'bookingactionsheader', get_string('bookingactionsheader', 'mod_booking'));
+            $mform->addElement('header', 'bookingactionsheader',
+            '<i class="fa fa-fw fa-bolt" aria-hidden="true"></i>&nbsp;' . get_string('bookingactionsheader', 'mod_booking'));
 
-            if (!empty($formdata['optionid'])) {
+            $mform->addElement('hidden', 'boactionsjson');
+            $mform->setType('boactionsjson', PARAM_RAW);
+            if (!empty($formdata['id'])) {
                 // Add a list of existing actions, including an edit and a delete button.
                 self::add_list_of_existing_actions_for_this_option($mform, $formdata);
 
@@ -156,7 +160,8 @@ class actions_info {
 
     /**
      * Save all booking actions.
-     * @param stdClass &$data reference to the form data
+     *
+     * @param stdClass $data reference to the form data
      * @return void
      */
     public static function save_action(stdClass &$data) {
@@ -190,7 +195,7 @@ class actions_info {
 
             $context = context_module::instance($data->cmid);
 
-            booking_update_options($optionvalues, $context, MOD_BOOKING_UPDATE_OPTIONS_PARAM_REDUCED);
+            booking_option::update($optionvalues, $context, MOD_BOOKING_UPDATE_OPTIONS_PARAM_REDUCED);
         }
 
     }
@@ -214,7 +219,9 @@ class actions_info {
 
         $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
 
-        $data = new actionslist($cmid, $optionid, $settings->boactions ?? []);
+        $boactions = booking_option::get_value_of_json_by_key($optionid, 'boactions');
+
+        $data = new actionslist($cmid, $optionid, $boactions ?? []);
         $output = $PAGE->get_renderer('mod_booking');
         $html = $output->render_boactionslist($data);
 

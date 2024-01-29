@@ -60,7 +60,7 @@ $definitions = [
         'staticaccelerationsize' => 1,
         'invalidationevents' => ['setbackcachedteachersjournal'],
     ],
-    'bookingoptionstable' => [ // This cache uses hased sql queries as keys.
+    'bookingoptionstable' => [ // This cache uses hashed sql queries as keys.
         'mode' => cache_store::MODE_APPLICATION,
         'simplekeys' => true,
         'staticacceleration' => true,
@@ -95,6 +95,7 @@ $definitions = [
         'staticaccelerationsize' => 1,
         'invalidationevents' => ['setbackconditionforms'],
     ],
+    // The cache is used to confirm bookings.
     'confirmbooking' => [ // This cache uses optionids as keys.
         'mode' => cache_store::MODE_APPLICATION,
         'simplekeys' => true,

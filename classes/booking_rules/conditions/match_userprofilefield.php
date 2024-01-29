@@ -87,7 +87,7 @@ class match_userprofilefield implements booking_rule_condition {
      * Only customizable functions need to return their necessary form elements.
      *
      * @param MoodleQuickForm $mform
-     * @param int $optionid
+     * @param array $ajaxformdata
      * @return void
      */
     public function add_condition_to_mform(MoodleQuickForm &$mform, array &$ajaxformdata = null) {
@@ -132,6 +132,8 @@ class match_userprofilefield implements booking_rule_condition {
 
     /**
      * Get the name of the rule.
+     *
+     * @param bool $localized
      * @return string the name of the rule
      */
     public function get_name_of_condition($localized = true) {
@@ -140,7 +142,8 @@ class match_userprofilefield implements booking_rule_condition {
 
     /**
      * Save the JSON for all sendmail_daysbefore rules defined in form.
-     * @param stdClass &$data form data reference
+     *
+     * @param stdClass $data form data reference
      */
     public function save_condition(stdClass &$data) {
         global $DB;
@@ -162,7 +165,7 @@ class match_userprofilefield implements booking_rule_condition {
 
     /**
      * Sets the rule defaults when loading the form.
-     * @param stdClass &$data reference to the default values
+     * @param stdClass $data reference to the default values
      * @param stdClass $record a record from booking_rules
      */
     public function set_defaults(stdClass &$data, stdClass $record) {

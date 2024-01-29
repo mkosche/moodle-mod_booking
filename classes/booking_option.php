@@ -13,6 +13,16 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Managing a single booking option
+ *
+ * @package mod_booking
+ * @copyright 2023 Wunderbyte GmbH <info@wunderbyte.at>
+ * @author 2014 David Bogner
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace mod_booking;
 
 use cache_helper;
@@ -20,6 +30,7 @@ use coding_exception;
 use completion_info;
 use context_module;
 use context_system;
+use context;
 use dml_exception;
 use Exception;
 use invalid_parameter_exception;
@@ -27,6 +38,7 @@ use local_entities\entitiesrelation_handler;
 use mod_booking\bo_availability\conditions\customform;
 use mod_booking\option\dates_handler;
 use mod_booking\bo_actions\actions_info;
+use mod_booking\booking_rules\rules_info;
 use stdClass;
 use moodle_url;
 use mod_booking\booking_utils;
@@ -35,9 +47,11 @@ use mod_booking\teachers_handler;
 use mod_booking\customfield\booking_handler;
 use mod_booking\event\bookinganswer_cancelled;
 use mod_booking\message_controller;
+use mod_booking\option\fields_info;
 use mod_booking\subbookings\subbookings_info;
 use mod_booking\task\send_completion_mails;
 use moodle_exception;
+use MoodleQuickForm;
 
 use function get_config;
 
@@ -46,12 +60,14 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/calendar/lib.php');
 require_once($CFG->libdir . '/completionlib.php');
+require_once($CFG->dirroot . '/mod/booking/lib.php');
 
 /**
- * Managing a single booking option
+ * Class to managing a single booking option
  *
  * @package mod_booking
- * @copyright 2014 David Bogner
+ * @copyright 2023 Wunderbyte GmbH <info@wunderbyte.at>
+ * @author 2014 David Bogner
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class booking_option {
@@ -165,8 +181,9 @@ class booking_option {
      * Returns a booking_option object when optionid is passed along.
      * Saves db query when booking id is given as well, but uses already cached settings.
      *
-     * @param $optionid
+     * @param int $optionid
      * @param ?int $bookingid booking id
+     *
      * @return booking_option
      * @throws coding_exception
      * @throws dml_exception
@@ -282,6 +299,12 @@ class booking_option {
         $this->option = $tags->option_replace($this->option);
     }
 
+    /**
+     * Get url params
+     *
+     * @return void
+     *
+     */
     public function get_url_params() {
         $bu = new booking_utils();
         $params = $bu->generate_params($this->booking->settings, $this->option);
@@ -397,11 +420,21 @@ class booking_option {
 
         $text = "";
 
+        if (empty($this->option->aftercompletedtext
+            && empty($this->option->beforecompletedtext)
+            && empty($this->option->beforebookedtext)
+            && empty($this->booking->settings->aftercompletedtext)
+            && empty($this->booking->settings->beforecompletedtext)
+            && empty($this->booking->settings->beforebookedtext))) {
+
+                return '';
+        }
+
         // New message controller.
         $messagecontroller = new message_controller(
             MOD_BOOKING_MSGCONTRPARAM_DO_NOT_SEND, // We do not want to send anything here.
             MOD_BOOKING_MSGPARAM_CONFIRMATION,
-            $this->booking->cm->id,
+            $this->cmid,
             $this->bookingid,
             $this->optionid,
             $userid
@@ -588,7 +621,7 @@ class booking_option {
      * Deletes a single booking of a user if user cancels the booking, sends mail to bookingmanager.
      * If there is a limit book other user and send mail to the user.
      *
-     * @param $userid
+     * @param int $userid
      * @param bool $cancelreservation
      * @param bool $bookingoptioncancel indicates if the function was called
      *     after the whole booking option was cancelled, false by default
@@ -629,7 +662,7 @@ class booking_option {
         }
 
         // Purge caches BEFORE sync_waiting_list.
-        self::purge_cache_for_option($this->optionid);
+        self::purge_cache_for_answers($this->optionid);
 
         // If the whole option was cancelled, there is no need to sync anymore.
         if ($syncwaitinglist && (!$bookingoptioncancel && (
@@ -721,7 +754,7 @@ class booking_option {
      * Unsubscribes given users from this booking option and subscribes them to the newoption
      *
      * @param int $newoption
-     * @param array of numbers $userids
+     * @param array $userids of numbers
      * @return stdClass transferred->success = true/false, transferred->no[] errored users,
      *         $transferred->yes transferred users
      */
@@ -940,7 +973,7 @@ class booking_option {
         // False means, that it can't be booked.
         // 0 means, that we can book right away
         // 1 means, that there is only a place on the waiting list.
-        $waitinglist = $this->check_if_limit($user->id, self::option_allows_overbooking_for_user($this->optionid, $user->id));
+        $waitinglist = $this->check_if_limit($user->id, self::option_allows_overbooking_for_user($this->optionid));
         // With the second param, we check if overbooking is allowed.
 
         if ($waitinglist === false) {
@@ -1014,7 +1047,7 @@ class booking_option {
                                        $timecreated);
 
         // Important: Purge caches after submitting a new user.
-        self::purge_cache_for_option($this->optionid);
+        self::purge_cache_for_answers($this->optionid);
 
         return $this->after_successful_booking_routine($user, $waitinglist);
     }
@@ -1067,7 +1100,7 @@ class booking_option {
         }
 
         // After writing an answer, cache has to be invalidated.
-        self::purge_cache_for_option($optionid);
+        self::purge_cache_for_answers($optionid);
     }
 
 
@@ -1455,7 +1488,11 @@ class booking_option {
         }
 
         foreach ($this->get_teachers() as $teacher) {
-            unsubscribe_teacher_from_booking_option($teacher->userid, $this->optionid, $this->booking->cm->id);
+            $teacherhandler = new teachers_handler($this->optionid);
+            $teacherhandler->unsubscribe_teacher_from_booking_option(
+                $teacher->userid,
+                $this->optionid,
+                $this->booking->cm->id);
         }
 
         // Delete calendar entry, if any.
@@ -1687,7 +1724,7 @@ class booking_option {
     /**
      * Transfer the booking option including users to another booking option of the same course.
      *
-     * @param $targetcmid
+     * @param int $targetcmid
      * @return string error message, empty if no error.
      * @throws coding_exception
      * @throws dml_exception
@@ -1713,7 +1750,7 @@ class booking_option {
         $newoption = $this->option;
         $newoption->id = -1;
         $newoption->bookingid = $targetbooking->id;
-        $newoptionid = booking_update_options($newoption, $targetcontext);
+        $newoptionid = self::update($newoption, $targetcontext);
         // Subscribe users.
         $newoption = singleton_service::get_instance_of_booking_option($targetcmid, $newoptionid);
         $users = $this->get_all_users();
@@ -1857,12 +1894,17 @@ class booking_option {
                 unset($newoption->optiondate);
                 unset($newoption->identifier);
             }
-            booking_update_options($newoption, $context);
+            self::update($newoption, $context);
             $firstrun = false;
         }
     }
 
-    // Print custom report.
+    /**
+     * Print custom report.
+     *
+     * @return void
+     *
+     */
     public function printcustomreport() {
         global $CFG;
 
@@ -2016,7 +2058,11 @@ class booking_option {
      * @param array $filters
      * @param string $fields
      * @param string $from
-     * @return void
+     * @param string $where
+     * @param array $params
+     * @param string $order
+     *
+     * @return array
      */
     public static function search_all_options_sql($bookingid = 0,
                                     $filters = [],
@@ -2052,11 +2098,8 @@ class booking_option {
      * Send message: Poll URL.
      *
      * @param array $userids the selected userids
-     * @param int $bookingid booking id
-     * @param int $cmid course module id
-     * @param int $optionid booking option id
-     * @throws coding_exception
-     * @throws dml_exception
+     *
+     * @return void
      */
     public function sendmessage_pollurl(array $userids) {
         global $DB;
@@ -2083,11 +2126,8 @@ class booking_option {
 
     /**
      * Send message: Poll URL for teachers.
-     * @param int $bookingid
-     * @param int $cmid
-     * @param int $optionid
-     * @throws coding_exception
-     * @throws dml_exception
+     *
+     * @return void
      */
     public function sendmessage_pollurlteachers() {
         global $DB;
@@ -2218,7 +2258,12 @@ class booking_option {
 
     /**
      * Helper function for mustache template to return array with datestring and customfields
-     * @param $bookingoption
+     *
+     * @param object $bookingevent
+     * @param int $descriptionparam
+     * @param bool $withcustomfields
+     * @param bool $forbookeduser
+     *
      * @return array
      * @throws \dml_exception
      */
@@ -2307,12 +2352,16 @@ class booking_option {
             $forbookeduser = false) {
 
         switch ($field->cfgname) {
-            case 'ZoomMeeting':
-            case 'BigBlueButtonMeeting':
-            case 'TeamsMeeting':
+            case 'zoommeeting':
+            case 'bigbluebuttonmeeting':
+            case 'teamsmeeting':
                 // If the session is not yet about to begin, we show placeholder.
-
                 return $this->render_meeting_fields($sessionid, $field, $descriptionparam, $forbookeduser);
+            case 'addcomment':
+                return [
+                    'name' => "",
+                    'value' => $field->value,
+                ];
             default:
                 return [
                     'name' => "$field->cfgname: ",
@@ -2701,9 +2750,14 @@ class booking_option {
         cache_helper::purge_by_event('setbackoptionstable');
         cache_helper::invalidate_by_event('setbackoptionsettings', [$optionid]);
 
-        // Set back the answer cache.
-        $cache = \cache::make('mod_booking', 'bookingoptionsanswers');
-        $cache->delete($optionid);
+        self::purge_cache_for_answers($optionid);
+    }
+
+    /**
+     * Helper function to purge cache for a booking option.
+     * @param int $optionid
+     */
+    public static function purge_cache_for_answers(int $optionid) {
 
         cache_helper::invalidate_by_event('setbackoptionsanswers', [$optionid]);
         // When we set back the booking_answers...
@@ -2726,6 +2780,11 @@ class booking_option {
 
         $optionsettings = singleton_service::get_instance_of_booking_option_settings($optionid);
         $bookingsettings = singleton_service::get_instance_of_booking_settings_by_cmid($optionsettings->cmid);
+
+        // If the option itself has a canceluntil date, we always use this one.
+        if (!empty($optionsettings->canceluntil)) {
+            return (int)$optionsettings->canceluntil;
+        }
 
         $canceluntil = 0;
 
@@ -2774,10 +2833,9 @@ class booking_option {
      * Helper function to check if an option allows overbooking.
      *
      * @param int $optionid
-     * @param int $userid
      * @return bool true if overbooking is allowed
      */
-    public static function option_allows_overbooking_for_user(int $optionid, int $userid):bool {
+    public static function option_allows_overbooking_for_user(int $optionid): bool {
 
         /* If the global setting to allow overbooking is on, we still need to check
         if the current user has the capability to overbook. */
@@ -3097,7 +3155,7 @@ class booking_option {
     /**
      * A helper class to add data to the json of a booking option.
      *
-     * @param stdClass &$data reference to a data object containing the json key
+     * @param stdClass $data reference to a data object containing the json key
      * @param string $key - for example: "disablecancel"
      * @param int|string|stdClass|array|null $value - for example: 1
      */
@@ -3113,7 +3171,7 @@ class booking_option {
     /**
      * A helper class to remove a data field from the json of a booking option.
      *
-     * @param stdClass &$data reference to a data object containing the json key to remove
+     * @param stdClass $data reference to a data object containing the json key to remove
      * @param string $key - the key to remove, for example: "disablecancel"
      */
     public static function remove_key_from_json(stdClass &$data, string $key) {
@@ -3189,5 +3247,212 @@ class booking_option {
         $user = singleton_service::get_instance_of_user($userid);
         $optionprice = price::get_price('option', $optionid, $user);
         return !empty($optionprice);
+    }
+
+    /**
+     * The only way to update a booking option.
+     * When calling an update with values from form, csv or webservice...
+     * ... we need to make sure to update values correctly.
+     * For once, values from form or CSV may not be present.
+     * We don't want to accidentally delete values in the process of updating.
+     * On the other hand, connected tables and values need to be updated after an optionid is there.
+     * This concerns customfields, entities, prices, optiondates etc.
+     *
+     * @param array|stdClass $data // New transmitted values via form, csv or webservice.
+     * @param null|context $context // Context class.
+     * @param int $updateparam // The update param allows for fine tuning.
+     *
+     * @return int
+     *
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws moodle_exception
+     */
+    public static function update($data, context $context = null,
+        int $updateparam = MOD_BOOKING_UPDATE_OPTIONS_PARAM_DEFAULT) {
+
+        global $DB, $PAGE;
+
+        // When we come here, we have the following possibilities:
+        // A) Normal saving via Form of an existing option.
+        // B) Normal saving via Form of a new option.
+        // C) CSV update of an existing option
+        // D) CSV creation of a new option
+        // E) Webservice update of an existing option
+        // F) Webservice creation of a new option.
+
+        // While A) & B) will already have called set_data...
+        // ... that's not the case for C to F.
+
+        // Get the old option. We need to compare it with the new one to get the changes.
+        // If no ID provided we threat record as new and set id to "0".
+        $optionid = is_array($data) ? ($data['id'] ?? 0) : ($data->id ?? 0);
+        $originaloption = singleton_service::get_instance_of_booking_option_settings($optionid);
+
+        // If $formdata is an array, we need to run set_data.
+        if (is_array($data) || isset($data->importing)) {
+            $data = (object)$data;
+            fields_info::set_data($data);
+
+            $errors = [];
+
+            // This is a possibility to return validation errors to the importer.
+            fields_info::validation((array)$data, [], $errors);
+        }
+
+        $newoption = new stdClass();
+        fields_info::prepare_save_fields($data, $newoption, $updateparam);
+
+        if (!empty($newoption->id)) {
+            // Save the changes to DB.
+            if (!$DB->update_record("booking_options", $newoption)) {
+                throw new moodle_exception('updateofoptionwentwrong', 'mod_booking');
+            }
+        } else {
+            // Save the changes to DB.
+            if (!$optionid = $DB->insert_record("booking_options", $newoption)) {
+                throw new moodle_exception('creationofoptionwentwrong', 'mod_booking');
+            }
+            // Some legacy weight still left.
+            $newoption->id = $optionid;
+            $data->id = $optionid;
+        }
+
+        fields_info::save_fields_post($data, $newoption, $updateparam);
+
+        // Todo:
+        // - Integrate customfields and more settings to option dates - half done.
+        // - implement saving and loading of templates.
+        // - implement returnurl - done
+        // - implement cancel
+        // - implement save and stay
+        // - implement save and add new
+        // - implement entities for optiondates - done
+        // - Test csv importer - done
+        // - test webservice importer
+        // - test availability
+        // - test actions
+        // - test subbookings
+        // - test events
+        // - test caches
+        // - test rules
+        // - rename everything and make it the only way to go.
+        // - fix save and add new
+        // - fix save and stay.
+
+        // Todo: Add the react on changes call.
+
+        // We need to purge cache after updating an option.
+        self::purge_cache_for_option($newoption->id);
+
+        // Now check, if there are rules to execute.
+        rules_info::execute_rules_for_option($newoption->id);
+
+        // If there have been changes to significant fields, we react on changes.
+        // Change notification will be sent (if active).
+        // Action logs will be stored ("Shwo recent updates..." link on bottom of option form).
+        $bu = new booking_utils();
+        if ($changes = $bu->booking_option_get_changes($originaloption, $newoption)) {
+
+            $cmid = $originaloption->cmid ?? 0;
+
+            // If we have no cmid, it's most possibly a template.
+            if (!empty($cmid) && $newoption->bookingid != 0) {
+                // We only react on changes, if a cmid exists.
+                $bu->react_on_changes($cmid, $context, $newoption->id, $changes);
+            }
+        }
+
+        return $newoption->id;
+    }
+
+    /**
+     * Recreate date series.
+     * @param int $semesterid
+     * @return void
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws moodle_exception
+     */
+    public function recreate_date_series(int $semesterid) {
+
+        // New code.
+        $data = (object)[
+            'cmid' => $this->cmid,
+            'id' => $this->id, // In the context of option_form class, id always refers to optionid.
+            'optionid' => $this->id, // Just kept on for legacy reasons.
+            'bookingid' => $this->bookingid,
+            'copyoptionid' => 0,
+            'returnurl' => '',
+        ];
+
+        fields_info::set_data($data);
+
+        $data->addoptiondateseries = "Create date series";
+        $data->semesterid = $semesterid;
+        $data->datesmarker = 1;
+
+        fields_info::set_data($data);
+
+        $context = context_module::instance($data->cmid);
+
+        $this->update($data, $context);
+
+    }
+
+    /**
+     * Helper function to deal with the creation of multisessions (optiondates).
+     *
+     * @param mixed $optionvalues
+     * @param mixed $booking
+     * @param int $optionid
+     * @param null|context $context
+     *
+     * @return void
+     *
+     */
+    public static function deal_with_multisessions(&$optionvalues, $booking, $optionid, $context) {
+
+        global $DB;
+
+        // Deal with new optiondates (Multisessions).
+        // TODO: We should have an optiondates class to deal with all of this.
+        // As of now, we do it the hacky way.
+        for ($i = 1; $i < 100; ++$i) {
+
+            $starttimekey = 'ms' . $i . 'starttime';
+            $endtimekey = 'ms' . $i . 'endtime';
+            $daystonotify = 'ms' . $i . 'nt';
+
+            if (!empty($optionvalues->$starttimekey) && !empty($optionvalues->$endtimekey)) {
+                $optiondate = new stdClass();
+                $optiondate->bookingid = $booking->id;
+                $optiondate->optionid = $optionid;
+                $optiondate->coursestarttime = $optionvalues->$starttimekey;
+                $optiondate->courseendtime = $optionvalues->$endtimekey;
+                if (!empty($optionvalues->$daystonotify)) {
+                    $optiondate->daystonotify = $optionvalues->$daystonotify;
+                }
+                $dateshandler = new dates_handler($optionid, $booking->id);
+                $optiondateid = $dateshandler->create_option_date($optiondate);
+
+                for ($j = 1; $j < 4; ++$j) {
+                    $cfname = 'ms' . $i . 'cf' . $j . 'name';
+                    $cfvalue = 'ms' . $i . 'cf'. $j . 'value';
+
+                    if (!empty($optionvalues->$cfname)
+                        && !empty($optionvalues->$cfvalue)) {
+
+                        $customfield = new stdClass();
+                        $customfield->bookingid = $booking->id;
+                        $customfield->optionid = $optionid;
+                        $customfield->optiondateid = $optiondateid;
+                        $customfield->cfgname = $optionvalues->$cfname;
+                        $customfield->value = $optionvalues->$cfvalue;
+                        $DB->insert_record("booking_customfields", $customfield);
+                    }
+                }
+            }
+        }
     }
 }

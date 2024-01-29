@@ -131,7 +131,7 @@ class customform implements bo_condition {
      * ... as they are not necessary, but return true when the booking policy is not yet answered.
      * Hard block is only checked if is_available already returns false.
      *
-     * @param booking_option_settings $booking_option_settings
+     * @param booking_option_settings $settings
      * @param int $userid
      * @return bool
      */
@@ -154,9 +154,9 @@ class customform implements bo_condition {
      * (when displaying all information about the activity) and 'student' cases
      * (when displaying only conditions they don't meet).
      *
-     * @param bool $full Set true if this is the 'full information' view
      * @param booking_option_settings $settings Item we're checking
      * @param int $userid User ID to check availability for
+     * @param bool $full Set true if this is the 'full information' view
      * @param bool $not Set true if we are inverting the condition
      * @return array availability and Information string (for admin) about all restrictions on
      *   this item
@@ -302,6 +302,11 @@ class customform implements bo_condition {
      */
     public function get_condition_object_for_json(stdClass $fromform): stdClass {
 
+        // If the checkbox is turned off, we return an empty object.
+        if ($fromform->bo_cond_customform_restrict == "0") {
+            return new stdClass();
+        }
+
         // Remove the namespace from classname.
         $classname = __CLASS__;
         $classnameparts = explode('\\', $classname);
@@ -361,7 +366,7 @@ class customform implements bo_condition {
 
     /**
      * Set default values to be shown in form when loaded from DB.
-     * @param stdClass &$defaultvalues the default values
+     * @param stdClass $defaultvalues the default values
      * @param stdClass $acdefault the condition object from JSON
      */
     public function set_defaults(stdClass &$defaultvalues, stdClass $acdefault) {
@@ -398,6 +403,7 @@ class customform implements bo_condition {
      * @param int $userid
      * @param bool $full
      * @param bool $not
+     * @param bool $fullwidth
      * @return array
      */
     public function render_button(booking_option_settings $settings,
@@ -446,6 +452,7 @@ class customform implements bo_condition {
      * This static functions checks if the user has saved something in customform.
      * If so, we add it to the json column in booking_answers.
      * @param stdClass $newanswer
+     * @param int $userid
      * @return void
      */
     public static function add_json_to_booking_answer(stdClass &$newanswer, int $userid) {

@@ -44,7 +44,7 @@ interface booking_rule {
     /**
      * Adds the form elements for this rule to the provided mform.
      * @param MoodleQuickForm $mform the mform where the rule should be added
-     * @param array $repateloptions options for repeated elements
+     * @param array $repeateloptions options for repeated elements
      * @return void
      */
     public function add_rule_to_mform(MoodleQuickForm &$mform, array &$repeateloptions);
@@ -58,13 +58,13 @@ interface booking_rule {
 
     /**
      * Gets the JSON for the rules to be stored in DB.
-     * @param stdClass &$data form data reference
+     * @param stdClass $data form data reference
      */
     public function save_rule(stdClass &$data);
 
     /**
      * Sets the rule defaults when loading the form.
-     * @param stdClass &$data reference to the default values
+     * @param stdClass $data reference to the default values
      * @param stdClass $record a record from booking_rules
      */
     public function set_defaults(stdClass &$data, stdClass $record);

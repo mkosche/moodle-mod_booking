@@ -64,14 +64,13 @@ class signin_downloadform implements renderable, templatable {
     /**
      * Constructor
      *
-     * @param int $coursemoduleid
      * @param \mod_booking\booking_option $bookingoption
      * @param \moodle_url $url baseurl
      */
     public function __construct(\mod_booking\booking_option $bookingoption, $url) {
-        $this->titleinstanceoption = format_string($bookingoption->booking->settings->name) . ' - ' .
-            format_string($bookingoption->settings->text);
-        $this->titleoption = format_string($bookingoption->settings->text);
+        $this->titleinstanceoption = format_string($bookingoption->booking->settings->name) . ': ' .
+            format_string($bookingoption->settings->get_title_with_prefix());
+        $this->titleoption = format_string($bookingoption->settings->get_title_with_prefix());
         $this->instanceoption = format_string($bookingoption->booking->settings->name);
         $this->sessions = [];
 
@@ -93,6 +92,14 @@ class signin_downloadform implements renderable, templatable {
         }
     }
 
+    /**
+     * Export for template
+     *
+     * @param renderer_base $output
+     *
+     * @return mixed
+     *
+     */
     public function export_for_template(renderer_base $output) {
         return $this;
     }

@@ -13,19 +13,24 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * This page allows a user to subscribe/unsubscribe other users from a booking option.
+ *
  * TODO: upgrade logging, add logging for added/deleted users
  *
- * @author David Bogner davidbogner@gmail.com
  * @package mod_booking
+ * @copyright 2023 Wunderbyte GmbH <info@wunderbyte.at>
+ * @author David Bogner davidbogner@gmail.com
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ *
  */
+
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/booking/locallib.php');
 
 use core\output\notification;
 use mod_booking\booking_utils;
-use mod_booking\booking_option;
 use mod_booking\form\subscribe_cohort_or_group_form;
 use mod_booking\output\booked_users;
 use mod_booking\singleton_service;
@@ -37,9 +42,10 @@ $optionid = required_param('optionid', PARAM_INT);
 $subscribe = optional_param('subscribe', false, PARAM_BOOL);
 $unsubscribe = optional_param('unsubscribe', false, PARAM_BOOL);
 $agree = optional_param('agree', false, PARAM_BOOL);
+$bookanyone = optional_param('bookanyone', false, PARAM_BOOL);
 
-// Get the bookanyone setting from user preferences.
-$bookanyone = get_user_preferences('bookanyone', '0');
+// If we have already submitted the form, we don't want to fall into the agree policy.
+$formsubmitted = optional_param('submitbutton', '', PARAM_TEXT);
 
 list($course, $cm) = get_course_and_cm_from_cmid($id);
 
@@ -84,7 +90,7 @@ $bookingoption->apply_tags();
 $PAGE->set_title(get_string('modulename', 'booking'));
 $PAGE->set_heading($COURSE->fullname);
 $PAGE->navbar->add(get_string('booking:subscribeusers', 'booking'), $url);
-if (!$agree && (!empty($bookingoption->booking->settings->bookingpolicy))) {
+if (!$agree && empty($formsubmitted) && (!empty($bookingoption->booking->settings->bookingpolicy))) {
     echo $OUTPUT->header();
     $alright = false;
     $message = "<p><b>" . get_string('bookingpolicyagree', 'booking') . ":</b></p>";
@@ -187,14 +193,64 @@ if (!$agree && (!empty($bookingoption->booking->settings->bookingpolicy))) {
         $existingselector->set_potential_users($bookingoption->bookedvisibleusers);
     }
 }
+
+// Add the Moodle form for cohort and group subscription.
+$mform = new subscribe_cohort_or_group_form();
+$mform->set_data(['id' => $id, 'optionid' => $optionid, 'agree' => "1"]);
+
+// Form processing and displaying is done here.
+if ($fromform = $mform->get_data()) {
+
+    $notificationstring = '';
+    $delay = 0;
+    $notificationtype = notification::NOTIFY_INFO;
+
+    $url = new moodle_url('/mod/booking/subscribeusers.php', ['id' => $id, 'optionid' => $optionid, 'agree' => 1]);
+
+    if (!empty($fromform->cohortids) || !empty($fromform->groupids)) {
+        $result = booking_utils::book_cohort_or_group_members($fromform, $bookingoption, $context);
+        $delay = 120;
+
+        // Generate the notification string and determine the notification color.
+        $notificationstring = get_string('resultofcohortorgroupbooking', 'mod_booking', $result);
+
+        if ($result->notenrolledusers > 0 || $result->notsubscribedusers > 0) {
+            $notificationstring .= get_string('problemsofcohortorgroupbooking', 'mod_booking', $result);
+
+            if ($result->subscribedusers > 0) {
+                $notificationtype = notification::NOTIFY_WARNING;
+            } else {
+                $notificationtype = notification::NOTIFY_ERROR;
+            }
+        } else {
+            if ($result->subscribedusers > 0) {
+                $notificationtype = notification::NOTIFY_SUCCESS;
+            } else {
+                $notificationtype = notification::NOTIFY_ERROR;
+            }
+        }
+    } else {
+        $notificationtype = notification::NOTIFY_ERROR;
+        $notificationstring = get_string('nogrouporcohortselected', 'mod_booking');
+        $delay = 5;
+    }
+
+    try {
+        redirect($url, $notificationstring, $delay, $notificationtype);
+    } catch (moodle_exception $e) {
+        debugging('subscribeusers.php: Exception in redirect function.');
+    }
+
+}
+
 echo $OUTPUT->header();
 
 echo $OUTPUT->heading(format_string($optionsettings->get_title_with_prefix()), 3, 'helptitle', 'uniqueid');
 
 // Switch to turn booking of anyone ON or OFF.
 if (is_siteadmin() && $bookanyone) {
-    // Turn it off.
     set_user_preference('bookanyone', '1');
+    // Show button to turn it off again.
     $url = new moodle_url('/mod/booking/subscribeusers.php', ['id' => $id,
                                                                 'optionid' => $optionid,
                                                                 'agree' => $agree,
@@ -202,12 +258,17 @@ if (is_siteadmin() && $bookanyone) {
     echo '<a class="btn btn-sm btn-light" href="' . $url . '">' . get_string('bookanyoneswitchoff', 'mod_booking') . '</a>';
     echo '<div class="alert alert-warning p-1 mt-1 text-center">' . get_string('bookanyonewarning', 'mod_booking')  . '</div>';
 } else {
-    // Turn it on.
     set_user_preference('bookanyone', '0');
-    $url = new moodle_url('/mod/booking/subscribeusers.php', ['id' => $id,
-                                                                'optionid' => $optionid,
-                                                                'agree' => $agree,
-                                                            ]);
+    // Show button to turn it off again.
+    $url = new moodle_url(
+        '/mod/booking/subscribeusers.php',
+        [
+            'id' => $id,
+            'optionid' => $optionid,
+            'agree' => $agree,
+            'bookanyone' => true,
+        ]
+    );
     echo '<a class="btn btn-sm btn-light" href="' . $url . '">' . get_string('bookanyoneswitchon', 'mod_booking') . '</a>';
 }
 
@@ -244,57 +305,10 @@ if (booking_check_if_teacher($bookingoption->option) && !has_capability(
 }
 
 echo $bookingoutput->subscriber_selection_form($existingselector, $subscriberselector, $course->id);
-
 echo '<br>';
 
-// Add the Moodle form for cohort and group subscription.
-$mform = new subscribe_cohort_or_group_form();
-$mform->set_data(['id' => $id, 'optionid' => $optionid]);
-
-// Form processing and displaying is done here.
-if ($fromform = $mform->get_data()) {
-
-    $notificationstring = '';
-    $delay = 0;
-    $notificationtype = notification::NOTIFY_INFO;
-
-    $url = new moodle_url('/mod/booking/subscribeusers.php', ['id' => $id, 'optionid' => $optionid, 'agree' => $agree]);
-
-    if (!empty($fromform->cohortids) || !empty($fromform->groupids)) {
-        $result = booking_utils::book_cohort_or_group_members($fromform, $bookingoption, $context);
-        $delay = 120;
-
-        // Generate the notification string and determine the notification color.
-        $notificationstring = get_string('resultofcohortorgroupbooking', 'mod_booking', $result);
-
-        if ($result->notenrolledusers > 0 || $result->notsubscribedusers > 0) {
-            $notificationstring .= get_string('problemsofcohortorgroupbooking', 'mod_booking', $result);
-
-            if ($result->subscribedusers > 0) {
-                $notificationtype = notification::NOTIFY_WARNING;
-            } else {
-                $notificationtype = notification::NOTIFY_ERROR;
-            }
-        } else {
-            if ($result->subscribedusers > 0) {
-                $notificationtype = notification::NOTIFY_SUCCESS;
-            } else {
-                $notificationtype = notification::NOTIFY_ERROR;
-            }
-        }
-    } else {
-        $notificationtype = notification::NOTIFY_ERROR;
-        $notificationstring = get_string('nogrouporcohortselected', 'mod_booking');
-        $delay = 5;
-    }
-
-    try {
-        redirect($url, $notificationstring, $delay, $notificationtype);
-    } catch (moodle_exception $e) {
-        debugging('subscribeusers.php: Exception in redirect function.');
-    }
-
-} else {
+// We separated this part of the form handling from the above part, because of the redirect function.
+if (!$fromform = $mform->get_data()) {
     // This branch is executed if the form is submitted but the data doesn't validate and the form should be redisplayed...
     // ... or on the first display of the form.
     $mform->display();

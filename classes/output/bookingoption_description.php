@@ -150,15 +150,19 @@ class bookingoption_description implements renderable, templatable {
 
     /**
      * Constructor.
+     *
      * @param int $optionid
-     * @param null $bookingevent
+     * @param object|null $bookingevent
      * @param int $descriptionparam
      * @param bool $withcustomfields
+     * @param bool|null $forbookeduser
+     * @param object|null $user
+     *
      */
     public function __construct(
             int $optionid,
             $bookingevent = null,
-            int $descriptionparam = MOD_BOOKING_DESCRIPTION_WEBSITE, // Default.
+            int $descriptionparam = MOD_BOOKING_DESCRIPTION_WEBSITE,
             bool $withcustomfields = true,
             bool $forbookeduser = null,
             object $user = null) {
@@ -206,11 +210,17 @@ class bookingoption_description implements renderable, templatable {
         // If there is an entity, we show it instead of the location field.
         if (!empty($settings->entity)) {
             $entityurl = new moodle_url('/local/entities/view.php', ['id' => $settings->entity['id']]);
-            $entityfullname = $settings->entity['name'];
-            $this->location = html_writer::tag('a', $entityfullname, ['href' => $entityurl->out(false)]);
+
+            if (!empty($settings->entity['parentname'])) {
+                $nametobeshown = $settings->entity['parentname'] . " (" . $settings->entity['name'] . ")";
+            } else {
+                $nametobeshown = $settings->entity['name'];
+            }
+            $this->location = html_writer::tag('a', $nametobeshown, ['href' => $entityurl->out(false)]);
         } else {
             $this->location = $settings->location;
         }
+
         $this->address = $settings->address;
         $this->institution = $settings->institution;
 
@@ -409,6 +419,8 @@ class bookingoption_description implements renderable, templatable {
     }
 
     /**
+     * Export for template.
+     *
      * @param renderer_base $output
      * @return array
      */

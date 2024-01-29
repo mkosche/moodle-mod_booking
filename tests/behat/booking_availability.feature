@@ -25,9 +25,14 @@ Feature: Test booking options avaialbility conditions
     And the following "activities" exist:
       | activity | course | name       | intro                  | bookingmanager | eventtype | Default view for booking options | Activate e-mails (confirmations, notifications and more) | Booking option name  |
       | booking  | C1     | My booking | My booking description | teacher1       | Webinar   | All bookings                     | Yes                                                      | New option - Webinar |
-    And I create booking option "Option - advanced availability" in "My booking"
-    And I create booking option "Option - availability by dates" in "My booking"
-    And I create booking option "Option - dependency" in "My booking"
+    ##And I create booking option "Option - advanced availability" in "My booking"
+    ##And I create booking option "Option - availability by dates" in "My booking"
+    ##And I create booking option "Option - dependency" in "My booking"
+    And the following "mod_booking > options" exist:
+      | booking    | text                           | course | description | optiondateid_1 | daystonotify_1 | coursestarttime_1 | courseendtime_1 | optiondateid_2 | daystonotify_2 | coursestarttime_2 | courseendtime_2 |
+      | My booking | Option - advanced availability | C1     | Deskr       | 0              | 0              | ## tomorrow ##    | ## +2 days ##   | 0              | 0              | ## +3 days ##     | ## +4 days ##   |
+      | My booking | Option - availability by dates | C1     | Deskr       | 0              | 0              | ## +2 days ##     | ## +3 days ##   | 0              | 0              | ## +4 days ##     | ## +5 days ##   |
+      | My booking | Option - dependency            | C1     | Deskr       | 0              | 0              | ## +3 days ##     | ## +4 days ##   | 0              | 0              | ## +5 days ##     | ## +6 days ##   |
 
   @javascript
   Scenario: Configure availability condition by dates - until
@@ -190,7 +195,6 @@ Feature: Test booking options avaialbility conditions
     Given I am on the "My booking" Activity page logged in as teacher1
     And I click on "Settings" "icon" in the ".allbookingoptionstable_r3" "css_element"
     And I click on "Edit booking option" "link" in the ".allbookingoptionstable_r3" "css_element"
-    And I set the field "Limit the number of participants" to "checked"
     And I set the field "Max. number of participants" to "1"
     And I press "Save and go back"
     ## Check availability as students
@@ -209,7 +213,6 @@ Feature: Test booking options avaialbility conditions
     Given I am on the "My booking" Activity page logged in as teacher1
     And I click on "Settings" "icon" in the ".allbookingoptionstable_r3" "css_element"
     And I click on "Edit booking option" "link" in the ".allbookingoptionstable_r3" "css_element"
-    And I set the field "Limit the number of participants" to "checked"
     And I set the following fields to these values:
       | Max. number of participants           | 2 |
       | Max. number of places on waiting list | 1 |
@@ -239,7 +242,6 @@ Feature: Test booking options avaialbility conditions
     When I am on the "My booking" Activity page logged in as admin
     And I click on "Settings" "icon" in the ".allbookingoptionstable_r3" "css_element"
     And I click on "Edit booking option" "link" in the ".allbookingoptionstable_r3" "css_element"
-    And I set the field "Limit the number of participants" to "checked"
     And I set the field "Max. number of participants" to "1"
     And I press "Save and go back"
     And I wait until the page is ready
@@ -312,13 +314,12 @@ Feature: Test booking options avaialbility conditions
     Given I am on the "My booking" Activity page logged in as teacher1
     And I click on "Settings" "icon" in the ".allbookingoptionstable_r3" "css_element"
     And I click on "Edit booking option" "link" in the ".allbookingoptionstable_r3" "css_element"
-    And I set the field "Limit the number of participants" to "checked"
     And I set the field "Max. number of participants" to "1"
     And I follow "Availability conditions"
     And I set the field "Only specific user(s) are allowed to book" to "checked"
     And I set the field "User(s) allowed to book" to "Student 2"
-    And I set the field "id_bo_cond_selectusers_overrideconditioncheckbox" to "checked"
-    And I set the field "id_bo_cond_selectusers_overrideoperator" to "OR"
+    And I set the field "bo_cond_selectusers_overrideconditioncheckbox" to "checked"
+    And I set the field "bo_cond_selectusers_overrideoperator" to "OR"
     And I set the field with xpath "//*[contains(@id, 'fitem_id_bo_cond_selectusers_overridecondition')]//*[contains(@id, 'form_autocomplete_input')]" to "Fully booked"
     And I press "Save and go back"
     And I wait until the page is ready

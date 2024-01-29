@@ -1,3 +1,108 @@
+## Version 8.1.7 (2024012900)
+**New features:**
+* New feature: Add setting to collapse descriptions of booking options in table.
+* New feature: Add possibility to set canceluntil date for individual booking options.
+
+**Improvements:**
+* Improvement: Improve performance on instances with a lot of options.
+* Improvement: Cache "showdates" for much better performance.
+* Improvement: Store useprice flag in JSON so that it works correctly.
+
+**Bugfixes:**
+* Bugfix: Change semester adHoc task threw an error when non existing courseid was defined.
+* Bugfix: Setting the active booking options filter on end of this day, not time() will improve cached working.
+* Bugfix: Do not save custom form condition if checkbox is turned off.
+* Bugfix: Fix and improve canceluntil functionality and make sure that it works with cancelmyself (for options without price).
+
+## Version 8.1.6 (2024012400)
+**Improvements:**
+* Improvement: Fix layout bugs with signin sheet.
+
+## Version 8.1.5 (2024012200)
+**Bugfixes:**
+* Bugfix: Fix save_data function of option field "elective".
+* Bugfix: Fix bugs in option field "actions".
+* Bugfix: Fix bug in option field "addtogroup".
+* Bugfix: Fix wrong usage of cmid in booking_option class.
+* Bugfix: Fix change semester functionality (reset and create new optiondates).
+* Bugfix: Fix several bugs with fields classes.
+* Bugfix: Fix for dynamic custom fields that allow multiple values (multiselect).
+
+## Version 8.1.4 (2024011900)
+**Improvements:**
+* Improvement: Improve quality of sign-in sheets.
+* Improvement: Speed-up performance by deleting the right caches (booking answers cache instead of whole booking option cache).
+
+**Bugfixes:**
+* Bugfix: Fix "showdates" misbehavior as well as template creation issue - both caused by TinyMCE - so disabled it.
+
+## Version 8.1.3 (2024011700)
+**Bugfixes:**
+* Bugfix: Fix button to allow booking of users who are not enrolled in course.
+
+## Version 8.1.2 (2024011600)
+**Bugfixes:**
+* Bugfix: No userid needed in option_allows_overbooking_for_user (we always use logged-in user here).
+* Bugfix: Fix exception for old options with only one date stored in the booking option.
+* Bugfix: Fix automatic creation of new Moodle courses with new option form.
+
+## Version 8.1.1 (2024011500)
+**Improvements:**
+* Improvement: React on changes in new booking_option update function.
+* Improvement: phpunittest - bring back "dayofweek" in csv and assertion.
+
+**Bugfixes:**
+* Bugfix: Collapsible not opened properly.
+* Bugfix: Make sure constants are present when needing them.
+* Bugfix: Fix collapsible for bootstrap 4 & 5.
+* Bugfix: Store correct info in dayofweek column.
+* Bugfix: Add missing string for booking:view capability.
+* Bugfix: Submit buttons not working in new option form - we comment them out for now.
+* Bugfix: Fix a bug in booking_option.php where optionid was retrieved incorrectly.
+* Bugfix: Semester not used from booking settings for new option.
+* Bugfix: Fix for undefined property: stdClass::$addtocalendar booking_utils.php.
+* Bugfix: No "id" in csv file. So if no ID provided we threat record as new and set id to "0".
+* Bugfix: Fix warning because of null in explode.
+* Bugfix: Fix broken cancel button in option form.
+
+## Version 8.1.0 (2024011000)
+**New features:**
+* New feature: In Booking 8.1.0, we completely re-wrote the booking option form in a more modern and object oriented way.
+This will allow us, to individually adapt the booking option form for differenct clients and use cases dynamically and easily.
+* New feature: In Booking 8.1.0, we also changed the way templates work in the option form.
+They are no longer filled out using JavaScript (which was quite buggy and incomplete) but we use the new classes for templates and CSV import too.
+* New feature: In Booking 8.1.0, optiondates (sessions of an option) are created using a new dynamic form.
+So you can now add entities, custom fields, comments and the number of days for session notifications directly to each date.
+Also, you will now always have optiondates, even if there is only one session (so there is no need to show coursestarttime and
+courseendtime of the booking option anymore).
+
+**Improvements:**
+* Improvement: Logs of little UI, Usability and layout changes to make the booking option form cleaner and more beautiful.
+* Improvement: Recommendedin show only options where coursesendtime is > $now. (arg 'all' to turn off).
+* Improvement: Lots of code quality improvements and linting (e.g. PHPdoc).
+
+## Version 8.0.56 (2023122000)
+**New features:**
+* New feature: Shortcode [recommendedin] - Better default settings and new params for configuration.
+
+**Improvements:**
+* Improvement: If we have dates with "entity outliers" we show an additional checkbox to confirm overwriting.
+* Improvement: Add and remove teachers only from future dates, but keep them in past dates - so we have a valid history.
+* Improvement: Change string for changed behavior (teachers only added/removed for FUTURE optiondates).
+* Improvement: Recommendedin show only options where coursesendtime is > $now. (arg 'all' to turn off)
+* Improvement: Remove RELEASENOTES as it is redundant to CHANGES.md.
+
+**Bugfixes:**
+* Bugfix: Also purge encoded tables (wunderbyte table cache) when purging cache for a specific option.
+* Bugfix: Only purge wbtable cache when a booking option gets updated. Not generally.
+* Bugfix: Fix some strings for booking instance action logs.
+* Bugfix: Fix behat.
+
+## Version 8.0.55 (2023121100)
+**Bugfixes:**
+* Bugfix: Add missing string 'semesterid'.
+* Bugfix: Fix a bug that lead to teacher notifications not being sent anymore.
+
 ## Version 8.0.54 (2023120700)
 **Improvements:**
 * Improvement: Refactor action names for wbtable.
@@ -73,8 +178,8 @@
 **Bugfixes:**
 * Bugfix: Make sure that booking and cancelling of options without a price is possible even when shopping cart is installed.
 * Bugfix: Fix bugs with prepages (both modal and inline) in combination with new cost center feature.
-* Bufix: Fix behat tests and issues related to prepages (both modal and inline).
-* Bufix: Fix error "Exception - Warning: Undefined array key "serviceperiodstart".
+* Bugfix: Fix behat tests and issues related to prepages (both modal and inline).
+* Bugfix: Fix error "Exception - Warning: Undefined array key "serviceperiodstart".
 * Bugfix: Fix Javascript for Prepage Modals.
 * Bugfix: Add shoppingcartisinstalled to example json.
 * Bugfix: Fix normal booking button js.

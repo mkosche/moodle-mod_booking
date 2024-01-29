@@ -15,8 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This is the main entrance point for the booking plugin
- * showing a table of all booking options.
+ * This is the main entrance point for the booking plugin showing a table of all booking options.
+ *
  * Completely rebuilt in January 2023.
  *
  * @package mod_booking
@@ -45,6 +45,8 @@ $whichview = optional_param('whichview', '', PARAM_ALPHA);
 list($course, $cm) = get_course_and_cm_from_cmid($cmid, 'booking');
 require_course_login($course, false, $cm);
 $context = context_module::instance($cm->id);
+
+require_capability('mod/booking:view', $context);
 
 // URL params.
 $urlparams = [

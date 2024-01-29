@@ -50,7 +50,6 @@ class campaigns_info {
      * Add form fields to mform.
      *
      * @param MoodleQuickForm $mform
-     * @param array $repeateloptions
      * @param array $ajaxformdata
      * @return void
      */
@@ -178,7 +177,7 @@ class campaigns_info {
 
     /**
      * Save the booking campaign.
-     * @param stdClass &$data reference to the form data
+     * @param stdClass $data reference to the form data
      * @return void
      */
     public static function save_booking_campaign(stdClass &$data) {

@@ -88,7 +88,7 @@ class campaign_customfield implements booking_campaign {
     /**
      * Add the campaign to the mform.
      * @param MoodleQuickForm $mform
-     * @param array &$ajaxformdata reference to form data
+     * @param array $ajaxformdata reference to form data
      * @return void
      */
     public function add_campaign_to_mform(MoodleQuickForm &$mform, array &$ajaxformdata = null) {
@@ -185,7 +185,7 @@ class campaign_customfield implements booking_campaign {
 
     /**
      * Save the campaign.
-     * @param stdClass &$data form data reference
+     * @param stdClass $data form data reference
      */
     public function save_campaign(stdClass &$data) {
         global $DB;
@@ -229,7 +229,7 @@ class campaign_customfield implements booking_campaign {
 
     /**
      * Sets the campaign defaults when loading the form.
-     * @param stdClass &$data reference to the default values
+     * @param stdClass $data reference to the default values
      * @param stdClass $record a record from booking_campaigns
      */
     public function set_defaults(stdClass &$data, stdClass $record) {
@@ -304,6 +304,7 @@ class campaign_customfield implements booking_campaign {
      * Function to apply the campaign's booking limit factor.
      * If there are more booked users as the set limit (overbooked), we use that nr as base.
      * @param int $limit the original booking limit
+     * @param booking_option_settings $settings
      * @return int the new booking limit
      */
     private function get_campaign_limit(int $limit, booking_option_settings $settings):int {

@@ -13,6 +13,15 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Handling editing of option tepmplates
+ *
+ * @package mod_booking
+ * @copyright 2023 Wunderbyte GmbH <info@wunderbyte.at>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 use mod_booking\form\option_form;
 use mod_booking\singleton_service;
 
@@ -46,7 +55,8 @@ if (!has_capability('mod/booking:manageoptiontemplates', $context)) {
     throw new moodle_exception('nopermissions', 'error', '', 'manage booking option templates');
 }
 
-$mform = new option_form(null, ['bookingid' => 0, 'optionid' => $optionid, 'cmid' => $cm->id, 'context' => $context]);
+$customdata = ['id' => $optionid, 'bookingid' => 0, 'optionid' => $optionid, 'cmid' => $cm->id, 'context' => $context];
+$mform = new option_form(null, $customdata);
 
 if ($defaultvalues = $DB->get_record('booking_options', ['bookingid' => 0, 'id' => $optionid])) {
     $defaultvalues->optionid = $optionid;
@@ -68,7 +78,7 @@ if ($mform->is_cancelled()) {
             $fromform->limitanswers = 0;
         }
 
-        $nbooking = booking_update_options($fromform, $context);
+        $nbooking = booking_option::update($fromform, $context);
 
         if ($draftitemid = file_get_submitted_draft_itemid('myfilemanageroption')) {
             file_save_draft_area_files($draftitemid, $context->id, 'mod_booking', 'myfilemanageroption',

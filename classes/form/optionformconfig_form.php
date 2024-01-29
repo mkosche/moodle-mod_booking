@@ -67,8 +67,16 @@ class optionformconfig_form extends \moodleform {
             }
 
             // Instantiate an option_form object, so we can get its elements.
-            $optionformdummy = new option_form(null,
-                ['formmode' => 'expert', 'bookingid' => $bookingid, 'optionid' => 0, 'cmid' => $cmid, 'context' => $context]);
+            $optionformdummy = new option_form(
+                null,
+                [
+                    'formmode' => 'expert',
+                    'bookingid' => $bookingid,
+                    'id' => 0,
+                    'optionid' => 0,
+                    'cmid' => $cmid,
+                    'context' => $context,
+                ]);
 
             if ($elements = $optionformdummy->_form->_elements) {
 
@@ -125,10 +133,12 @@ class optionformconfig_form extends \moodleform {
 
 
     /**
-     * Validate price categories.
+     * Form validation.
      *
-     * {@inheritdoc}
-     * @see moodleform::validation()
+     * @param array $data
+     * @param array $files
+     * @return array
+     *
      */
     public function validation($data, $files) {
 

@@ -49,7 +49,7 @@ class col_availableplaces implements renderable, templatable {
     /** @var booking_answers $bookinganswers instance of class */
     private $bookinganswers = null;
 
-    /** @var stdClass $buyforuser user stdclass if we buy for user */
+    /** @var \stdClass $buyforuser user stdclass if we buy for user */
     private $buyforuser = null;
 
     /** @var bool $showmanageresponses */
@@ -66,8 +66,10 @@ class col_availableplaces implements renderable, templatable {
 
     /**
      * The constructor takes the values from db.
-     * @param stdClass $values
+     *
+     * @param mixed $values
      * @param booking_option_settings $settings
+     * @param bool $buyforuser
      */
     public function __construct($values, booking_option_settings $settings, $buyforuser = null) {
         global $CFG;
@@ -80,14 +82,15 @@ class col_availableplaces implements renderable, templatable {
 
         $syscontext = context_system::instance();
         $modcontext = context_module::instance($cmid);
-        $isteacher = booking_check_if_teacher($values);
-        if (
-            has_capability('mod/booking:updatebooking', $modcontext)
+
+        $canviewreport = (
+            has_capability('mod/booking:viewreports', $syscontext)
+            || has_capability('mod/booking:updatebooking', $modcontext)
             || has_capability('mod/booking:updatebooking', $syscontext)
-            || has_capability('mod/booking:viewreports', $syscontext)
-            || (has_capability('mod/booking:addeditownoption', $modcontext) && $isteacher)
-            || (has_capability('mod/booking:addeditownoption', $syscontext) && $isteacher)
-        ) {
+            || booking_check_if_teacher($optionid)
+        );
+
+        if ($canviewreport) {
 
             $this->showmanageresponses = true;
 

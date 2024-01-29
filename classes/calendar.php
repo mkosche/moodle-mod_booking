@@ -13,6 +13,16 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Util class for adding events to calendar.
+ *
+ * @package mod_booking
+ * @copyright 2023 Wunderbyte GmbH <info@wunderbyte.at>
+ * @author Andraž Prinčič, David Bogner
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace mod_booking;
 
 use calendar_event;
@@ -25,21 +35,68 @@ global $CFG;
 require_once($CFG->dirroot.'/calendar/lib.php');
 
 /**
- * Util class for adding events to calendar.
+ * Class for adding events to calendar.
  *
  * @package mod_booking
- * @copyright 2019 Andraž Prinčič, David Bogner
+ * @copyright 2023 Wunderbyte GmbH <info@wunderbyte.at>
+ * @author Andraž Prinčič, David Bogner
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class calendar {
 
+    /**
+     * MOD_BOOKING_TYPEOPTION
+     *
+     * @var int
+     */
     const MOD_BOOKING_TYPEOPTION = 1;
+
+    /**
+     * MOD_BOOKING_TYPEUSER
+     *
+     * @var int
+     */
     const MOD_BOOKING_TYPEUSER = 2;
+
+    /**
+     * MOD_BOOKING_TYPETEACHERADD
+     *
+     * @var int
+     */
     const MOD_BOOKING_TYPETEACHERADD = 3;
+
+    /**
+     * MOD_BOOKING_TYPETEACHERREMOVE
+     *
+     * @var int
+     */
     const MOD_BOOKING_TYPETEACHERREMOVE = 4;
+
+    /**
+     * MOD_BOOKING_TYPETEACHERUPDATE
+     *
+     * @var int
+     */
     const MOD_BOOKING_TYPETEACHERUPDATE = 5;
+
+    /**
+     * MOD_BOOKING_TYPEOPTIONDATE
+     *
+     * @var int
+     */
     const MOD_BOOKING_TYPEOPTIONDATE = 6;
 
+    /**
+     * Class constructor.
+     *
+     * @param int $cmid
+     * @param int $optionid
+     * @param int $userid
+     * @param mixed $type
+     * @param int $optiondateid
+     * @param int $justbooked
+     *
+     */
     public function __construct($cmid, $optionid, $userid, $type, $optiondateid = 0, $justbooked = 0) {
         global $DB;
 
@@ -183,12 +240,13 @@ class calendar {
      *
      * @param int $cmid
      * @param int $optionid
-     * @param int $userid
      * @param int $calendareventid
+     * @param int $userid
      * @param int $addtocalendar 0 = do not add, 1 = add as course event
+     *
      * @return int calendarid
-     * @throws coding_exception
-     * @throws dml_exception
+     * @throws \coding_exception
+     * @throws \dml_exception
      */
     private static function booking_option_add_to_cal(int $cmid, int $optionid, int $calendareventid,
         int $userid = 0, int $addtocalendar = 1) {
@@ -272,7 +330,6 @@ class calendar {
      * @param stdClass $optiondate
      * @param int $calendareventid
      * @param int $userid
-     * @param int $calendareventid
      * @param int $addtocalendar 0 = do not add, 1 = add as course event
      *
      * @return int calendarid
@@ -370,8 +427,8 @@ class calendar {
         global $DB;
 
         $optioniduserid =
-            "ue.optionid = :optionid
-            AND ue.userid = :userid";
+            "optionid = :optionid
+            AND userid = :userid";
 
         $sqlusereventids =
             "SELECT eventid
@@ -384,10 +441,10 @@ class calendar {
         ];
         try {
              // At first delete events themselves.
-            $DB->delete_records_select("event", "id IN ( $sqlusereventids )", $params);
+            $DB->delete_records_select('event', "id IN ( $sqlusereventids )", $params);
 
             // Now we can delete the booking user event entries.
-            $DB->delete_records_select("booking_userevents", $optioniduserid, $params);
+            $DB->delete_records_select('booking_userevents', $optioniduserid, $params);
         } catch (Exception $e) {
             debugging('there seems to be a problem with deleting the user events.', DEBUG_NORMAL);
         }
