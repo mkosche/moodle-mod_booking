@@ -25,9 +25,13 @@
 namespace mod_booking\option;
 
 use dml_exception;
+use context_module;
 use local_entities\entitiesrelation_handler;
+use mod_booking\calendar;
 use mod_booking\customfield\optiondate_cfields;
+use mod_booking\event\bookingoptiondate_created;
 use mod_booking\singleton_service;
+use mod_booking\teachers_handler;
 use stdClass;
 
 /**
@@ -162,7 +166,7 @@ class optiondate {
         int $entityid = 0,
         array $customfields = []):optiondate {
 
-        global $DB;
+        global $DB, $USER;
 
         $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
         $data = [
@@ -178,6 +182,7 @@ class optiondate {
         ];
 
         // Before we insert a record, we want to know if we can also update.
+        $insertnew = false;
         if (!empty($id)) {
             $data = array_merge(['id' => $id], $data);
 
@@ -197,10 +202,46 @@ class optiondate {
             } else {
                 // If we don't find the record, we insert it.
                 unset($data['id']);
-                $id = $DB->insert_record('booking_optiondates', $data);
+                $insertnew = true;
             }
         } else {
+            $insertnew = true;
+        }
+
+        if ($insertnew) {
             $id = $DB->insert_record('booking_optiondates', $data);
+
+            // Add teachers of the booking option to newly created optiondate.
+            teachers_handler::subscribe_existing_teachers_to_new_optiondate($id);
+
+            // When we create a template, we may not have a cmid.
+
+            if (!empty($settings->cmid)) {
+
+                // We trigger the event, where we take care of events in calendar etc. First we get the context.
+                $event = bookingoptiondate_created::create([
+                    'context' => context_module::instance($settings->cmid),
+                    'objectid' => $id,
+                    'userid' => $USER->id,
+                    'other' => ['optionid' => $optionid],
+                ]);
+                $event->trigger();
+
+                // Also create new user events (user calendar entries) for all booked users.
+                $option = singleton_service::get_instance_of_booking_option($settings->cmid, $optionid);
+                $users = $option->get_all_users();
+                foreach ($users as $user) {
+                    new calendar($settings->cmid, $optionid, $user->id, calendar::MOD_BOOKING_TYPEOPTIONDATE, $id, 1);
+                }
+            }
+
+            // If a new optiondate is inserted and we have no entityid set, then we use the entity of the parent option as default.
+            if (class_exists('local_entities\entitiesrelation_handler') && empty($entityid)) {
+                $erhandleroption = new entitiesrelation_handler('mod_booking', 'option');
+                $entityid = $erhandleroption->get_entityid_by_instanceid($optionid);
+                $erhandler = new entitiesrelation_handler('mod_booking', 'optiondate');
+                $erhandler->save_entity_relation($id, $entityid);
+            }
         }
 
         $oldrecord = empty($oldrecord->optiondateid) ? new stdClass() : $oldrecord;
@@ -208,7 +249,6 @@ class optiondate {
         $newdata['entityid'] = $entityid;
         $newdata['entityarea'] = 'optiondate';
         if (!self::compare_optiondates((array)$oldrecord, $newdata, 2)) {
-
             // We need to save entities relation.
             if (class_exists('local_entities\entitiesrelation_handler')) {
                 $erhandler = new entitiesrelation_handler('mod_booking', 'optiondate');
@@ -289,19 +329,37 @@ class optiondate {
     public static function delete($optiondateid) {
         global $DB;
 
-        $optionid = $DB->get_field('booking_optiondates', 'optionid', ['id' => $optiondateid]);
+        if (!$optiondate = $DB->get_record('booking_optiondates', ['id' => $optiondateid])) {
+            return;
+        }
+        $optionid = $optiondate->optionid;
 
-        // Delete course events for the optiondate.
-        // Optionid and optiondateid are stored in uuid column like this: optionid-optiondateid.
-        $DB->delete_records_select('event',
-            "eventtype = 'course'
-            AND courseid <> 0
-            AND component = 'mod_booking'
-            AND uuid = :pattern",
-            ['pattern' => "{$optionid}-{$optiondateid}"]
-        );
+        // Delete calendar course event for the optiondate.
+        if ($optiondate->eventid !== null && $optiondate->eventid !== 0) {
+            $DB->delete_records('event', ['id' => $optiondate->eventid]);
+        } else {
+            // If eventid is missing, we can still try another way of deleting.
+            // Optionid and optiondateid are stored in uuid column like this: optionid-optiondateid.
+            $DB->delete_records_select('event',
+                "eventtype = 'course'
+                AND courseid <> 0
+                AND component = 'mod_booking'
+                AND uuid = :pattern",
+                ['pattern' => "{$optionid}-{$optiondateid}"]
+            );
+        }
 
-        $DB->delete_records('booking_optiondates', ['id' => $optiondateid]);
+        // Besides the calendar course event, also clean all associated user events.
+        $usereventrecords = $DB->get_records('booking_userevents', ['optiondateid' => $optiondateid]);
+        if (!empty($usereventrecords)) {
+            foreach ($usereventrecords as $uerecord) {
+                $DB->delete_records('event', ['id' => $uerecord->eventid]);
+                $DB->delete_records('booking_userevents', ['id' => $uerecord->id]);
+            }
+        }
+
+        // We also need to delete the associated records in booking_optiondates_teachers.
+        teachers_handler::remove_teachers_from_deleted_optiondate($optiondateid);
 
         // We might need to delete entities relation.
         if (class_exists('local_entities\entitiesrelation_handler')) {
@@ -310,5 +368,31 @@ class optiondate {
         }
 
         optiondate_cfields::delete_cfields_for_optiondate($optiondateid);
+
+        /* TODO: We need to migrate changes to a new get_changes function.
+        This function should also be part of the new option/fields interface! */
+        // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
+        /* $changes = [];
+
+        // Store the changes so they can be sent in an update mail.
+        $changes[] = [
+            'info' => get_string('changeinfosessiondeleted', 'booking'),
+            'fieldname' => 'coursestarttime',
+            'oldvalue' => $optiondate->coursestarttime,
+        ];
+        $changes[] = [
+            'fieldname' => 'courseendtime',
+            'oldvalue' => $optiondate->courseendtime,
+        ];
+        if (!empty($changes)) {
+            // Set no update to true, so the original.
+            $bu = new \mod_booking\booking_utils();
+            $cm = get_coursemodule_from_instance('booking', $this->bookingid);
+            $context = context_module::instance($cm->id);
+            $bu->react_on_changes($cm->id, $context, $this->optionid, $changes, true);
+        } */
+
+        // At the very end, we delete the optiondate itself.
+        $DB->delete_records('booking_optiondates', ['id' => $optiondateid]);
     }
 }

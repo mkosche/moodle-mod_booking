@@ -188,7 +188,7 @@ class booking_option {
      * @throws coding_exception
      * @throws dml_exception
      */
-    public static function create_option_from_optionid($optionid, ?int $bookingid = null): ?booking_option {
+    public static function create_option_from_optionid($optionid, ?int $bookingid = null) {
         global $DB;
 
         if (empty($bookingid)) {
@@ -2751,6 +2751,7 @@ class booking_option {
         cache_helper::purge_by_event('setbackoptionstable');
         cache_helper::invalidate_by_event('setbackoptionsettings', [$optionid]);
 
+        // We also purge the answers cache.
         self::purge_cache_for_answers($optionid);
     }
 
@@ -3209,7 +3210,7 @@ class booking_option {
      * @param int $optionid
      * @return int|null $cmid
      */
-    public static function get_cmid_from_optionid(int $optionid): ?int {
+    public static function get_cmid_from_optionid(int $optionid) {
         $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
         if (!empty($settings->cmid)) {
             return (int) $settings->cmid;
@@ -3399,61 +3400,5 @@ class booking_option {
 
         $this->update($data, $context);
 
-    }
-
-    /**
-     * Helper function to deal with the creation of multisessions (optiondates).
-     *
-     * @param mixed $optionvalues
-     * @param mixed $booking
-     * @param int $optionid
-     * @param null|context $context
-     *
-     * @return void
-     *
-     */
-    public static function deal_with_multisessions(&$optionvalues, $booking, $optionid, $context) {
-
-        global $DB;
-
-        // Deal with new optiondates (Multisessions).
-        // TODO: We should have an optiondates class to deal with all of this.
-        // As of now, we do it the hacky way.
-        for ($i = 1; $i < 100; ++$i) {
-
-            $starttimekey = 'ms' . $i . 'starttime';
-            $endtimekey = 'ms' . $i . 'endtime';
-            $daystonotify = 'ms' . $i . 'nt';
-
-            if (!empty($optionvalues->$starttimekey) && !empty($optionvalues->$endtimekey)) {
-                $optiondate = new stdClass();
-                $optiondate->bookingid = $booking->id;
-                $optiondate->optionid = $optionid;
-                $optiondate->coursestarttime = $optionvalues->$starttimekey;
-                $optiondate->courseendtime = $optionvalues->$endtimekey;
-                if (!empty($optionvalues->$daystonotify)) {
-                    $optiondate->daystonotify = $optionvalues->$daystonotify;
-                }
-                $dateshandler = new dates_handler($optionid, $booking->id);
-                $optiondateid = $dateshandler->create_option_date($optiondate);
-
-                for ($j = 1; $j < 4; ++$j) {
-                    $cfname = 'ms' . $i . 'cf' . $j . 'name';
-                    $cfvalue = 'ms' . $i . 'cf'. $j . 'value';
-
-                    if (!empty($optionvalues->$cfname)
-                        && !empty($optionvalues->$cfvalue)) {
-
-                        $customfield = new stdClass();
-                        $customfield->bookingid = $booking->id;
-                        $customfield->optionid = $optionid;
-                        $customfield->optiondateid = $optiondateid;
-                        $customfield->cfgname = $optionvalues->$cfname;
-                        $customfield->value = $optionvalues->$cfvalue;
-                        $DB->insert_record("booking_customfields", $customfield);
-                    }
-                }
-            }
-        }
     }
 }
