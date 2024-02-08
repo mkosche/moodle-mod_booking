@@ -116,10 +116,18 @@ class canceluntil extends field_base {
      */
     public static function set_data(stdClass &$data, booking_option_settings $settings) {
 
-        $canceluntil = booking_option::get_value_of_json_by_key($data->id, "canceluntil");
-        if (!empty($canceluntil)) {
-            $data->canceluntilcheckbox = 1;
-            $data->canceluntil = $canceluntil;
+        if (!empty($data->importing)) {
+            if (!empty($data->canceluntil)) {
+                $data->canceluntilcheckbox = 1;
+                // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
+                /* $data->canceluntil = $data->canceluntil; */ // Not necessary!
+            }
+        } else {
+            $canceluntil = booking_option::get_value_of_json_by_key($data->id, "canceluntil");
+            if (!empty($canceluntil)) {
+                $data->canceluntilcheckbox = 1;
+                $data->canceluntil = $canceluntil;
+            }
         }
     }
 }

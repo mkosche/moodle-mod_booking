@@ -86,7 +86,6 @@ $string['search'] = 'Search...';
 $string['semesterid'] = 'SemesterID';
 $string['nosemester'] = 'No semester chosen';
 $string['sendmailtoallbookedusers'] = 'Send e-mail to all booked users';
-$string['showmore'] = 'Show more';
 $string['sortorder'] = 'Sort order';
 $string['sortorder:asc'] = 'A&rarr;Z';
 $string['sortorder:desc'] = 'Z&rarr;A';
@@ -1092,7 +1091,6 @@ Go to course: {$a->courselink}
 See all booking options: {$a->bookinglink}';
 $string['sendmailtobooker'] = 'Book other users page: Send mail to user who books instead to users who are booked';
 $string['sendmailtobooker_help'] = 'Activate this option in order to send booking confirmation mails to the user who books other users instead to users, who have been added to a booking option. This is only relevant for bookings made on the page "book other users".';
-$string['startendtimeknown'] = 'Start and end time of course are known';
 $string['submitandadd'] = 'Save and add new';
 $string['submitandstay'] = 'Save and stay';
 $string['waitinglisttaken'] = 'On the waiting list';
@@ -1585,6 +1583,8 @@ $string['signincustfields'] = 'Custom profile fields';
 $string['signincustfields_desc'] = 'Select the custom profiles fields to be shown on the sign-in sheet';
 $string['showcustomfields'] = 'Custom booking option fields';
 $string['showcustomfields_desc'] = 'Select the custom booking option fields to be shown on the sign-in sheet';
+$string['alloptionsinreport'] = 'One report for a booking activity';
+$string['alloptionsinreportdesc'] = 'The report of one booking activity will include all the answers of all booking options within this activity.';
 
 $string['showlistoncoursepage'] = 'Show extra information on course page';
 $string['showlistoncoursepage_help'] = 'If you activate this setting, the course name, a short info and a button

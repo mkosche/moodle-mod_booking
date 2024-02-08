@@ -420,14 +420,14 @@ class booking_option {
 
         $text = "";
 
-        if (empty($this->option->aftercompletedtext
-            && empty($this->option->beforecompletedtext)
-            && empty($this->option->beforebookedtext)
+        if (empty($this->settings->aftercompletedtext)
+            && empty($this->settings->beforecompletedtext)
+            && empty($this->settings->beforebookedtext)
             && empty($this->booking->settings->aftercompletedtext)
             && empty($this->booking->settings->beforecompletedtext)
-            && empty($this->booking->settings->beforebookedtext))) {
+            && empty($this->booking->settings->beforebookedtext)) {
 
-                return '';
+            return '';
         }
 
         // New message controller.
@@ -446,21 +446,21 @@ class booking_option {
             [MOD_BOOKING_STATUSPARAM_BOOKED, MOD_BOOKING_STATUSPARAM_WAITINGLIST])) {
             $ac = $bookinganswers->is_activity_completed($userid);
             if ($ac == 1) {
-                if (!empty($this->option->aftercompletedtext)) {
-                    $text = format_text($this->option->aftercompletedtext);
+                if (!empty($this->settings->aftercompletedtext)) {
+                    $text = format_text($this->settings->aftercompletedtext);
                 } else if (!empty($this->booking->settings->aftercompletedtext)) {
                     $text = format_text($this->booking->settings->aftercompletedtext);
                 }
             } else {
-                if (!empty($this->option->beforecompletedtext)) {
-                    $text = format_text($this->option->beforecompletedtext);
+                if (!empty($this->settings->beforecompletedtext)) {
+                    $text = format_text($this->settings->beforecompletedtext);
                 } else if (!empty($this->booking->settings->beforecompletedtext)) {
                     $text = format_text($this->booking->settings->beforecompletedtext);
                 }
             }
         } else {
-            if (!empty($this->option->beforebookedtext)) {
-                $text = format_text($this->option->beforebookedtext);
+            if (!empty($this->settings->beforebookedtext)) {
+                $text = format_text($this->settings->beforebookedtext);
             } else if (!empty($this->booking->settings->beforebookedtext)) {
                 $text = format_text($this->booking->settings->beforebookedtext);
             }
@@ -1887,7 +1887,6 @@ class booking_option {
             $newoption = $settings->return_settings_as_stdclass();
             $newoption->coursestarttime = $optiondate->starttimestamp;
             $newoption->courseendtime = $optiondate->endtimestamp;
-            $newoption->startendtimeknown = 1;
             if (!$firstrun) {
                 unset($newoption->optionid);
                 unset($newoption->id);
@@ -3287,14 +3286,19 @@ class booking_option {
         // ... that's not the case for C to F.
 
         // Get the old option. We need to compare it with the new one to get the changes.
-        // If no ID provided we threat record as new and set id to "0".
+        // If no ID provided we treat record as new and set id to "0".
         $optionid = is_array($data) ? ($data['id'] ?? 0) : ($data->id ?? 0);
         $originaloption = singleton_service::get_instance_of_booking_option_settings($optionid);
 
         // If $formdata is an array, we need to run set_data.
         if (is_array($data) || isset($data->importing)) {
             $data = (object)$data;
-            fields_info::set_data($data);
+
+            // If we encounter an error in set data, we need to exit here.
+            $errormessage = fields_info::set_data($data);
+            if (!empty($errormessage)) {
+                throw new moodle_exception('erroronsetdata', 'mod_booking', '', $data, $errormessage);
+            }
 
             $errors = [];
 
