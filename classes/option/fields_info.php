@@ -31,6 +31,11 @@ use mod_booking\singleton_service;
 use moodle_exception;
 use MoodleQuickForm;
 use stdClass;
+use context_coursecat;
+use context_module;
+use dml_exception;
+use Exception;
+use mod_booking\price;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -62,7 +67,13 @@ class fields_info {
         $classes = self::get_field_classes();
 
         foreach ($classes as $classname) {
+
             if (class_exists($classname)) {
+
+                // We want to ignore some classes here.
+                if (self::ignore_class($formdata, $classname)) {
+                    continue;
+                }
 
                 // Execute the prepare function of every field.
                 try {
@@ -128,7 +139,6 @@ class fields_info {
             case MOD_BOOKING_HEADER_PRICE:
             case MOD_BOOKING_HEADER_TEACHERS:
             case MOD_BOOKING_HEADER_SUBBOOKINGS:
-            case MOD_BOOKING_HEADER_AVAILABILITY:
                 // For some identifiers, we do nothing.
                 // Because they take care of everything in one step.
                 break;
@@ -151,8 +161,14 @@ class fields_info {
 
         $classes = self::get_field_classes();
 
-        foreach ($classes as $class) {
-            $class::instance_form_definition($mform, $formdata, $optionformconfig);
+        foreach ($classes as $classname) {
+
+            // We want to ignore some classes here.
+            if (self::ignore_class((object)$formdata, $classname)) {
+                continue;
+            }
+
+            $classname::instance_form_definition($mform, $formdata, $optionformconfig);
         }
     }
 
@@ -167,8 +183,14 @@ class fields_info {
 
         $classes = self::get_field_classes();
 
-        foreach ($classes as $class) {
-            $class::validation($data, $files, $errors);
+        foreach ($classes as $classname) {
+
+            // We want to ignore some classes here.
+            if (self::ignore_class((object)$data, $classname)) {
+                continue;
+            }
+
+            $classname::validation($data, $files, $errors);
         }
     }
 
@@ -183,8 +205,14 @@ class fields_info {
 
         $classes = self::get_field_classes(MOD_BOOKING_EXECUTION_POSTSAVE);
 
-        foreach ($classes as $class) {
-            $class::save_data($formdata, $option);
+        foreach ($classes as $classname) {
+
+            // We want to ignore some classes here.
+            if (self::ignore_class($formdata, $classname)) {
+                continue;
+            }
+
+            $classname::save_data($formdata, $option);
         }
     }
 
@@ -195,7 +223,7 @@ class fields_info {
      */
     public static function set_data(stdClass &$data) {
 
-        $optionid = $data->id ?? 0;
+        $optionid = $data->id ?? $data->optionid ?? 0;
 
         $errormessage = '';
 
@@ -209,7 +237,16 @@ class fields_info {
 
         try {
             foreach ($classes as $classname) {
+
+                // We want to ignore some classes here.
+                if (self::ignore_class($data, $classname)) {
+                    continue;
+                }
                 $classname::set_data($data, $settings);
+                // We might get the id during prepare__import. If so, we want to get the settings object.
+                if (!empty($data->id) && empty($settings->id)) {
+                    $settings = singleton_service::get_instance_of_booking_option_settings($data->id);
+                }
             }
         } catch (moodle_exception $e) {
             // This is just to get out of the loop.
@@ -231,6 +268,12 @@ class fields_info {
         $classes = self::get_field_classes();
 
         foreach ($classes as $classname) {
+
+            // We want to ignore some classes here.
+            if (self::ignore_class($formdata, $classname)) {
+                continue;
+            }
+
             $classname::definition_after_data($mform, $formdata);
         }
     }
@@ -249,6 +292,10 @@ class fields_info {
 
         $classes = [];
         foreach (array_keys($fields) as $classname) {
+
+            if (!self::check_field_for_user($classname)) {
+                continue;
+            }
 
             // We might only want postsave classes.
             if ($save === MOD_BOOKING_EXECUTION_POSTSAVE) {
@@ -269,5 +316,108 @@ class fields_info {
         ksort($classes);
 
         return $classes;
+    }
+
+    /**
+     * Check field for user applies only the classes for the context of the form.
+     * @param string $classname
+     * @return bool
+     */
+    private static function check_field_for_user(string $classname) {
+
+        global $OUTPUT, $PAGE;
+
+        try {
+            $cmid = $PAGE->cm->id;
+        } catch (Exception $e) {
+
+            // Hack alert: Forcing bootstrap_renderer to initiate moodle page.
+            $OUTPUT->header();
+        }
+
+        try {
+            if ($cm = $PAGE->cm ?? false) {
+                $cmid = $cm->id;
+                $modulecontext = context_module::instance($cmid);
+            } else {
+                $cmid = 0;
+            }
+        } catch (Exception $e) {
+
+            $cmid = 0;
+        }
+
+        // Necessary fields are the same for all.
+        if (in_array(MOD_BOOKING_OPTION_FIELD_NECESSARY, $classname::$fieldcategories)) {
+            return true;
+        }
+
+        if (empty($cmid) || has_capability('mod/booking:expertoptionform', $modulecontext)) {
+            // Standard fields only.
+            if (in_array(MOD_BOOKING_OPTION_FIELD_STANDARD, $classname::$fieldcategories)) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+
+            // Easy fields only.
+            // Standard fields only.
+            if (in_array(MOD_BOOKING_OPTION_FIELD_EASY, $classname::$fieldcategories)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Ignore class.
+     * @param mixed $data
+     * @param mixed $classname
+     * @return bool
+     * @throws coding_exception
+     * @throws dml_exception
+     */
+    private static function ignore_class($data, $classname) {
+
+        global $DB;
+
+        if (!empty($data->importing)) {
+            // If we are importing, we see if the value is actually present.
+            // We only want the last part of the classname.
+            $array = explode('\\', $classname);
+            $shortclassname = array_pop($array);
+
+            // If the class is not necessary and not part of the imported fields, ignore it.
+            if (!in_array(MOD_BOOKING_OPTION_FIELD_NECESSARY, $classname::$fieldcategories)
+                && !isset($data->{$shortclassname})) {
+
+                // The custom field class is the only one which still needs to executed, as we dont.
+                if ($classname::$id === MOD_BOOKING_OPTION_FIELD_PRICE) {
+                    // TODO: if a column is called like any price category.
+                    $existingpricecategories = $DB->get_records('booking_pricecategories', ['disabled' => 0]);
+                    $results = array_filter($existingpricecategories, fn($a) => isset($data->{$a->identifier}));
+                    if (!empty($results)) {
+                        return false;
+                    }
+                }
+
+                // If there are alternative identifiers, we have to check if one of them is present.
+                foreach ($classname::$alternativeimportidentifiers as $alternativeidentifier) {
+                    if (isset($data->{$alternativeidentifier})) {
+                        return false;
+                    }
+                }
+
+                // The custom field class is the only one which still needs to executed, as we dont.
+                if ($classname::$id !== MOD_BOOKING_OPTION_FIELD_COSTUMFIELDS) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

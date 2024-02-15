@@ -391,9 +391,7 @@ class bo_info {
             }
         }
         if ($showconditionsheader) {
-            $mform->addElement('header', 'availabilityconditions',
-            '<i class="fa fa-fw fa-key" aria-hidden="true"></i>&nbsp;' .
-            get_string('availabilityconditions', 'mod_booking'));
+            $mform->addElement('header', 'availabilityconditions', get_string('availabilityconditionsheader', 'mod_booking'));
         }
 
         $conditions = self::get_conditions(MOD_BOOKING_CONDPARAM_MFORM_ONLY);
@@ -730,10 +728,13 @@ class bo_info {
             $user = null;
         }
 
+        // Initialize extra classes.
+        $extraclasses = '';
+
         // Needed for normal bookit button.
         if ($fullwidth) {
             // For view.php and default rendering.
-            $fullwidthclasses = 'w-100';
+            $extraclasses = 'w-100';
         }
 
         $data = [
@@ -744,7 +745,7 @@ class bo_info {
             'nojs' => $nojs,
             'main' => [
                 'label' => $label,
-                'class' => "$classes $fullwidthclasses text-center",
+                'class' => "$classes $extraclasses text-center",
                 'role' => $role,
             ],
         ];

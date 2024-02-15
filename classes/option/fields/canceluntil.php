@@ -28,6 +28,7 @@ use mod_booking\booking_option;
 use mod_booking\booking_option_settings;
 use mod_booking\option\fields_info;
 use mod_booking\option\field_base;
+use mod_booking\singleton_service;
 use MoodleQuickForm;
 use stdClass;
 
@@ -59,6 +60,24 @@ class canceluntil extends field_base {
      * @var string
      */
     public static $header = MOD_BOOKING_HEADER_ADVANCEDOPTIONS;
+
+    /**
+     * An int value to define if this field is standard or used in a different context.
+     * @var array
+     */
+    public static $fieldcategories = [MOD_BOOKING_OPTION_FIELD_STANDARD];
+
+    /**
+     * Additionally to the classname, there might be others keys which should instantiate this class.
+     * @var array
+     */
+    public static $alternativeimportidentifiers = [];
+
+    /**
+     * This is an array of incompatible field ids.
+     * @var array
+     */
+    public static $incompatiblefields = [];
 
     /**
      * This function interprets the value from the form and, if useful...
@@ -117,10 +136,14 @@ class canceluntil extends field_base {
     public static function set_data(stdClass &$data, booking_option_settings $settings) {
 
         if (!empty($data->importing)) {
+            // IMPORTING.
+            if (!is_numeric($data->canceluntil)) {
+                $data->canceluntil = strtotime($data->canceluntil);
+            }
+
+            $data->canceluntil = $data->canceluntil ?? booking_option::get_value_of_json_by_key($data->id, "canceluntil") ?? 0;
             if (!empty($data->canceluntil)) {
                 $data->canceluntilcheckbox = 1;
-                // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
-                /* $data->canceluntil = $data->canceluntil; */ // Not necessary!
             }
         } else {
             $canceluntil = booking_option::get_value_of_json_by_key($data->id, "canceluntil");

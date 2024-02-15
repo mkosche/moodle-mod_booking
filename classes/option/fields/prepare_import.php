@@ -63,6 +63,26 @@ class prepare_import extends field_base {
     public static $header = MOD_BOOKING_HEADER_GENERAL;
 
     /**
+     * An int value to define if this field is standard or used in a different context.
+     * @var array
+     */
+    public static $fieldcategories = [
+        MOD_BOOKING_OPTION_FIELD_NECESSARY,
+    ];
+
+    /**
+     * Additionally to the classname, there might be others keys which should instantiate this class.
+     * @var array
+     */
+    public static $alternativeimportidentifiers = [];
+
+    /**
+     * This is an array of incompatible field ids.
+     * @var array
+     */
+    public static $incompatiblefields = [];
+
+    /**
      * This function interprets the value from the form and, if useful...
      * ... relays it to the new option class for saving or updating.
      * @param stdClass $formdata
@@ -109,12 +129,8 @@ class prepare_import extends field_base {
             $data->importing = true;
             if ($record = $DB->get_record('booking_options', ['identifier' => $data->identifier])) {
 
-                foreach ($record as $key => $value) {
-                    // We only want to set those values that are not uploaded.
-                    if (!isset($data->{$key})) {
-                        $data->{$key} = $value;
-                    }
-                }
+                $data->id = $record->id;
+
             } else if (empty($data->text)) {
                 throw new moodle_exception(
                     'identifiernotfoundnotenoughdata',

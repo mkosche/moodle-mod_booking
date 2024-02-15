@@ -28,6 +28,7 @@ use mod_booking\booking_option;
 use mod_booking\booking_option_settings;
 use mod_booking\option\field_base;
 use mod_booking\price as Mod_bookingPrice;
+use mod_booking\singleton_service;
 use MoodleQuickForm;
 use stdClass;
 
@@ -59,6 +60,26 @@ class price extends field_base {
      * @var string
      */
     public static $header = MOD_BOOKING_HEADER_PRICE;
+
+    /**
+     * An int value to define if this field is standard or used in a different context.
+     * @var array
+     */
+    public static $fieldcategories = [MOD_BOOKING_OPTION_FIELD_STANDARD];
+
+    /**
+     * Additionally to the classname, there might be others keys which should instantiate this class.
+     * @var array
+     */
+    public static $alternativeimportidentifiers = [
+        'useprice',
+    ];
+
+    /**
+     * This is an array of incompatible field ids.
+     * @var array
+     */
+    public static $incompatiblefields = [];
 
     /**
      * This function interprets the value from the form and, if useful...
@@ -148,8 +169,11 @@ class price extends field_base {
         // This has to be fixed.
 
         $pricehandler = new Mod_bookingPrice('option', $data->id);
+        $priceitems = Mod_bookingPrice::get_prices_from_cache_or_db('option', $data->id);
 
         if (!empty($data->importing)) {
+
+            // This is for IMPORTING!
 
             if (!is_array($pricehandler->pricecategories)) {
                 return;
@@ -162,18 +186,35 @@ class price extends field_base {
                 if (!empty($data->{$category->identifier}) && is_numeric($data->{$category->identifier})) {
                     $price = $data->{$category->identifier};
                     // We don't want this value to be used elsewhere.
-                    unset($data->{$category->identifier});
                 } else {
-                    $price = $category->defaultvalue ?? 0;
+                    // Make sure that if prices exist, we do not lose them.
+                    $items = array_filter($priceitems, fn($a) => $a->pricecategoryidentifier == $category->identifier);
+                    $item = reset($items);
+                    $price = $item->price ?? $category->defaultvalue ?? 0;
                 }
 
-                $pricegroup = MOD_BOOKING_FORM_PRICEGROUP . $category->identifier;
-                $priceidentifier = MOD_BOOKING_FORM_PRICE . $category->identifier;
+                if (!empty($price)) {
+                    $pricegroup = MOD_BOOKING_FORM_PRICEGROUP . $category->identifier;
+                    $priceidentifier = MOD_BOOKING_FORM_PRICE . $category->identifier;
+                    $data->{$pricegroup}[$priceidentifier] = $price;
+                }
+            }
 
-                $data->{$pricegroup}[$priceidentifier] = $price;
-
-                // If we have at least one price during import, we set useprice to 1.
+            // Make sure that we want to use prices.
+            // When there is at least one price set in data, we turn on the useprice flag.
+            foreach ($pricehandler->pricecategories as $category) {
+                if (!empty($data->{$category->identifier}) && is_numeric($data->{$category->identifier})) {
+                    $data->useprice = 1;
+                    break;
+                }
+            }
+            // If price is always on, we also turn on the useprice flag.
+            if (get_config('booking', 'priceisalwayson')) {
                 $data->useprice = 1;
+            }
+            // If it is still not set, we use the original flag from settings.
+            if (!isset($data->useprice)) {
+                $data->useprice = $settings->useprice ?? 0;
             }
 
         } else {
@@ -190,6 +231,11 @@ class price extends field_base {
             } else if ($useprice == 0) {
                 $data->useprice = 0;
             } else if ($useprice == 1) {
+                $data->useprice = 1;
+            }
+
+            // If price is always on, we also turn on the useprice flag.
+            if (get_config('booking', 'priceisalwayson')) {
                 $data->useprice = 1;
             }
 

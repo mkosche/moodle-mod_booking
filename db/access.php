@@ -270,4 +270,32 @@ $capabilities = [
             'editingteacher' => CAP_ALLOW,
         ],
     ],
+    // Expert option form capability. Can be configured via settings.
+    'mod/booking:expertoptionform' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => [
+            'editingteacher' => CAP_ALLOW,
+        ],
+    ],
+    // Restricted option form capability. Can be configured via settings.
+    'mod/booking:reducedoptionform1' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSECAT,
+    ],
+    // Restricted option form capability. Can be configured via settings.
+    'mod/booking:reducedoptionform2' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSECAT,
+    ],
+    // Restricted option form capability. Can be configured via settings.
+    'mod/booking:reducedoptionform3' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSECAT,
+    ],
+    // Restricted option form capability. Can be configured via settings.
+    'mod/booking:reducedoptionform4' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSECAT,
+    ],
 ];

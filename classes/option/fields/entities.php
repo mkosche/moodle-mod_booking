@@ -61,6 +61,24 @@ class entities extends field_base {
     public static $header = MOD_BOOKING_HEADER_GENERAL;
 
     /**
+     * An int value to define if this field is standard or used in a different context.
+     * @var array
+     */
+    public static $fieldcategories = [MOD_BOOKING_OPTION_FIELD_STANDARD];
+
+    /**
+     * Additionally to the classname, there might be others keys which should instantiate this class.
+     * @var array
+     */
+    public static $alternativeimportidentifiers = [];
+
+    /**
+     * This is an array of incompatible field ids.
+     * @var array
+     */
+    public static $incompatiblefields = [];
+
+    /**
      * This function interprets the value from the form and, if useful...
      * ... relays it to the new option class for saving or updating.
      * @param stdClass $formdata
@@ -85,7 +103,7 @@ class entities extends field_base {
                 $entities = entitiesrelation_handler::get_entities_by_id($formdata->{LOCAL_ENTITIES_FORM_ENTITYID . 0});
                 $newoption->address = '';
                 foreach ($entities as $entity) {
-                    $newoption->location = $entity->parentname ?? $entity->name;
+                    $newoption->location = $entity->name;
                     $newoption->address .= "$entity->postcode $entity->city $entity->streetname $entity->streetnumber";
                     if (count($entities) > 1) {
                         $newoption->address .= ', ';
@@ -94,7 +112,7 @@ class entities extends field_base {
                 if (count($entities) > 1) {
                     $newoption->address = substr($newoption->address, 0, -2);
                 }
-            } else {
+            } else if (isset($formdata->{LOCAL_ENTITIES_FORM_ENTITYID . 0})) {
                 $newoption->location = '';
                 $newoption->address = '';
             }
@@ -135,7 +153,6 @@ class entities extends field_base {
      */
     public static function instance_form_definition(MoodleQuickForm &$mform, array &$formdata, array $optionformconfig) {
 
-        $optionid = $formdata['id'];
         // Add entities.
         if (class_exists('local_entities\entitiesrelation_handler')) {
             $erhandler = new entitiesrelation_handler('mod_booking', 'option');
@@ -196,7 +213,9 @@ class entities extends field_base {
 
         // This is to save entity relation data.
         // The id key has to be set to option id.
-        if (class_exists('local_entities\entitiesrelation_handler')) {
+        if (class_exists('local_entities\entitiesrelation_handler')
+            && isset($formdata->{LOCAL_ENTITIES_FORM_ENTITYID . 0})) {
+
             $erhandler = new entitiesrelation_handler('mod_booking', 'option');
             $erhandler->instance_form_save($formdata, $option->id, $index);
         }

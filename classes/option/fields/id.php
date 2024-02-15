@@ -63,6 +63,26 @@ class id extends field_base {
     public static $header = MOD_BOOKING_HEADER_GENERAL;
 
     /**
+     * An int value to define if this field is standard or used in a different context.
+     * @var array
+     */
+    public static $fieldcategories = [
+        MOD_BOOKING_OPTION_FIELD_NECESSARY,
+    ];
+
+    /**
+     * Additionally to the classname, there might be others keys which should instantiate this class.
+     * @var array
+     */
+    public static $alternativeimportidentifiers = [];
+
+    /**
+     * This is an array of incompatible field ids.
+     * @var array
+     */
+    public static $incompatiblefields = [];
+
+    /**
      * This function interprets the value from the form and, if useful...
      * ... relays it to the new option class for saving or updating.
      * @param stdClass $formdata
@@ -104,7 +124,14 @@ class id extends field_base {
 
         $cmid = $formdata['cmid'] ?? 0;
 
-        $id = $formdata['id'] ?? 0;
+        $id = $formdata['optionid'] ?? $formdata['id'] ?? 0;
+
+        $formdata['id'] = $id;
+
+        $settings = singleton_service::get_instance_of_booking_option_settings($id);
+        $bookingid = $settings->bookingid;
+
+        $cmid = $settings->cmid;
 
         // Id & optionid are the same here.
         $mform->addElement('hidden', 'id', $id);
@@ -117,7 +144,7 @@ class id extends field_base {
         $mform->addElement('hidden', 'cmid', $cmid);
         $mform->setType('cmid', PARAM_INT);
 
-        $mform->addElement('hidden', 'bookingid', $formdata['bookingid']);
+        $mform->addElement('hidden', 'bookingid', $bookingid);
         $mform->setType('bookingid', PARAM_INT);
     }
 
@@ -132,5 +159,6 @@ class id extends field_base {
 
         $data->id = $data->id ?? $data->optionid;
         $data->cmid = $data->cmid ?? $settings->cmid ?? 0;
+        $data->bookingid = $data->bookingid ?? $settings->bookingid ?? 0;
     }
 }

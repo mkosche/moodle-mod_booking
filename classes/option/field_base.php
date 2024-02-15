@@ -24,6 +24,7 @@
 
 namespace mod_booking\option;
 
+use coding_exception;
 use mod_booking\booking_option_settings;
 use mod_booking\option\fields;
 use mod_booking\option\fields_info;
@@ -60,6 +61,12 @@ abstract class field_base implements fields {
     public static $header = '';
 
     /**
+     * This is an array of incompatible field ids.
+     * @var array
+     */
+    public static $incompatiblefields = [];
+
+    /**
      * This function interprets the value from the form and, if useful...
      * ... relays it to the new option class for saving or updating.
      * @param stdClass $formdata
@@ -72,7 +79,7 @@ abstract class field_base implements fields {
         stdClass &$formdata,
         stdClass &$newoption,
         int $updateparam,
-        $returnvalue = null): string {
+        $returnvalue = ''): string {
 
         $key = fields_info::get_class_name(static::class);
         $value = $formdata->{$key} ?? null;
@@ -80,7 +87,7 @@ abstract class field_base implements fields {
         if (!empty($value)) {
             $newoption->{$key} = $value;
         } else {
-            $newoption->{$key} = '';
+            $newoption->{$key} = $returnvalue;
         }
 
         // We can return an warning message here.
@@ -151,5 +158,21 @@ abstract class field_base implements fields {
      */
     public static function definition_after_data(MoodleQuickForm &$mform, $formdata) {
 
+    }
+
+    /**
+     * Definition after data callback
+     * @return string
+     * @throws coding_exception
+     */
+    public static function return_localized_name() {
+
+        $classname = get_called_class();
+
+        // We only want the last part of the classname.
+        $array = explode('\\', $classname);
+
+        $classname = array_pop($array);
+        return get_string($classname, 'mod_booking');
     }
 }

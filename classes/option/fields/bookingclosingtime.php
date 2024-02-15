@@ -64,6 +64,24 @@ class bookingclosingtime extends field_base {
     public static $header = MOD_BOOKING_HEADER_AVAILABILITY;
 
     /**
+     * An int value to define if this field is standard or used in a different context.
+     * @var array
+     */
+    public static $fieldcategories = [MOD_BOOKING_OPTION_FIELD_STANDARD];
+
+    /**
+     * Additionally to the classname, there might be others keys which should instantiate this class.
+     * @var array
+     */
+    public static $alternativeimportidentifiers = [];
+
+    /**
+     * This is an array of incompatible field ids.
+     * @var array
+     */
+    public static $incompatiblefields = [];
+
+    /**
      * This function interprets the value from the form and, if useful...
      * ... relays it to the new option class for saving or updating.
      * @param stdClass $formdata
@@ -127,18 +145,32 @@ class bookingclosingtime extends field_base {
     public static function set_data(stdClass &$data, booking_option_settings $settings) {
 
         $key = fields_info::get_class_name(static::class);
-        // Normally, we don't call set data after the first time loading.
-        if (isset($data->{$key})) {
-            return;
-        }
 
-        $value = $settings->{$key} ?? null;
+        // Importing needs special treatment.
+        if (!empty($data->importing)) {
+            if (isset($data->{$key})) {
 
-        $data->{$key} = $value;
+                $value = strtotime($data->{$key});
+                $data->{$key} = $value;
+                $data->restrictanswerperiodclosing = 1;
+            }
 
-        // We need to also set the checkbox correctly.
-        if (!empty($value)) {
-            $data->restrictanswerperiodclosing = 1;
+        } else {
+
+            // Normally, we don't call set data after the first time loading.
+            if (isset($data->{$key})) {
+                $data->restrictanswerperiodclosing = 1;
+                return;
+            }
+
+            $value = $settings->{$key} ?? null;
+
+            $data->{$key} = $value;
+
+            // We need to also set the checkbox correctly.
+            if (!empty($value)) {
+                $data->restrictanswerperiodclosing = 1;
+            }
         }
     }
 }

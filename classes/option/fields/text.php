@@ -62,6 +62,24 @@ class text extends field_base {
     public static $header = MOD_BOOKING_HEADER_GENERAL;
 
     /**
+     * An int value to define if this field is standard or used in a different context.
+     * @var array
+     */
+    public static $fieldcategories = [MOD_BOOKING_OPTION_FIELD_STANDARD];
+
+    /**
+     * Additionally to the classname, there might be others keys which should instantiate this class.
+     * @var array
+     */
+    public static $alternativeimportidentifiers = [];
+
+    /**
+     * This is an array of incompatible field ids.
+     * @var array
+     */
+    public static $incompatiblefields = [];
+
+    /**
      * This function interprets the value from the form and, if useful...
      * ... relays it to the new option class for saving or updating.
      * @param stdClass $formdata
@@ -93,7 +111,7 @@ class text extends field_base {
         // Standardfunctionality to add a header to the mform (only if its not yet there).
         fields_info::add_header_to_mform($mform, self::$header);
 
-        $booking = singleton_service::get_instance_of_booking_by_bookingid($formdata['bookingid']);
+        $booking = singleton_service::get_instance_of_booking_by_bookingid($formdata['bookingid'] ?? 0);
 
         // Booking option name.
         $mform->addElement('text', 'text', get_string('bookingoptionname', 'mod_booking'), ['size' => '64']);

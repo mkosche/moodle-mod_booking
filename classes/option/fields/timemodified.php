@@ -44,7 +44,7 @@ class timemodified extends field_base {
      * This ID is used for sorting execution.
      * @var int
      */
-    public static $id = MOD_BOOKING_OPTION_FIELD_LOCATION;
+    public static $id = MOD_BOOKING_OPTION_FIELD_TIMEMODIFIED;
 
     /**
      * Some fields are saved with the booking option...
@@ -59,6 +59,24 @@ class timemodified extends field_base {
      * @var string
      */
     public static $header = MOD_BOOKING_HEADER_GENERAL;
+
+    /**
+     * An int value to define if this field is standard or used in a different context.
+     * @var array
+     */
+    public static $fieldcategories = [MOD_BOOKING_OPTION_FIELD_STANDARD];
+
+    /**
+     * Additionally to the classname, there might be others keys which should instantiate this class.
+     * @var array
+     */
+    public static $alternativeimportidentifiers = [];
+
+    /**
+     * This is an array of incompatible field ids.
+     * @var array
+     */
+    public static $incompatiblefields = [];
 
     /**
      * This function interprets the value from the form and, if useful...

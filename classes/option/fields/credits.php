@@ -60,6 +60,24 @@ class credits extends field_base {
     public static $header = MOD_BOOKING_HEADER_PRICE;
 
     /**
+     * An int value to define if this field is standard or used in a different context.
+     * @var array
+     */
+    public static $fieldcategories = [MOD_BOOKING_OPTION_FIELD_STANDARD];
+
+    /**
+     * Additionally to the classname, there might be others keys which should instantiate this class.
+     * @var array
+     */
+    public static $alternativeimportidentifiers = [];
+
+    /**
+     * This is an array of incompatible field ids.
+     * @var array
+     */
+    public static $incompatiblefields = [];
+
+    /**
      * This function interprets the value from the form and, if useful...
      * ... relays it to the new option class for saving or updating.
      * @param stdClass $formdata
@@ -86,7 +104,7 @@ class credits extends field_base {
      */
     public static function instance_form_definition(MoodleQuickForm &$mform, array &$formdata, array $optionformconfig) {
 
-        $cmid = $formdata['cmid'];
+        $cmid = $formdata['cmid'] ?? 0;
         $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
 
         // Standardfunctionality to add a header to the mform (only if its not yet there).
