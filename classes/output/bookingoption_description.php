@@ -145,6 +145,9 @@ class bookingoption_description implements renderable, templatable {
     /** @var stdClass $responsiblecontactuser */
     private $responsiblecontactuser = null;
 
+    /** @var string $attachments */
+    private $attachments = null;
+
     /** @var string $bookingopeningtime */
     private $bookingopeningtime = '';
 
@@ -204,6 +207,8 @@ class bookingoption_description implements renderable, templatable {
         if (!empty($settings->imageurl)) {
             $this->imageurl = $settings->imageurl;
         }
+
+        $this->attachments = $this->get_attachments($optionid);
 
         // Is this an invisible option?
         $this->invisible = $settings->invisible;
@@ -451,6 +456,7 @@ class bookingoption_description implements renderable, templatable {
             'description' => $this->description,
             'statusdescription' => $this->statusdescription,
             'imageurl' => $this->imageurl,
+            'attachments' => $this->attachments,
             'location' => $this->location,
             'address' => $this->address,
             'institution' => $this->institution,
@@ -509,5 +515,31 @@ class bookingoption_description implements renderable, templatable {
             $ret = false;
         }
         return $ret;
+    }
+
+    private function get_attachments($optionid){
+        global $DB, $CFG;
+
+        if ($attfiles = $DB->get_records_sql("SELECT id, contextid, filepath, filename
+                                 FROM {files}
+                                 WHERE component = 'mod_booking'
+                                 AND itemid = :optionid
+                                 AND filearea = 'myfilemanageroption'
+                                 AND filesize > 0
+                                 AND source is not null", ['optionid' => $optionid])) {
+
+            // If an file has been uploaded for the option, let's create the according URL.
+            $attachments = [];
+            foreach ($attfiles as $attfile){
+                $attachment['name'] = $attfile->filename;
+                $attachment['url'] = $CFG->wwwroot . "/pluginfile.php/" . $attfile->contextid .
+                    "/mod_booking/myfilemanageroption/" . $optionid . $attfile->filepath . $attfile->filename;
+                $attachments[] = $attachment;
+            }
+
+
+            return $attachments;
+        }
+        return null;
     }
 }
