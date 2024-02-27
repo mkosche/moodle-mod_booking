@@ -138,7 +138,7 @@ class selectusers implements bo_condition {
      * @param int $userid
      * @return bool
      */
-    public function hard_block(booking_option_settings $settings, $userid):bool {
+    public function hard_block(booking_option_settings $settings, $userid): bool {
 
         $context = context_system::instance();
         if (has_capability('mod/booking:overrideboconditions', $context)) {
@@ -164,7 +164,7 @@ class selectusers implements bo_condition {
      * @return array availability and Information string (for admin) about all restrictions on
      *   this item
      */
-    public function get_description(booking_option_settings $settings, $userid = null, $full = false, $not = false):array {
+    public function get_description(booking_option_settings $settings, $userid = null, $full = false, $not = false): array {
 
         $description = '';
 
@@ -412,8 +412,9 @@ class selectusers implements bo_condition {
                 // Get a string of all users who are allowed to book.
                 $allowedusersstringarr = [];
                 foreach ($this->customsettings->userids as $uid) {
-                    $currentuser = singleton_service::get_instance_of_user($uid);
-                    $allowedusersstringarr[] = "$currentuser->firstname $currentuser->lastname (UserID: $currentuser->id)";
+                    if ($currentuser = singleton_service::get_instance_of_user($uid)) {
+                        $allowedusersstringarr[] = "$currentuser->firstname $currentuser->lastname (UserID: $currentuser->id)";
+                    }
                 }
                 $allowedusersstring = implode(', ', $allowedusersstringarr);
             }

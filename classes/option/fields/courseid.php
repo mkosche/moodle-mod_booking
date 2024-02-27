@@ -28,6 +28,7 @@ use core_course_external;
 use mod_booking\booking_option_settings;
 use mod_booking\option\fields_info;
 use mod_booking\option\field_base;
+use moodle_exception;
 use MoodleQuickForm;
 use stdClass;
 
@@ -70,7 +71,9 @@ class courseid extends field_base {
      * Additionally to the classname, there might be others keys which should instantiate this class.
      * @var array
      */
-    public static $alternativeimportidentifiers = [];
+    public static $alternativeimportidentifiers = [
+        'enroltocourseshortname',
+    ];
 
     /**
      * This is an array of incompatible field ids.
@@ -225,6 +228,13 @@ class courseid extends field_base {
                 if ($courseid = $DB->get_field('course', 'id', ['shortname' => $data->enroltocourseshortname])) {
                     $data->courseid = $courseid;
                     unset($data->enroltocourseshortname);
+                } else {
+                    throw new moodle_exception(
+                        'courseshortnamenotfound',
+                        'mod_booking',
+                        '',
+                        $data->enroltocourseshortname,
+                        'Course not found: ' . $data->enroltocourseshortname);
                 }
 
             }

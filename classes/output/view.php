@@ -262,13 +262,13 @@ class view implements renderable, templatable {
      * Render table for elective.
      * @return array the rendered table
      */
-    public function get_rendered_elective_table():array {
+    public function get_rendered_elective_table(): array {
         $cmid = $this->cmid;
 
         $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
 
         // Create the table.
-        $allbookingoptionstable = new bookingoptions_wbtable("cmid_{$cmid} electivetable", $booking);
+        $allbookingoptionstable = new bookingoptions_wbtable("cmid_{$cmid} electivetable");
 
         $wherearray = ['bookingid' => (int)$booking->id];
         list($fields, $from, $where, $params, $filter) =
@@ -288,13 +288,13 @@ class view implements renderable, templatable {
      * Render table for all booking options.
      * @return string the rendered table
      */
-    public function get_rendered_all_options_table():string {
+    public function get_rendered_all_options_table(): string {
         $cmid = $this->cmid;
 
         $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
 
         // Create the table.
-        $allbookingoptionstable = new bookingoptions_wbtable("cmid_{$cmid} allbookingoptionstable", $booking);
+        $allbookingoptionstable = new bookingoptions_wbtable("cmid_{$cmid} allbookingoptionstable");
 
         $wherearray = ['bookingid' => (int)$booking->id];
         list($fields, $from, $where, $params, $filter) =
@@ -320,7 +320,7 @@ class view implements renderable, templatable {
         $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
 
         // Create the table.
-        $activebookingoptionstable = new bookingoptions_wbtable("cmid_{$cmid} activebookingoptionstable", $booking);
+        $activebookingoptionstable = new bookingoptions_wbtable("cmid_{$cmid} activebookingoptionstable");
 
         $wherearray = ['bookingid' => (int)$booking->id];
         $additionalwhere = '((courseendtime > :timenow OR courseendtime = 0) AND status = 0)';
@@ -329,8 +329,9 @@ class view implements renderable, templatable {
             booking::get_options_filter_sql(0, 0, '', null, $booking->context, [],
                 $wherearray, null, MOD_BOOKING_STATUSPARAM_BOOKED, $additionalwhere);
 
-        // Timenow is today at midnight.
-        $params['timenow'] = strtotime('today 24:00');
+        // Timenow is today at at 00.00.
+        // The test is on courseendtime, if it has finished not already yesterday.
+        $params['timenow'] = strtotime('today 00:00');
         $activebookingoptionstable->set_filter_sql($fields, $from, $where, $filter, $params);
 
         // Initialize the default columnes, headers, settings and layout for the table.
@@ -354,7 +355,7 @@ class view implements renderable, templatable {
         $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
 
         // Create the table.
-        $mybookingoptionstable = new bookingoptions_wbtable("cmid_{$cmid}_userid_{$USER->id} mybookingoptionstable", $booking);
+        $mybookingoptionstable = new bookingoptions_wbtable("cmid_{$cmid}_userid_{$USER->id} mybookingoptionstable");
 
         $wherearray = ['bookingid' => (int)$booking->id];
         list($fields, $from, $where, $params, $filter) =
@@ -384,7 +385,7 @@ class view implements renderable, templatable {
         $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
 
         // Create the table.
-        $teacheroptionstable = new bookingoptions_wbtable("cmid_{$cmid}_teacherid_{$teacherid} teacheroptionstable", $booking);
+        $teacheroptionstable = new bookingoptions_wbtable("cmid_{$cmid}_teacherid_{$teacherid} teacheroptionstable");
 
         $wherearray = [
             'bookingid' => (int)$booking->id,
@@ -416,7 +417,7 @@ class view implements renderable, templatable {
         $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
 
         // Create the table.
-        $showonlyonetable = new bookingoptions_wbtable("cmid_{$cmid}_optionid_{$optionid} showonlyonetable", $booking);
+        $showonlyonetable = new bookingoptions_wbtable("cmid_{$cmid}_optionid_{$optionid} showonlyonetable");
 
         $wherearray = [
             'bookingid' => (int) $booking->id,
@@ -446,7 +447,7 @@ class view implements renderable, templatable {
         $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
 
         // Create the table.
-        $myinstitutiontable = new bookingoptions_wbtable("cmid_{$cmid} myinstitutiontable", $booking);
+        $myinstitutiontable = new bookingoptions_wbtable("cmid_{$cmid} myinstitutiontable");
 
         $wherearray = [
             'bookingid' => (int) $booking->id,
@@ -475,7 +476,7 @@ class view implements renderable, templatable {
         $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
 
         // Create the table.
-        $visibleoptionstable = new bookingoptions_wbtable("cmid_{$cmid} visibleoptionstable", $booking);
+        $visibleoptionstable = new bookingoptions_wbtable("cmid_{$cmid} visibleoptionstable");
 
         $wherearray = [
             'bookingid' => (int) $booking->id,
@@ -504,7 +505,7 @@ class view implements renderable, templatable {
         $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
 
         // Create the table.
-        $invisibleoptionstable = new bookingoptions_wbtable("cmid_{$cmid} invisibleoptionstable", $booking);
+        $invisibleoptionstable = new bookingoptions_wbtable("cmid_{$cmid} invisibleoptionstable");
 
         $wherearray = [
             'bookingid' => (int) $booking->id,
@@ -810,7 +811,7 @@ class view implements renderable, templatable {
                         'labelstartvalue' => get_string('coursestarttime', 'mod_booking'),
                         'defaultvaluestart' => 'now', // Can also be Unix timestamp or string "now".
                         'labelendvalue' => get_string('courseendtime', 'mod_booking'),
-                        'defaultvalueend' => strtotime('+ 1 year', time()), // Can also be Unix timestamp or string "now".
+                        'defaultvalueend' => 'now + 1 year', // Can also be Unix timestamp or string "now".
                         'checkboxlabel' => get_string('apply_filter', 'local_wunderbyte_table'),
                     ],
                 ],
@@ -825,7 +826,7 @@ class view implements renderable, templatable {
                         'labelstartvalue' => get_string('bookingopeningtime', 'mod_booking'),
                         'defaultvaluestart' => 'now', // Can also be Unix timestamp or string "now".
                         'labelendvalue' => get_string('bookingclosingtime', 'mod_booking'),
-                        'defaultvalueend' => strtotime('+ 1 year', time()), // Can also be Unix timestamp or string "now".
+                        'defaultvalueend' => 'now + 1 year', // Can also be Unix timestamp or string "now".
                         'checkboxlabel' => get_string('apply_filter', 'local_wunderbyte_table'),
                     ],
                 ],

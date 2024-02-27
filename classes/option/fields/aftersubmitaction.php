@@ -15,19 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Control and manage booking dates.
+ * Action after submit of edit option form.
  *
  * @package mod_booking
- * @copyright 2023 Wunderbyte GmbH <info@wunderbyte.at>
+ * @copyright 2024 Wunderbyte GmbH <info@wunderbyte.at>
+ * @author  Bernhard Fischer-Sengseis
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace mod_booking\option\fields;
 
-use mod_booking\bo_availability\bo_info;
 use mod_booking\booking_option_settings;
 use mod_booking\option\fields_info;
 use mod_booking\option\field_base;
+use mod_booking\singleton_service;
+use moodle_url;
 use MoodleQuickForm;
 use stdClass;
 
@@ -38,13 +40,13 @@ use stdClass;
  * @author Georg Maißer
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class availability extends field_base {
+class aftersubmitaction extends field_base {
 
     /**
      * This ID is used for sorting execution.
      * @var int
      */
-    public static $id = MOD_BOOKING_OPTION_FIELD_AVAILABILITY;
+    public static $id = MOD_BOOKING_OPTION_FIELD_AFTERSUBMITACTION;
 
     /**
      * Some fields are saved with the booking option...
@@ -52,13 +54,13 @@ class availability extends field_base {
      * Some can be saved only post save (when they need the option id).
      * @var int
      */
-    public static $save = MOD_BOOKING_EXECUTION_POSTSAVE;
+    public static $save = MOD_BOOKING_EXECUTION_NORMAL;
 
     /**
      * This identifies the header under which this particular field should be displayed.
      * @var string
      */
-    public static $header = MOD_BOOKING_HEADER_AVAILABILITY;
+    public static $header = MOD_BOOKING_HEADER_BOOKINGOPTIONTEXT;
 
     /**
      * An int value to define if this field is standard or used in a different context.
@@ -70,9 +72,7 @@ class availability extends field_base {
      * Additionally to the classname, there might be others keys which should instantiate this class.
      * @var array
      */
-    public static $alternativeimportidentifiers = [
-        'boavenrolledincourse',
-    ];
+    public static $alternativeimportidentifiers = [];
 
     /**
      * This is an array of incompatible field ids.
@@ -95,11 +95,33 @@ class availability extends field_base {
         int $updateparam,
         $returnvalue = null): string {
 
-        // Save the additional JSON conditions (the ones which have been added to the mform).
-        bo_info::save_json_conditions_from_form($formdata);
-
-        $newoption->availability = $formdata->availability;
-
+        if (isset($formdata->aftersubmitaction)) {
+            switch ($formdata->aftersubmitaction) {
+                case 'submitandadd':
+                    $newreturnurl = new moodle_url('/mod/booking/editoptions.php', [
+                        'id' => $formdata->cmid,
+                        'optionid' => null,
+                        'returnto' => 'url',
+                        'returnurl' => $formdata->returnurl,
+                    ]);
+                    $formdata->returnurl = $newreturnurl->out(false);
+                    $newoption->returnurl = $newreturnurl->out(false);
+                    break;
+                case 'submitandstay':
+                    if (empty($newoption->id)) {
+                        break;
+                    }
+                    $newreturnurl = new moodle_url('/mod/booking/editoptions.php', [
+                        'id' => $formdata->cmid,
+                        'optionid' => $newoption->id,
+                        'returnto' => 'url',
+                        'returnurl' => $formdata->returnurl,
+                    ]);
+                    $formdata->returnurl = $newreturnurl->out(false);
+                    $newoption->returnurl = $newreturnurl->out(false);
+                    break;;
+            }
+        }
         return '';
     }
 
@@ -112,11 +134,19 @@ class availability extends field_base {
      */
     public static function instance_form_definition(MoodleQuickForm &$mform, array &$formdata, array $optionformconfig) {
 
-        $optionid = $formdata['id'];
+        // What to do after submit button is pressed.
+        $aftersubmitactions = [
+            'submitandgoback' => get_string ('submitandgoback', 'mod_booking'), // Go back to returnurl.
+            'submitandstay' => get_string ('submitandstay', 'mod_booking'), // Stay on edit option form.
+            'submitandadd' => get_string ('submitandadd', 'mod_booking'), // Create a new option after submit.
+        ];
+        // For new booking options, we cannot stay on page, because we have not optionid for returnurl.
+        if (empty($formdata['id'])) {
+            unset($aftersubmitactions['submitandstay']);
+        }
 
-        // TODO: expert/simple mode needs to work with this too!
-        // Add availability conditions.
-        bo_info::add_conditions_to_mform($mform, $optionid);
+        $mform->closeHeaderBefore('aftersubmitaction');
+        $mform->addElement('select', 'aftersubmitaction', get_string('aftersubmitaction', 'mod_booking'), $aftersubmitactions);
     }
 
     /**
@@ -127,41 +157,6 @@ class availability extends field_base {
      * @throws dml_exception
      */
     public static function set_data(stdClass &$data, booking_option_settings $settings) {
-
-        global $DB;
-
-        // Availability normally comes from settings, but it might come from the importer as well.
-        if (!empty($data->importing)) {
-            if (!empty($data->availability)) {
-                $availability = $data->availability;
-            } else {
-                $availability = $settings->availability ?? "{}";
-                $data->availability = $availability;
-            }
-
-            // On importing, we support the boavenrolledincourse key.
-            if (!empty($data->boavenrolledincourse)) {
-
-                $items = explode(',', $data->boavenrolledincourse);
-
-                list($inorequal, $params) = $DB->get_in_or_equal($items, SQL_PARAMS_NAMED);
-                $sql = "SELECT id
-                        FROM {course}
-                        WHERE shortname $inorequal";
-                $courses = $DB->get_records_sql($sql, $params);
-
-                $data->bo_cond_enrolledincourse_courseids = array_keys($courses);
-                $data->bo_cond_enrolledincourse_restrict = 1;
-                unset($data->boavenrolledincourse);
-            }
-        } else {
-            $availability = $settings->availability ?? "{}";
-        }
-
-        if (!empty($availability)) {
-            $jsonobject = json_decode($availability);
-            bo_info::set_defaults($data, $jsonobject);
-        }
-
+        return;
     }
 }

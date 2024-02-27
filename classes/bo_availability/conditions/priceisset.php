@@ -84,12 +84,14 @@ class priceisset implements bo_condition {
         // This is the return value. Not available to begin with.
         $isavailable = false;
 
-        $priceitems = price::get_prices_from_cache_or_db('option', $settings->id);
+        if (!get_config('booking', 'priceisalwayson')) {
+            $priceitems = price::get_prices_from_cache_or_db('option', $settings->id);
 
-        // If the user is not yet booked we return true.
-        if (count($priceitems) == 0) {
+            // If the user is not yet booked we return true.
+            if (count($priceitems) == 0) {
 
-            $isavailable = true;
+                $isavailable = true;
+            }
         }
 
         // If it's inversed, we inverse.
@@ -113,7 +115,7 @@ class priceisset implements bo_condition {
      * @param int $userid
      * @return bool
      */
-    public function hard_block(booking_option_settings $settings, $userid):bool {
+    public function hard_block(booking_option_settings $settings, $userid): bool {
         return true;
     }
 
@@ -134,7 +136,7 @@ class priceisset implements bo_condition {
      * @return array availability and Information string (for admin) about all restrictions on
      *   this item
      */
-    public function get_description(booking_option_settings $settings, $userid = null, $full = false, $not = false):array {
+    public function get_description(booking_option_settings $settings, $userid = null, $full = false, $not = false): array {
 
         $description = '';
 

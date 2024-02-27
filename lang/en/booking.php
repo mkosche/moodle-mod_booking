@@ -26,6 +26,7 @@ global $CFG;
 
 // General strings.
 $string['accept'] = 'Accept';
+$string['aftersubmitaction'] = 'After saving...';
 $string['age'] = 'Age';
 $string['allowupdatedays'] = 'Days before reference date';
 $string['areyousure:book'] = 'Click again to confirm booking';
@@ -113,6 +114,7 @@ $string['usersmatching'] = 'Matching users';
 $string['allmoodleusers'] = 'All users of this site';
 $string['enrolledusers'] = 'Users enrolled in course';
 $string['nopriceisset'] = 'No price has been set for pricecategory {$a}';
+$string['youareediting'] = 'You are editing "<b>{$a}</b>".';
 
 // Badges.
 $string['badge:pro'] = '<span class="badge bg-success text-light"><i class="fa fa-cogs" aria-hidden="true"></i> PRO</span>';
@@ -291,7 +293,7 @@ $string['scgfselectgroups'] = 'Select group(s)';
 
 // Bookingform.
 $string['address'] = 'Address';
-$string['general'] = 'Allgemein';
+$string['general'] = 'General';
 $string['advancedoptions'] = 'Advanced options';
 $string['btnbooknowname'] = 'Name of button: Book now';
 $string['btncacname'] = 'Name of button: Confirm activity completion';
@@ -359,6 +361,7 @@ $string['reminder_teacher_sent'] = 'Teacher reminder sent';
 $string['optiondates_teacher_added'] = 'Substitution teacher was added';
 $string['optiondates_teacher_deleted'] = 'Teacher deleted from teaching journal';
 $string['booking_failed'] = 'Booking failed';
+$string['booking_afteractionsfailed'] = 'Actions after booking failed';
 
 // View.php.
 $string['bookingpolicyagree'] = 'I have read, understood and agree to the booking policy.';
@@ -1098,8 +1101,8 @@ Go to course: {$a->courselink}
 See all booking options: {$a->bookinglink}';
 $string['sendmailtobooker'] = 'Book other users page: Send mail to user who books instead to users who are booked';
 $string['sendmailtobooker_help'] = 'Activate this option in order to send booking confirmation mails to the user who books other users instead to users, who have been added to a booking option. This is only relevant for bookings made on the page "book other users".';
-$string['submitandadd'] = 'Save and add new';
-$string['submitandstay'] = 'Save and stay';
+$string['submitandadd'] = 'Add a new booking option';
+$string['submitandstay'] = 'Stay here';
 $string['waitinglisttaken'] = 'On the waiting list';
 $string['groupexists'] = 'The group already exists in the target course, please choose another name for the booking option';
 $string['groupdeleted'] = 'This booking instance creates groups automatically in the target course. But the group has been manually deleted in the target course. Activate the following checkbox in order to recreate the group';
@@ -1120,7 +1123,7 @@ $string['toggleformmode_expert'] = '<i class="fa fa-expand" aria-hidden="true"><
 
 // Option_form.php.
 $string['bookingoptionimage'] = 'Upload an image';
-$string['submitandgoback'] = 'Save and go back';
+$string['submitandgoback'] = 'Close this form';
 $string['bookingoptionprice'] = 'Price';
 
 // We removed this, but keep it for now as we might need these strings again.
@@ -1412,6 +1415,7 @@ $string['copytoclipboard'] = 'Copy to clipboard: Ctrl+C, Enter';
 $string['yes'] = 'Yes';
 $string['sendreminderemailsuccess'] = 'Notification e-mail has been sent!';
 $string['sign_in_sheet_download'] = 'Download sign-in sheet';
+$string['sign_in_sheet_configure'] = 'Configure sign-in sheet';
 $string['status_complete'] = "Complete";
 $string['status_incomplete'] = "Incomplete";
 $string['status_noshow'] = "No show";

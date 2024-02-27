@@ -134,8 +134,8 @@ class notifymelist implements bo_condition {
      * @param int $userid
      * @return bool
      */
-    public function hard_block(booking_option_settings $settings, $userid):bool {
-        return true;
+    public function hard_block(booking_option_settings $settings, $userid): bool {
+        return false;
     }
 
     /**
@@ -155,7 +155,7 @@ class notifymelist implements bo_condition {
      * @return array availability and Information string (for admin) about all restrictions on
      *   this item
      */
-    public function get_description(booking_option_settings $settings, $userid = null, $full = false, $not = false):array {
+    public function get_description(booking_option_settings $settings, $userid = null, $full = false, $not = false): array {
 
         $description = '';
 

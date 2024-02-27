@@ -55,7 +55,7 @@ interface booking_campaign {
      * @param bool $localized
      * @return string the name of the campaign
      */
-    public function get_name_of_campaign_type(bool $localized = true):string;
+    public function get_name_of_campaign_type(bool $localized = true): string;
 
     /**
      * Save the campaign.
@@ -83,13 +83,13 @@ interface booking_campaign {
      * @param booking_option_settings $settings
      * @return bool true if the campaign is currently active
      */
-    public function campaign_is_active(int $optionid, booking_option_settings $settings):bool;
+    public function campaign_is_active(int $optionid, booking_option_settings $settings): bool;
     /**
      * Function to apply the campaign price factor.
      * @param float $price the original price
      * @return float the new price
      */
-    public function get_campaign_price(float $price):float;
+    public function get_campaign_price(float $price): float;
 
     /**
      * Function to apply the logic of the particular campaign.
@@ -103,5 +103,5 @@ interface booking_campaign {
      * @param booking_option_settings $settings the booking option settings class
      * @return array
      */
-    public function is_blocking(booking_option_settings $settings):array;
+    public function is_blocking(booking_option_settings $settings): array;
 }

@@ -1,3 +1,53 @@
+## Version 8.1.24 (2024022600)
+* Improvement: Better layout for table row.
+* Improvement: Second sign-in sheet button for download only and layout improvements.
+* Improvement: Linting and layout improvements for report.php and all_userbookings.php
+* Bugfix: Fix language string for "general" in English language pack - closes #410.
+* Bugfix: Also check for already reserved in allow_add_item_to_cart.
+
+## Version 8.1.23 (2024022301)
+* Bugfix: Save availability on newly created option as well.
+* Bugfix: Notification list is NO hard block!
+* Improvement: Throw exceptions on import for better quality.
+
+## Version 8.1.22 (2024022300)
+* Bugfix: Fix allow_add_item_to_cart => do not block is_available anymore with notifyme-list.
+
+## Version 8.1.21 (2024022200)
+* New feature: Add new possibility to create new option or stay in edit option form after submit.
+* Improvement: Show sub-entities and location from entity in sign-in-sheet.
+* Improvement: Show signin sheet download button and area at more prominent place.
+* Improvement: Get name for filter and address from entity manager.
+* Improvement: Show an info alert in option form with option title, so we always know which option we edit.
+* Improvement: Make sure we can only fill new options with template data, so existing options won't get overwritten.
+* Improvement: Add Event to see if and possibly why afteractions failed.
+* Improvement: Add Event to see if and possibly why afteractions failed
+* Bugfix: For config settings, we always use 'booking' as plugin string.
+* Bugfix: Add missing logic to addtocalendar field, so course calendar events will be created and deleted when saving form.
+* Bugfix: For plugin settings, we use 'booking' not 'mod_booking'.
+* Bugfix: If maxanswers are 0 the option is unlimited, so is_fully_booked has to always return false in this case.
+* Bugfix: Don't override address & location if entities exist.
+* Bugfix: Fix Webservice importer (bookingopening & closingtime etc).
+* Bugfix: Remove broken mobile app support.
+* Bugfix: Fix behat (button "Save and go back" was renamed to "Save").
+
+## Version 8.1.20 (2024021900)
+* Improvement: priceisalwayson setting will always block booking now.
+* Improvement: Slightly better caching policy.
+* Bufix: New wunderbyte constructor rules implemented.
+* Bugfix: No warning when user in selectuser condition is deleted.
+* Bugfix: Save and display bookingoptionimages & attachments.
+* Bugfix: Visibility has to be public on bookingoptiondescription.
+* Bugfix: Revert "Save lowest entity in location (not parent)".
+
+## Version 8.1.19 (2024021601)
+* Bugfix: Special availability import fixed
+
+## Version 8.1.18 (2024021600)
+* Improvement: Adoption of new wb table constructor
+* Bugfix: Download bookings on report.php fixed, also for exactly one instance
+* Bugfix: Active Bookingoptions are not yet finished or have finished today
+
 ## Version 8.1.17 (2024021401)
 * Improvement: Add easy option form functionality.
 * Improvement: Add reduced optionforms capabilities.

@@ -26,6 +26,7 @@ global $CFG;
 
 // General strings.
 $string['accept'] = 'Akzeptieren';
+$string['aftersubmitaction'] = 'Nach dem Speichern...';
 $string['age'] = 'Alter';
 $string['allowupdatedays'] = 'Tage vor Referenzdatum';
 $string['areyousure:book'] = 'Nochmal klicken, um die Buchung zu bestätigen';
@@ -112,6 +113,7 @@ $string['usersmatching'] = 'Gefundene Nutzer:innen';
 $string['allmoodleusers'] = 'Alle Nutzer:innen dieser Website';
 $string['enrolledusers'] = 'In den Kurs eingeschriebene Nutzer:innen';
 $string['nopriceisset'] = 'Kein Preis für Preiskategorie {$a} vorhanden';
+$string['youareediting'] = 'Sie bearbeiten "<b>{$a}</b>".';
 
 // Badges.
 $string['badge:pro'] = '<span class="badge bg-success text-light"><i class="fa fa-cogs" aria-hidden="true"></i> PRO</span>';
@@ -359,6 +361,7 @@ $string['reminder_teacher_sent'] = 'Benachrichtigung an Trainer:in versendet';
 $string['optiondates_teacher_added'] = 'Vertretung wurde eingetragen';
 $string['optiondates_teacher_deleted'] = 'Trainer:in wurde aus Trainingsjournal entfernt';
 $string['booking_failed'] = 'Buchung gescheitert';
+$string['booking_afteractionsfailed'] = 'Actions nach der Buchung gescheitert';
 
 // View.php.
 $string['bookingpolicyagree'] = 'Ich habe die Buchungsbedingungen gelesen und erkläre mich damit einverstanden.';
@@ -1080,8 +1083,8 @@ Zum Kurs: {$a->courselink}
 Alle Buchungsoptionen ansehen: {$a->bookinglink}';
 $string['sendmailtobooker'] = 'Buchung für andere User durchführen: Mail an User, der Buchung durchführt, anstatt an gebuchte User senden';
 $string['sendmailtobooker_help'] = 'Diese Option aktivieren, um Buchungsbestätigungsmails anstatt an die gebuchten Nutzer:innen zu senden an den/die Nutzer/in senden, die die Buchung durchgeführt hat. Dies betrifft nur Buchungen, die auf der Seite "Buchung für andere Nutzer:innen durchführen" getätigt wurden';
-$string['submitandadd'] = 'Speichern und neue';
-$string['submitandstay'] = 'Speichern';
+$string['submitandadd'] = 'Neue Buchungsoption anlegen';
+$string['submitandstay'] = 'Formular weiterbearbeiten';
 $string['waitinglisttaken'] = 'Auf der Warteliste';
 $string['groupexists'] = 'Die Gruppe existiert bereits im Zielkurs. Bitte verwenden Sie einen anderen Namen für die Buchungsoption';
 $string['groupdeleted'] = 'Diese Buchung erstellt automatisch Gruppen im Zielkurs. Aber die Gruppe wurde im Zielkurs manuell gelöscht. Aktivieren Sie folgende Checkbox, um die Gruppe erneut zu erstellen';
@@ -1100,7 +1103,7 @@ $string['toggleformmode_expert'] = '<i class="fa fa-expand" aria-hidden="true"><
 
 // Option_form.php.
 $string['bookingoptionimage'] = 'Bild hochladen';
-$string['submitandgoback'] = 'Speichern und zurück';
+$string['submitandgoback'] = 'Formular schließen';
 $string['bookingoptionprice'] = 'Preis';
 
 // We removed this, but keep it for now as we might need these strings again.
@@ -1356,6 +1359,7 @@ $string['selectoptionid'] = 'Eine Auswahl treffen';
 $string['sendcustommsg'] = 'Persönliche Nachricht senden';
 $string['sendreminderemailsuccess'] = 'Benachrichtung wurde per E-Mail versandt';
 $string['sign_in_sheet_download'] = 'Unterschriftenliste herunterladen';
+$string['sign_in_sheet_configure'] = 'Unterschriftenliste konfigurieren';
 $string['status_complete'] = "Abgeschlossen";
 $string['status_incomplete'] = "Nicht abgeschlossen";
 $string['status_noshow'] = "Nicht aufgetaucht";
