@@ -1,3 +1,15 @@
+## Version 8.1.27 (2024022800)
+* Improvement: Better layout for new menu bar (we cannot show it at the top right, as this would lead to several layouting problems).
+
+## Version 8.1.26 (2024022701)
+* Improvement: In Booking, we show the edit button at the top right.
+* New feature: New pencil button to directly edit booking options.
+
+## Version 8.1.25 (2024022700)
+* Improvement: Make alert to show which option is edited sticky at top.
+* Bugfix: Missing cache definitions.
+* Bugfix: Fix descriptionformat via upgrade.
+
 ## Version 8.1.24 (2024022600)
 * Improvement: Better layout for table row.
 * Improvement: Second sign-in sheet button for download only and layout improvements.
