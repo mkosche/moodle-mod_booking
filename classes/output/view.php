@@ -51,8 +51,11 @@ use templatable;
  */
 class view implements renderable, templatable {
 
-    /** @var int $cmid */
+    /** @var int $cmid course module id */
     private $cmid = null;
+
+    /** @var int $bookingid id of the booking instance */
+    private $bookingid = null;
 
     /** @var int $defaultoptionsort */
     private $defaultoptionsort = null;
@@ -137,6 +140,7 @@ class view implements renderable, templatable {
 
         $context = context_system::instance();
         $bookingsettings = singleton_service::get_instance_of_booking_settings_by_cmid($cmid);
+        $this->bookingid = $bookingsettings->id;
 
         // Default sort column and sort order from booking settings.
         $this->defaultoptionsort = $bookingsettings->defaultoptionsort;
@@ -215,14 +219,14 @@ class view implements renderable, templatable {
             return;
         }
 
-        // Active options.
-        if (in_array('showactive', $showviews)) {
-            $this->renderedactiveoptionstable = $this->get_rendered_active_options_table();
-        }
-
         // All options.
         if (in_array('showall', $showviews)) {
             $this->renderedalloptionstable = $this->get_rendered_all_options_table();
+        }
+
+        // Active options.
+        if (in_array('showactive', $showviews)) {
+            $this->renderedactiveoptionstable = $this->get_rendered_active_options_table();
         }
 
         // My bookings.
@@ -570,12 +574,18 @@ class view implements renderable, templatable {
 
         // Only admins can download.
         if (has_capability('mod/booking:updatebooking', context_module::instance($this->cmid))) {
-            $baseurl = new moodle_url('/mod/booking/download.php');
+            $baseurl = new moodle_url('/mod/booking/download.php', ['cmid' => $this->cmid]);
             $wbtable->define_baseurl($baseurl);
             $wbtable->showdownloadbutton = true;
         }
 
-        self::apply_standard_params_for_bookingtable($wbtable, $optionsfields, $filter, $search, $sort);
+        // Get view param from JSON of booking instance settings.
+        $viewparam = (int)booking::get_value_of_json_by_key($bookingsettings->id, 'viewparam');
+        if (empty($viewparam)) {
+            $viewparam = MOD_BOOKING_VIEW_PARAM_LIST; // List view is the default view.
+        }
+
+        self::apply_standard_params_for_bookingtable($wbtable, $optionsfields, $filter, $search, $sort, true, true, $viewparam);
     }
 
 
@@ -589,6 +599,7 @@ class view implements renderable, templatable {
      * @param bool $sort
      * @param bool $reload
      * @param bool $filterinactive
+     * @param int $viewparam list view or card view
      * @return void
      * @throws moodle_exception
      * @throws coding_exception
@@ -600,13 +611,316 @@ class view implements renderable, templatable {
         bool $search = true,
         bool $sort = true,
         bool $reload = true,
-        bool $filterinactive = true) {
+        bool $filterinactive = true,
+        int $viewparam = MOD_BOOKING_VIEW_PARAM_LIST) {
         // Activate sorting.
         $wbtable->cardsort = true;
 
         // Without defining sorting won't work!
         $wbtable->define_columns(['titleprefix', 'coursestarttime', 'courseendtime']);
 
+        // Switch view type (cards view or list view).
+        switch ($viewparam) {
+            case MOD_BOOKING_VIEW_PARAM_CARDS:
+                self::generate_table_for_cards($wbtable, $optionsfields);
+                break;
+            default:
+                self::generate_table_for_list($wbtable, $optionsfields);
+                break;
+        }
+
+        // Header column.
+        $wbtable->define_header_column('text');
+
+        $wbtable->pageable(true);
+        $wbtable->stickyheader = true;
+        $wbtable->showcountlabel = true;
+        $wbtable->showreloadbutton = $reload;
+
+        $wbtable->define_cache('mod_booking', 'bookingoptionstable');
+
+        if ($search) {
+            $fulltextsearchcolumns = [];
+            $fulltextsearchcolumns[] = 'titleprefix';
+            $fulltextsearchcolumns[] = 'text';
+            if (in_array('description', $optionsfields)) {
+                $fulltextsearchcolumns[] = 'description';
+            }
+            if (in_array('location', $optionsfields)) {
+                $fulltextsearchcolumns[] = 'location';
+            }
+            if (in_array('institution', $optionsfields)) {
+                $fulltextsearchcolumns[] = 'institution';
+            }
+            if (in_array('teacher', $optionsfields)) {
+                $fulltextsearchcolumns[] = 'teacherobjects';
+            }
+            $wbtable->define_fulltextsearchcolumns($fulltextsearchcolumns);
+        }
+
+        if ($filter) {
+            $filtercolumns = [];
+            if (in_array('teacher', $optionsfields)) {
+                $filtercolumns['teacherobjects'] = [
+                    'localizedname' => get_string('teachers', 'mod_booking'),
+                    'jsonattribute' => 'name',
+                ];
+            }
+            if (in_array('location', $optionsfields)) {
+                $filtercolumns['location'] = [
+                    'localizedname' => get_string('location', 'mod_booking'),
+                ];
+            }
+            if (in_array('institution', $optionsfields)) {
+                $filtercolumns['institution'] = [
+                    'localizedname' => get_string('institution', 'mod_booking'),
+                ];
+            }
+
+            $filtercolumns['coursestarttime'] = [
+                'localizedname' => get_string('timefilter:coursetime', 'mod_booking'),
+                'datepicker' => [
+                    'In between' => [
+                        'possibleoperations' => ['within', 'flexoverlap', 'before', 'after'],
+                        'columntimestart' => 'coursestarttime',
+                        'columntimeend' => 'courseendtime',
+                        'labelstartvalue' => get_string('coursestarttime', 'mod_booking'),
+                        'defaultvaluestart' => 'now', // Can also be Unix timestamp or string "now".
+                        'labelendvalue' => get_string('courseendtime', 'mod_booking'),
+                        'defaultvalueend' => 'now + 1 year', // Can also be Unix timestamp or string "now".
+                        'checkboxlabel' => get_string('apply_filter', 'local_wunderbyte_table'),
+                    ],
+                ],
+            ];
+            $filtercolumns['bookingopeningtime'] = [
+                'localizedname' => get_string('timefilter:bookingtime', 'mod_booking'),
+                'datepicker' => [
+                    'In between' => [
+                        'possibleoperations' => ['within', 'flexoverlap', 'before', 'after'],
+                        'columntimestart' => 'bookingopeningtime',
+                        'columntimeend' => 'bookingclosingtime',
+                        'labelstartvalue' => get_string('bookingopeningtime', 'mod_booking'),
+                        'defaultvaluestart' => 'now', // Can also be Unix timestamp or string "now".
+                        'labelendvalue' => get_string('bookingclosingtime', 'mod_booking'),
+                        'defaultvalueend' => 'now + 1 year', // Can also be Unix timestamp or string "now".
+                        'checkboxlabel' => get_string('apply_filter', 'local_wunderbyte_table'),
+                    ],
+                ],
+            ];
+            $wbtable->define_filtercolumns($filtercolumns);
+        }
+
+        if ($sort) {
+            $sortablecolumns = [];
+            $sortablecolumns['coursestarttime'] = get_string('optiondatestart', 'mod_booking');
+            $sortablecolumns['titleprefix'] = get_string('titleprefix', 'mod_booking');
+            $sortablecolumns['text'] = get_string('bookingoptionnamewithoutprefix', 'mod_booking');
+            if (in_array('location', $optionsfields)) {
+                $sortablecolumns['location'] = get_string('location', 'mod_booking');
+            }
+            if (in_array('institution', $optionsfields)) {
+                $sortablecolumns['institution'] = get_string('institution', 'mod_booking');
+            }
+            if (in_array('bookingopeningtime', $optionsfields)) {
+                $sortablecolumns['bookingopeningtime'] = get_string('bookingopeningtime', 'mod_booking');
+            }
+            if (in_array('bookingclosingtime', $optionsfields)) {
+                $sortablecolumns['bookingclosingtime'] = get_string('bookingclosingtime', 'mod_booking');
+            }
+            $wbtable->define_sortablecolumns($sortablecolumns);
+        }
+
+        // Let's collapse filters per default.
+        $wbtable->filteronloadinactive = $filterinactive;
+    }
+
+    /**
+     * Helper function to generate cards table.
+     * @param wunderbyte_table $wbtable reference to table instance
+     * @param array $optionsfields
+     * @return void
+     */
+    public static function generate_table_for_cards(wunderbyte_table &$wbtable, array $optionsfields) {
+
+        // We define it here so we can pass it with the mustache template.
+        $wbtable->add_subcolumns('optionid', ['id']);
+        $wbtable->add_subcolumns('cardimage', ['image']);
+        $wbtable->add_classes_to_subcolumns('cardimage', ['columnvalueclass' => 'w-100'], ['image']);
+        $wbtable->add_subcolumns('optioninvisible', ['invisibleoption']);
+
+        // 1. Card body.
+        $cardbody = ['coursestarttime', 'courseendtime'];
+        $cardbody[] = 'action';
+        $cardbody[] = 'invisibleoption';
+        $cardbody[] = 'text';
+        if (in_array('teacher', $optionsfields)) {
+            $cardbody[] = 'teacher';
+        }
+        if (in_array('description', $optionsfields)) {
+            $cardbody[] = 'description';
+        }
+        if (in_array('statusdescription', $optionsfields)) {
+            $cardbody[] = 'statusdescription';
+        }
+
+        $wbtable->add_subcolumns('cardbody', $cardbody);
+        $wbtable->add_classes_to_subcolumns('cardbody', ['columnkeyclass' => 'd-none']);
+        $wbtable->add_classes_to_subcolumns('cardbody', ['columnvalueclass' => 'd-none'], ['coursestarttime', 'courseendtime']);
+        $wbtable->add_classes_to_subcolumns('cardbody', ['columnvalueclass' => 'float-right'], ['action']);
+        $wbtable->add_classes_to_subcolumns(
+            'cardbody',
+            ['columnvalueclass' => 'text-center booking-option-info-invisible'],
+            ['invisibleoption']
+        );
+        $wbtable->add_classes_to_subcolumns('cardbody', ['columnvalueclass' => 'h5'], ['text']);
+        $wbtable->add_classes_to_subcolumns('cardbody', ['columnvalueclass' => 'd-block pt-1'], ['description']);
+        $wbtable->add_classes_to_subcolumns('cardbody', ['columnvalueclass' => 'd-block pt-1'], ['statusdescription']);
+        $wbtable->add_classes_to_subcolumns('cardbody', ['columnalt' => get_string('teacher', 'mod_booking')], ['teacher']);
+
+        // 2. Cardlist.
+        $cardlist = [];
+        $cardlist[] = 'bookings';
+        if (in_array('minanswers', $optionsfields)) {
+            $cardlist[] = 'minanswers';
+        }
+        if (in_array('dayofweektime', $optionsfields)) {
+            $cardlist[] = 'dayofweektime';
+        }
+        if (in_array('location', $optionsfields)) {
+            $cardlist[] = 'location';
+        }
+        if (in_array('institution', $optionsfields)) {
+            $cardlist[] = 'institution';
+        }
+        if (in_array('responsiblecontact', $optionsfields)) {
+            $cardlist[] = 'responsiblecontact';
+        }
+        if (in_array('bookingopeningtime', $optionsfields)) {
+            $cardlist[] = 'bookingopeningtime';
+        }
+        if (in_array('bookingclosingtime', $optionsfields)) {
+            $cardlist[] = 'bookingclosingtime';
+        }
+        if (in_array('showdates', $optionsfields)) {
+            $cardlist[] = 'showdates';
+        }
+        $cardlist[] = 'comments';
+
+        $wbtable->add_subcolumns('cardlist', $cardlist);
+        $wbtable->add_classes_to_subcolumns('cardlist', ['columnkeyclass' => 'd-none']);
+
+        if (in_array('dayofweektime', $optionsfields)) {
+            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['columnclass' => 'text-left text-gray pr-2'],
+                ['dayofweektime']);
+            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['columniclassbefore' => 'fa fa-clock-o fa-fw text-gray'],
+                ['dayofweektime']);
+        }
+        if (in_array('responsiblecontact', $optionsfields)) {
+            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['columnclass' => 'text-left pr-2 text-gray'],
+                ['responsiblecontact']);
+            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['columniclassbefore' => 'fa fa-user fa-fw text-gray'],
+                ['responsiblecontact']);
+        }
+        if (in_array('bookingopeningtime', $optionsfields)) {
+            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['columnclass' => 'text-left pr-2 text-gray d-block'],
+                ['bookingopeningtime']);
+            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['columniclassbefore' => 'fa fa-forward fa-fw text-gray'],
+                ['bookingopeningtime']);
+        }
+        if (in_array('bookingclosingtime', $optionsfields)) {
+            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['columnclass' => 'text-left pr-2 text-gray d-block'],
+                ['bookingclosingtime']);
+            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['columniclassbefore' => 'fa fa-step-forward fa-fw text-gray'],
+                ['bookingclosingtime']);
+        }
+        if (in_array('showdates', $optionsfields)) {
+            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['columnclass' => 'text-left pr-2 text-gray'],
+                ['showdates']);
+        }
+        if (in_array('location', $optionsfields)) {
+            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['columnclass' => 'text-left text-gray  pr-2'],
+                ['location']);
+            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['columniclassbefore' => 'fa fa-map-marker fa-fw text-gray'],
+                ['location']);
+        }
+        if (in_array('institution', $optionsfields)) {
+            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['columnclass' => 'text-left text-gray  pr-2'],
+                ['institution']);
+            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['columniclassbefore' => 'fa fa-building-o fa-fw text-gray'],
+                ['institution']);
+        }
+        $wbtable->add_classes_to_subcolumns('cardlist',
+            ['columnclass' => 'text-left text-gray pr-2'],
+            ['bookings']);
+        $wbtable->add_classes_to_subcolumns('cardlist',
+            ['columniclassbefore' => 'fa fa-ticket fa-fw text-gray'],
+            ['bookings']);
+        if (in_array('minanswers', $optionsfields)) {
+            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['columnclass' => 'text-left text-gray pr-2'],
+                ['minanswers']);
+            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['columniclassbefore' => 'fa fa-arrow-up fa-fw text-gray'],
+                ['minanswers']);
+        }
+
+        // 3. Cardfooter.
+        $wbtable->add_subcolumns('cardfooter', ['booknow', 'course', 'progressbar', 'ratings']);
+        $wbtable->add_classes_to_subcolumns('cardfooter', ['columnkeyclass' => 'd-none']);
+        $wbtable->add_classes_to_subcolumns('cardfooter', ['columnclass' => 'text-right'], ['booknow']);
+        $wbtable->add_classes_to_subcolumns('cardfooter',
+            ['columnclass' => 'text-left mt-1 text-gray'],
+            ['progressbar']);
+        $wbtable->add_classes_to_subcolumns('cardfooter', ['columnclass' => 'mt-1'], ['ratings']);
+        $wbtable->add_classes_to_subcolumns('cardfooter', ['columnclass' => 'theme-text-color bold '], ['price']);
+
+        // Override naming for columns.
+        $wbtable->add_classes_to_subcolumns(
+            'leftside',
+            ['keystring' => get_string('tableheader_text', 'booking')],
+            ['text']
+        );
+        $wbtable->add_classes_to_subcolumns(
+            'leftside',
+            ['keystring' => get_string('tableheader_teacher', 'booking')],
+            ['teacher']
+        );
+
+        // Additional descriptions.
+        $wbtable->add_classes_to_subcolumns('cardlist', ['columnalt' => get_string('location', 'mod_booking')],
+            ['location']);
+        $wbtable->add_classes_to_subcolumns('cardlist', ['columnalt' => get_string('dayofweektime', 'mod_booking')],
+            ['dayofweektime']);
+        $wbtable->add_classes_to_subcolumns('cardlist', ['columnalt' => get_string('bookings', 'mod_booking')],
+            ['bookings']);
+        $wbtable->add_classes_to_subcolumns('cardimage', ['cardimagealt' => get_string('bookingoptionimage', 'mod_booking')],
+            ['image']);
+
+        // At last, we set the correct template!
+        $wbtable->tabletemplate = 'mod_booking/table_cards';
+
+    }
+
+    /**
+     * Helper function to generate list table.
+     * @param wunderbyte_table $wbtable reference to table instance
+     * @param array $optionsfields
+     * @return void
+     */
+    public static function generate_table_for_list(wunderbyte_table &$wbtable, array $optionsfields) {
         $columnsleftside = [];
         $columnsleftside[] = 'invisibleoption';
         $columnsleftside[] = 'text';
@@ -750,114 +1064,9 @@ class view implements renderable, templatable {
             ['keystring' => get_string('tableheader_teacher', 'booking')],
             ['teacher']
         );
-        // phpcs:ignore
-        // $wbtable->is_downloading('', 'List of booking options');
 
-        // Header column.
-        $wbtable->define_header_column('text');
-
-        $wbtable->pageable(true);
-        $wbtable->stickyheader = true;
-        $wbtable->showcountlabel = true;
-        $wbtable->showreloadbutton = $reload;
-
-        $wbtable->define_cache('mod_booking', 'bookingoptionstable');
-
-        if ($search) {
-            $fulltextsearchcolumns = [];
-            $fulltextsearchcolumns[] = 'titleprefix';
-            $fulltextsearchcolumns[] = 'text';
-            if (in_array('description', $optionsfields)) {
-                $fulltextsearchcolumns[] = 'description';
-            }
-            if (in_array('location', $optionsfields)) {
-                $fulltextsearchcolumns[] = 'location';
-            }
-            if (in_array('institution', $optionsfields)) {
-                $fulltextsearchcolumns[] = 'institution';
-            }
-            if (in_array('teacher', $optionsfields)) {
-                $fulltextsearchcolumns[] = 'teacherobjects';
-            }
-            $wbtable->define_fulltextsearchcolumns($fulltextsearchcolumns);
-        }
-
-        if ($filter) {
-            $filtercolumns = [];
-            if (in_array('teacher', $optionsfields)) {
-                $filtercolumns['teacherobjects'] = [
-                    'localizedname' => get_string('teachers', 'mod_booking'),
-                    'jsonattribute' => 'name',
-                ];
-            }
-            if (in_array('location', $optionsfields)) {
-                $filtercolumns['location'] = [
-                    'localizedname' => get_string('location', 'mod_booking'),
-                ];
-            }
-            if (in_array('institution', $optionsfields)) {
-                $filtercolumns['institution'] = [
-                    'localizedname' => get_string('institution', 'mod_booking'),
-                ];
-            }
-
-            $filtercolumns['coursestarttime'] = [
-                'localizedname' => get_string('timefilter:coursetime', 'mod_booking'),
-                'datepicker' => [
-                    'In between' => [
-                        'possibleoperations' => ['within', 'flexoverlap', 'before', 'after'],
-                        'columntimestart' => 'coursestarttime',
-                        'columntimeend' => 'courseendtime',
-                        'labelstartvalue' => get_string('coursestarttime', 'mod_booking'),
-                        'defaultvaluestart' => 'now', // Can also be Unix timestamp or string "now".
-                        'labelendvalue' => get_string('courseendtime', 'mod_booking'),
-                        'defaultvalueend' => 'now + 1 year', // Can also be Unix timestamp or string "now".
-                        'checkboxlabel' => get_string('apply_filter', 'local_wunderbyte_table'),
-                    ],
-                ],
-            ];
-            $filtercolumns['bookingopeningtime'] = [
-                'localizedname' => get_string('timefilter:bookingtime', 'mod_booking'),
-                'datepicker' => [
-                    'In between' => [
-                        'possibleoperations' => ['within', 'flexoverlap', 'before', 'after'],
-                        'columntimestart' => 'bookingopeningtime',
-                        'columntimeend' => 'bookingclosingtime',
-                        'labelstartvalue' => get_string('bookingopeningtime', 'mod_booking'),
-                        'defaultvaluestart' => 'now', // Can also be Unix timestamp or string "now".
-                        'labelendvalue' => get_string('bookingclosingtime', 'mod_booking'),
-                        'defaultvalueend' => 'now + 1 year', // Can also be Unix timestamp or string "now".
-                        'checkboxlabel' => get_string('apply_filter', 'local_wunderbyte_table'),
-                    ],
-                ],
-            ];
-            $wbtable->define_filtercolumns($filtercolumns);
-        }
-
-        if ($sort) {
-            $sortablecolumns = [];
-            $sortablecolumns['coursestarttime'] = get_string('optiondatestart', 'mod_booking');
-            $sortablecolumns['titleprefix'] = get_string('titleprefix', 'mod_booking');
-            $sortablecolumns['text'] = get_string('bookingoptionnamewithoutprefix', 'mod_booking');
-            if (in_array('location', $optionsfields)) {
-                $sortablecolumns['location'] = get_string('location', 'mod_booking');
-            }
-            if (in_array('institution', $optionsfields)) {
-                $sortablecolumns['institution'] = get_string('institution', 'mod_booking');
-            }
-            if (in_array('bookingopeningtime', $optionsfields)) {
-                $sortablecolumns['bookingopeningtime'] = get_string('bookingopeningtime', 'mod_booking');
-            }
-            if (in_array('bookingclosingtime', $optionsfields)) {
-                $sortablecolumns['bookingclosingtime'] = get_string('bookingclosingtime', 'mod_booking');
-            }
-            $wbtable->define_sortablecolumns($sortablecolumns);
-        }
-
+        // At last, we set the correct template!
         $wbtable->tabletemplate = 'mod_booking/table_list';
-
-        // Let's collapse filters per default.
-        $wbtable->filteronloadinactive = $filterinactive;
     }
 
     /**

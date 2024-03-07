@@ -160,7 +160,7 @@ if ($ADMIN->fulltree) {
                 get_string('collapseshowsettings_desc', 'mod_booking'),
                 2, $options));
 
-        // Turn off wunderbyte branding.
+        // Turn off modals.
         $settings->add(
             new admin_setting_configcheckbox('booking/turnoffmodals',
                     get_string('turnoffmodals', 'mod_booking'),
@@ -195,6 +195,11 @@ if ($ADMIN->fulltree) {
             new admin_setting_configcheckbox('booking/teachersshowemails',
                 get_string('teachersshowemails', 'mod_booking'),
                 get_string('teachersshowemails_desc', 'mod_booking'), 0));
+
+        $settings->add(
+            new admin_setting_configcheckbox('booking/bookedteachersshowemails',
+                get_string('bookedteachersshowemails', 'mod_booking'),
+                get_string('bookedteachersshowemails_desc', 'mod_booking'), 0));
 
         $settings->add(
             new admin_setting_configcheckbox('booking/teachersallowmailtobookedusers',
@@ -292,6 +297,11 @@ if ($ADMIN->fulltree) {
     $settings->add(
         new admin_setting_configcheckbox('booking/turnoffwaitinglistaftercoursestart',
                 get_string('turnoffwaitinglistaftercoursestart', 'mod_booking'), '', 0));
+
+    $settings->add(
+        new admin_setting_configcheckbox('booking/keepusersbookedonreducingmaxanswers',
+                get_string('keepusersbookedonreducingmaxanswers', 'mod_booking'),
+                    get_string('keepusersbookedonreducingmaxanswers_desc', 'mod_booking'), 0));
 
     // Notification list settings.
     $settings->add(

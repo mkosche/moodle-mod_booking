@@ -1,3 +1,46 @@
+## Version 8.1.32 (2024030601)
+* Improvement: Layout fix for cards.
+* Improvement: Show "Choose..." string in autocompletes if value is missing.
+
+## Version 8.1.31 (2024030500)
+* New feature: New placeholder classes for better performance and maintainability.
+* New feature: Show full entity name of each optiondate in optionview (booking option description).
+* New feature: New setting for sync_waiting_list to keep users booked when reducing limits.
+* Improvement: Import now works with "startdate" & "enddate" keys.
+* Improvement: Inline modals (turn off modals functionality) will only work with list view.
+With cards view, we always have modals.
+* Improvement: Apply waitinglist on increasing maxanswers for booking option
+* Improvement: Add string that modals cannot be turned off for new cards view.
+* Improvement: When purging caches for option we also need to destroy singletons for booking option settings.
+* Improvement: Show teachers emails to booked users only (with config setting).
+* Improvement: Better strings.
+* Bugfix: Add to Calendar needed to be in postsave mode.
+* Bugfix: Set importing on true when noticing an import.
+* Bugfix: Default boavenrolledincourse during import to OR, not AND, support for boavenrolledincourseoperator (Values OR, AND).
+* Bugfix: Don't call add to calendar on template.
+* Bugfix: Add isset check for addtocalendar.
+* Bugfix: Don't block booking options without price with prepages.
+* Bugfix: Destroy all instances of booking options when calling destroy_booking_option.
+* Bugfix: Make sure we use correct context when creating booking option sql.
+* Bugfix: Wrong settings were used on report.php.
+* Bugfix: Use context_system if context_module can't be found (eg for template).
+* Testing: Temporarily take out failing behat test - to be reintroduced.
+
+## Version 8.1.30 (2024030400)
+* Bugfix: Several fixes for indexes and foreign keys.
+
+## Version 8.1.29 (2024030100)
+* Bugfix: Fix for leap year bug.
+* Bugfix: Pre- and Post-page conditions like "Bookingpolicy" should not block "allow_add_item_to_cart".
+* Bugfix: Fix download.php of Booking view.
+
+## Version 8.1.28 (2024022900)
+* New feature: You may now switch between list and cards layout in Booking instance settings.
+* Improvement: Change tab order an make all booking options tab the default.
+* Improvement: showall should be the default tab - also in install.xml.
+* Bugfix: Make sure menubar is always at correct position using CSS.
+* Bugfix: We always want to see institution - regardless if entitity manager is installed or not.
+
 ## Version 8.1.27 (2024022800)
 * Improvement: Better layout for new menu bar (we cannot show it at the top right, as this would lead to several layouting problems).
 

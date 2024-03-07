@@ -245,6 +245,7 @@ $string['pluginadministration'] = 'Booking administration';
 $string['pluginname'] = 'Booking';
 $string['potentialsubscribers'] = 'Potential subscribers';
 $string['proversiononly'] = 'Upgrade to Booking PRO to use this feature.';
+$string['proversion:cardsview'] = 'With Booking PRO you can also use cards view.';
 $string['removeresponses'] = 'Remove all responses';
 $string['responses'] = 'Responses';
 $string['responsesto'] = 'Responses to {$a} ';
@@ -487,6 +488,9 @@ $string['defaultbookingoption'] = 'Default booking options';
 $string['activatemails'] = 'Activate e-mails (confirmations, notifications and more)';
 $string['copymail'] = 'Send confirmation e-mail to booking manager';
 $string['bookingpolicy'] = 'Booking policy';
+$string['viewparam'] = 'View type';
+$string['viewparam:list'] = 'List view';
+$string['viewparam:cards'] = 'Cards view';
 
 $string['eventslist'] = 'Recent updates';
 $string['showrecentupdates'] = 'Show recent updates';
@@ -546,436 +550,33 @@ $string['feedbackurl_help'] = 'Enter a link to a feedback form that should be se
 $string['feedbackurlteachers_help'] = 'Enter a link to a feedback form that should be sent to teachers.
  It can be added to e-mails with the <b>{pollurlteachers}</b> placeholder.';
 
-$string['bookedtext_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text:
-<ul>
-<li>{bookingdetails} - Detailed summary of the booking option (incl. sessions und link to booking option)</li>
-<li>{gotobookingoption} - Link to booking option</li>
-<li>{status} - Booking status</li>
-<li>{participant}</li>
-<li>{email} - User email</li>
-<li>{title}</li>
-<li>{duration}</li>
-<li>{starttime}</li>
-<li>{endtime}</li>
-<li>{startdate}</li>
-<li>{enddate}</li>
-<li>{courselink}</li>
-<li>{bookinglink}</li>
-<li>{location}</li>
-<li>{institution}</li>
-<li>{address}</li>
-<li>{eventtype}</li>
-<li>{teacher} - Name of first teacher</li>
-<li>{teachers} - List of all teachers</li>
-<li>{teacherN} - Name of specific teacher, e.g. {teacher1}</li>
-<li>{pollstartdate}</li>
-<li>{qr_id} - Insert QR code with user id</li>
-<li>{qr_username} - Insert QR code with user username</li>
-<li>{dates} - Session times</li>
-<li>{shorturl} - Short URL of option</li>
-<li>{usercalendarurl} - Link to subscribe to user calendar (personal events)</li>
-<li>{coursecalendarurl} - Link to subscribe to course calendar (course events)</li>
-</ul>';
+$string['bookedtext_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text: {$a}';
 
-$string['userleave_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text:
-<ul>
-<li>{bookingdetails} - Detailed summary of the booking option (incl. sessions und link to booking option)</li>
-<li>{gotobookingoption} - Link to booking option</li>
-<li>{status} - Booking status</li>
-<li>{participant}</li>
-<li>{email} - User email</li>
-<li>{title}</li>
-<li>{duration}</li>
-<li>{starttime}</li>
-<li>{endtime}</li>
-<li>{startdate}</li>
-<li>{enddate}</li>
-<li>{courselink}</li>
-<li>{bookinglink}</li>
-<li>{pollurl}</li>
-<li>{pollurlteachers}</li>
-<li>{location}</li>
-<li>{institution}</li>
-<li>{address}</li>
-<li>{eventtype}</li>
-<li>{teacher} - Name of first teacher</li>
-<li>{teachers} - List of all teachers</li>
-<li>{teacherN} - Name of specific teacher, e.g. {teacher1}</li>
-<li>{pollstartdate}</li>
-<li>{qr_id} - Insert QR code with user id</li>
-<li>{qr_username} - Insert QR code with user username</li>
-<li>{dates} - Session times</li>
-<li>{shorturl} - Short URL of option</li>
-<li>{usercalendarurl} - Link to subscribe to user calendar (personal events)</li>
-<li>{coursecalendarurl} - Link to subscribe to course calendar (course events)</li>
-</ul>';
+$string['userleave_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text: {$a}';
 
-$string['waitingtext_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text:
-<ul>
-<li>{bookingdetails} - Detailed summary of the booking option (incl. sessions und link to booking option)</li>
-<li>{gotobookingoption} - Link to booking option</li>
-<li>{status} - Booking status</li>
-<li>{participant}</li>
-<li>{email} - User email</li>
-<li>{title}</li>
-<li>{duration}</li>
-<li>{starttime}</li>
-<li>{endtime}</li>
-<li>{startdate}</li>
-<li>{enddate}</li>
-<li>{courselink}</li>
-<li>{bookinglink}</li>
-<li>{pollurl}</li>
-<li>{pollurlteachers}</li>
-<li>{location}</li>
-<li>{institution}</li>
-<li>{address}</li>
-<li>{eventtype}</li>
-<li>{teacher} - Name of first teacher</li>
-<li>{teachers} - List of all teachers</li>
-<li>{teacherN} - Name of specific teacher, e.g. {teacher1}</li>
-<li>{pollstartdate}</li>
-<li>{qr_id} - Insert QR code with user id</li>
-<li>{qr_username} - Insert QR code with user username</li>
-<li>{dates} - Session times</li>
-<li>{shorturl} - Short URL of option</li>
-<li>{usercalendarurl} - Link to subscribe to user calendar (personal events)</li>
-<li>{coursecalendarurl} - Link to subscribe to course calendar (course events)</li>
-</ul>';
+$string['waitingtext_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text: {$a}';
 
-$string['notifyemail_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text:
-<ul>
-<li>{bookingdetails} - Detailed summary of the booking option (incl. sessions und link to booking option)</li>
-<li>{gotobookingoption} - Link to booking option</li>
-<li>{status} - Booking status</li>
-<li>{participant}</li>
-<li>{email} - User email</li>
-<li>{title}</li>
-<li>{duration}</li>
-<li>{starttime}</li>
-<li>{endtime}</li>
-<li>{startdate}</li>
-<li>{enddate}</li>
-<li>{courselink}</li>
-<li>{bookinglink}</li>
-<li>{pollurl}</li>
-<li>{pollurlteachers}</li>
-<li>{location}</li>
-<li>{institution}</li>
-<li>{address}</li>
-<li>{eventtype}</li>
-<li>{teacher} - Name of first teacher</li>
-<li>{teachers} - List of all teachers</li>
-<li>{teacherN} - Name of specific teacher, e.g. {teacher1}</li>
-<li>{pollstartdate}</li>
-<li>{qr_id} - Insert QR code with user id</li>
-<li>{qr_username} - Insert QR code with user username</li>
-<li>{dates} - Session times</li>
-<li>{shorturl} - Short URL of option</li>
-<li>{usercalendarurl} - Link to subscribe to user calendar (personal events)</li>
-<li>{coursecalendarurl} - Link to subscribe to course calendar (course events)</li>
-</ul>';
+$string['notifyemail_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text: {$a}';
 
-$string['notifyemailteachers_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text:
-<ul>
-<li>{bookingdetails} - Detailed summary of the booking option (incl. sessions und link to booking option)</li>
-<li>{gotobookingoption} - Link to booking option</li>
-<li>{status} - Booking status</li>
-<li>{participant}</li>
-<li>{email} - User email</li>
-<li>{title}</li>
-<li>{duration}</li>
-<li>{starttime}</li>
-<li>{endtime}</li>
-<li>{startdate}</li>
-<li>{enddate}</li>
-<li>{courselink}</li>
-<li>{bookinglink}</li>
-<li>{pollurl}</li>
-<li>{pollurlteachers}</li>
-<li>{location}</li>
-<li>{institution}</li>
-<li>{address}</li>
-<li>{eventtype}</li>
-<li>{teacher} - Name of first teacher</li>
-<li>{teachers} - List of all teachers</li>
-<li>{teacherN} - Name of specific teacher, e.g. {teacher1}</li>
-<li>{pollstartdate}</li>
-<li>{qr_id} - Insert QR code with user id</li>
-<li>{qr_username} - Insert QR code with user username</li>
-<li>{dates} - Session times</li>
-<li>{shorturl} - Short URL of option</li>
-<li>{usercalendarurl} - Link to subscribe to user calendar (personal events)</li>
-<li>{coursecalendarurl} - Link to subscribe to course calendar (course events)</li>
-</ul>';
+$string['notifyemailteachers_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text: {$a}';
 
-$string['statuschangetext_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text:
-<ul>
-<li>{bookingdetails} - Detailed summary of the booking option (incl. sessions und link to booking option)</li>
-<li>{gotobookingoption} - Link to booking option</li>
-<li>{status} - Booking status</li>
-<li>{participant}</li>
-<li>{email} - User email</li>
-<li>{title}</li>
-<li>{duration}</li>
-<li>{starttime}</li>
-<li>{endtime}</li>
-<li>{startdate}</li>
-<li>{enddate}</li>
-<li>{courselink}</li>
-<li>{bookinglink}</li>
-<li>{pollurl}</li>
-<li>{pollurlteachers}</li>
-<li>{location}</li>
-<li>{institution}</li>
-<li>{address}</li>
-<li>{eventtype}</li>
-<li>{teacher} - Name of first teacher</li>
-<li>{teachers} - List of all teachers</li>
-<li>{teacherN} - Name of specific teacher, e.g. {teacher1}</li>
-<li>{pollstartdate}</li>
-<li>{qr_id} - Insert QR code with user id</li>
-<li>{qr_username} - Insert QR code with user username</li>
-<li>{dates} - Session times</li>
-<li>{shorturl} - Short URL of option</li>
-<li>{usercalendarurl} - Link to subscribe to user calendar (personal events)</li>
-<li>{coursecalendarurl} - Link to subscribe to course calendar (course events)</li>
-</ul>';
+$string['statuschangetext_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text: {$a}';
 
-$string['deletedtext_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text:
-<ul>
-<li>{bookingdetails} - Detailed summary of the booking option (incl. sessions und link to booking option)</li>
-<li>{gotobookingoption} - Link to booking option</li>
-<li>{status} - Booking status</li>
-<li>{participant}</li>
-<li>{email} - User email</li>
-<li>{title}</li>
-<li>{duration}</li>
-<li>{starttime}</li>
-<li>{endtime}</li>
-<li>{startdate}</li>
-<li>{enddate}</li>
-<li>{courselink}</li>
-<li>{bookinglink}</li>
-<li>{pollurl}</li>
-<li>{pollurlteachers}</li>
-<li>{location}</li>
-<li>{institution}</li>
-<li>{address}</li>
-<li>{eventtype}</li>
-<li>{teacher} - Name of first teacher</li>
-<li>{teachers} - List of all teachers</li>
-<li>{teacherN} - Name of specific teacher, e.g. {teacher1}</li>
-<li>{pollstartdate}</li>
-<li>{qr_id} - Insert QR code with user id</li>
-<li>{qr_username} - Insert QR code with user username</li>
-<li>{dates} - Session times</li>
-<li>{shorturl} - Short URL of option</li>
-<li>{usercalendarurl} - Link to subscribe to user calendar (personal events)</li>
-<li>{coursecalendarurl} - Link to subscribe to course calendar (course events)</li>
-</ul>';
+$string['deletedtext_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text: {$a}';
 
 $string['bookingchangedtext_help'] = 'Enter 0 to turn change notifications off.
 
-You can use any of the following placeholders in the text:
-<ul>
-<li>{changes} - What has changed?</li>
-<li>{bookingdetails} - Detailed summary of the booking option (incl. sessions und link to booking option)</li>
-<li>{gotobookingoption} - Link to booking option</li>
-<li>{status} - Booking status</li>
-<li>{participant}</li>
-<li>{email} - User email</li>
-<li>{title}</li>
-<li>{duration}</li>
-<li>{starttime}</li>
-<li>{endtime}</li>
-<li>{startdate}</li>
-<li>{enddate}</li>
-<li>{courselink}</li>
-<li>{bookinglink}</li>
-<li>{pollurl}</li>
-<li>{pollurlteachers}</li>
-<li>{location}</li>
-<li>{institution}</li>
-<li>{address}</li>
-<li>{eventtype}</li>
-<li>{teacher} - Name of first teacher</li>
-<li>{teachers} - List of all teachers</li>
-<li>{teacherN} - Name of specific teacher, e.g. {teacher1}</li>
-<li>{pollstartdate}</li>
-<li>{qr_id} - Insert QR code with user id</li>
-<li>{qr_username} - Insert QR code with user username</li>
-<li>{dates} - Session times</li>
-<li>{shorturl} - Short URL of option</li>
-<li>{usercalendarurl} - Link to subscribe to user calendar (personal events)</li>
-<li>{coursecalendarurl} - Link to subscribe to course calendar (course events)</li>
-</ul>';
+You can use any of the following placeholders in the text: {$a}';
 
-$string['pollurltext_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text:
-<ul>
-<li>{bookingdetails} - Detailed summary of the booking option (incl. sessions und link to booking option)</li>
-<li>{gotobookingoption} - Link to booking option</li>
-<li>{status} - Booking status</li>
-<li>{participant}</li>
-<li>{email} - User email</li>
-<li>{title}</li>
-<li>{duration}</li>
-<li>{starttime}</li>
-<li>{endtime}</li>
-<li>{startdate}</li>
-<li>{enddate}</li>
-<li>{courselink}</li>
-<li>{bookinglink}</li>
-<li>{pollurl}</li>
-<li>{pollurlteachers}</li>
-<li>{location}</li>
-<li>{institution}</li>
-<li>{address}</li>
-<li>{eventtype}</li>
-<li>{teacher} - Name of first teacher</li>
-<li>{teachers} - List of all teachers</li>
-<li>{teacherN} - Name of specific teacher, e.g. {teacher1}</li>
-<li>{pollstartdate}</li>
-<li>{qr_id} - Insert QR code with user id</li>
-<li>{qr_username} - Insert QR code with user username</li>
-<li>{dates} - Session times</li>
-<li>{shorturl} - Short URL of option</li>
-<li>{usercalendarurl} - Link to subscribe to user calendar (personal events)</li>
-<li>{coursecalendarurl} - Link to subscribe to course calendar (course events)</li>
-</ul>';
+$string['pollurltext_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text: {$a}';
 
-$string['pollurlteacherstext_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text:
-<ul>
-<li>{bookingdetails} - Detailed summary of the booking option (incl. sessions und link to booking option)</li>
-<li>{gotobookingoption} - Link to booking option</li>
-<li>{status} - Booking status</li>
-<li>{participant}</li>
-<li>{email} - User email</li>
-<li>{title}</li>
-<li>{duration}</li>
-<li>{starttime}</li>
-<li>{endtime}</li>
-<li>{startdate}</li>
-<li>{enddate}</li>
-<li>{courselink}</li>
-<li>{bookinglink}</li>
-<li>{pollurl}</li>
-<li>{pollurlteachers}</li>
-<li>{location}</li>
-<li>{institution}</li>
-<li>{address}</li>
-<li>{eventtype}</li>
-<li>{teacher} - Name of first teacher</li>
-<li>{teachers} - List of all teachers</li>
-<li>{teacherN} - Name of specific teacher, e.g. {teacher1}</li>
-<li>{pollstartdate}</li>
-<li>{qr_id} - Insert QR code with user id</li>
-<li>{qr_username} - Insert QR code with user username</li>
-<li>{dates} - Session times</li>
-<li>{shorturl} - Short URL of option</li>
-<li>{usercalendarurl} - Link to subscribe to user calendar (personal events)</li>
-<li>{coursecalendarurl} - Link to subscribe to course calendar (course events)</li>
-</ul>';
+$string['pollurlteacherstext_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text: {$a}';
 
-$string['activitycompletiontext_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text:
-<ul>
-<li>{bookingdetails} - Detailed summary of the booking option (incl. sessions und link to booking option)</li>
-<li>{gotobookingoption} - Link to booking option</li>
-<li>{status} - Booking status</li>
-<li>{participant}</li>
-<li>{email} - User email</li>
-<li>{title}</li>
-<li>{duration}</li>
-<li>{starttime}</li>
-<li>{endtime}</li>
-<li>{startdate}</li>
-<li>{enddate}</li>
-<li>{courselink}</li>
-<li>{bookinglink}</li>
-<li>{pollurl}</li>
-<li>{pollurlteachers}</li>
-<li>{location}</li>
-<li>{institution}</li>
-<li>{address}</li>
-<li>{eventtype}</li>
-<li>{teacher} - Name of first teacher</li>
-<li>{teachers} - List of all teachers</li>
-<li>{teacherN} - Name of specific teacher, e.g. {teacher1}</li>
-<li>{pollstartdate}</li>
-<li>{qr_id} - Insert QR code with user id</li>
-<li>{qr_username} - Insert QR code with user username</li>
-<li>{dates} - Session times</li>
-<li>{shorturl} - Short URL of option</li>
-<li>{usercalendarurl} - Link to subscribe to user calendar (personal events)</li>
-<li>{coursecalendarurl} - Link to subscribe to course calendar (course events)</li>
-</ul>';
+$string['activitycompletiontext_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text: {$a}';
 
-$string['notificationtext_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text:
-<ul>
-<li>{bookingdetails} - Detailed summary of the booking option (incl. sessions und link to booking option)</li>
-<li>{gotobookingoption} - Link to booking option</li>
-<li>{status} - Booking status</li>
-<li>{participant}</li>
-<li>{email} - User email</li>
-<li>{title}</li>
-<li>{duration}</li>
-<li>{starttime}</li>
-<li>{endtime}</li>
-<li>{startdate}</li>
-<li>{enddate}</li>
-<li>{courselink}</li>
-<li>{bookinglink}</li>
-<li>{pollurl}</li>
-<li>{pollurlteachers}</li>
-<li>{location}</li>
-<li>{institution}</li>
-<li>{address}</li>
-<li>{eventtype}</li>
-<li>{teacher} - Name of first teacher</li>
-<li>{teachers} - List of all teachers</li>
-<li>{teacherN} - Name of specific teacher, e.g. {teacher1}</li>
-<li>{pollstartdate}</li>
-<li>{qr_id} - Insert QR code with user id</li>
-<li>{qr_username} - Insert QR code with user username</li>
-<li>{dates} - Session times</li>
-<li>{shorturl} - Short URL of option</li>
-<li>{usercalendarurl} - Link to subscribe to user calendar (personal events)</li>
-<li>{coursecalendarurl} - Link to subscribe to course calendar (course events)</li>
-</ul>';
+$string['notificationtext_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text: {$a}';
 
-$string['placeholders_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text:
-<ul>
-<li>{bookingdetails} - Detailed summary of the booking option (incl. sessions und link to booking option)</li>
-<li>{gotobookingoption} - Link to booking option</li>
-<li>{status} - Booking status</li>
-<li>{participant}</li>
-<li>{profilepicture} - User\'s profile picture</li>
-<li>{email} - User email</li>
-<li>{title} - The title of the booking option</li>
-<li>{duration}</li>
-<li>{starttime}</li>
-<li>{endtime}</li>
-<li>{startdate}</li>
-<li>{enddate}</li>
-<li>{courselink}</li>
-<li>{bookinglink}</li>
-<li>{pollurl}</li>
-<li>{pollurlteachers}</li>
-<li>{location}</li>
-<li>{institution}</li>
-<li>{address}</li>
-<li>{eventtype}</li>
-<li>{teacher} - Name of first teacher</li>
-<li>{teachers} - List of all teachers</li>
-<li>{teacherN} - Name of specific teacher, e.g. {teacher1}</li>
-<li>{pollstartdate}</li>
-<li>{qr_id} - Insert QR code with user id</li>
-<li>{qr_username} - Insert QR code with user username</li>
-<li>{dates} - Session times</li>
-<li>{shorturl} - Short URL of option</li>
-<li>{usercalendarurl} - Link to subscribe to user calendar (personal events)</li>
-<li>{coursecalendarurl} - Link to subscribe to course calendar (course events)</li>
-</ul>';
+$string['placeholders_help'] = 'Leave this blank to use the site default text. You can use any of the following placeholders in the text: {$a}';
 
 $string['helptext:placeholders'] = '<p>
 <a data-toggle="collapse" href="#collapsePlaceholdersHelptext" role="button" aria-expanded="false" aria-controls="collapsePlaceholdersHelptext">
@@ -984,40 +585,36 @@ $string['helptext:placeholders'] = '<p>
 </p>
 <div class="collapse" id="collapsePlaceholdersHelptext">
   <div class="card card-body">
-    <ul>
-        <li>{title} - Title of the booking option</li>
-        <li>{bookingdetails} - Detailed summary of the booking option (incl. sessions und link to booking option)</li>
-        <li>{gotobookingoption} - Link to booking option</li>
-        <li>{journal} - Link to "Substitutions / Cancelled dates" (training journal)</li>
-        <li>{status} - Booking status</li>
-        <li>{participant}</li>
-        <li>{email} - User email</li>
-        <li>{duration}</li>
-        <li>{starttime}</li>
-        <li>{endtime}</li>
-        <li>{startdate}</li>
-        <li>{enddate}</li>
-        <li>{courselink}</li>
-        <li>{bookinglink}</li>
-        <li>{pollurl}</li>
-        <li>{pollurlteachers}</li>
-        <li>{location}</li>
-        <li>{institution}</li>
-        <li>{address}</li>
-        <li>{eventtype}</li>
-        <li>{teacher} - Name of first teacher</li>
-<li>{teachers} - List of all teachers</li>
-        <li>{teacherN} - Name of specific teacher, e.g. {teacher1}</li>
-        <li>{pollstartdate}</li>
-        <li>{qr_id} - Insert QR code with user id</li>
-        <li>{qr_username} - Insert QR code with user username</li>
-        <li>{dates} - Session times</li>
-        <li>{shorturl} - Short URL of option</li>
-        <li>{usercalendarurl} - Link to subscribe to user calendar (personal events)</li>
-        <li>{coursecalendarurl} - Link to subscribe to course calendar (course events)</li>
-    </ul>
+    {$a}
   </div>
 </div>';
+
+// Placeholders.
+$string['bookingdetails'] = "bookingdetails";
+$string['gotobookingoption'] = "gotobookingoption";
+$string['bookinglink'] = "bookinglink";
+$string['coursecalendarurl'] = "coursecalendarurl";
+$string['courselink'] = "courselink";
+$string['duration'] = "duration";
+$string['email'] = "email";
+$string['enddate'] = "enddate";
+$string['endtime'] = "endtime";
+$string['firstname'] = "firstname";
+$string['duration'] = "duration";
+$string['journal'] = "journal";
+$string['lastname'] = "lastname";
+$string['numberparticipants'] = "numberparticipants";
+$string['numberwaitinglist'] = "numberwaitinglist";
+$string['participant'] = "participant";
+$string['pollstartdate'] = "pollstartdate";
+$string['qr_id'] = "qr_id";
+$string['qr_username'] = "qr_username";
+$string['startdate'] = "startdate";
+$string['starttime'] = "starttime";
+$string['title'] = "title";
+$string['usercalendarurl'] = "usercalendarurl";
+$string['username'] = "username";
+$string['loopprevention'] = 'The placeholder {$a} causes a loop. Please replace it.';
 
 $string['configurefields'] = 'Configure fields and columns';
 $string['manageresponsespagefields'] = 'Manage responses - Page';
@@ -1122,7 +719,7 @@ $string['toggleformmode_simple'] = '<i class="fa fa-compress" aria-hidden="true"
 $string['toggleformmode_expert'] = '<i class="fa fa-expand" aria-hidden="true"></i> Switch to expert mode';
 
 // Option_form.php.
-$string['bookingoptionimage'] = 'Upload an image';
+$string['bookingoptionimage'] = 'Header image';
 $string['submitandgoback'] = 'Close this form';
 $string['bookingoptionprice'] = 'Price';
 
@@ -1683,6 +1280,9 @@ $string['turnoffwaitinglist'] = 'Turn off waiting list globally';
 $string['turnoffwaitinglist_desc'] = 'Activate this setting, if you do not want to use the waiting list
  feature on this site (e.g. because you only want to use the notification list).';
 $string['turnoffwaitinglistaftercoursestart'] = 'Turn off automatic moving up from waiting list after a booking option has started.';
+$string['keepusersbookedonreducingmaxanswers'] = 'Keep users booked on limit reduction';
+$string['keepusersbookedonreducingmaxanswers_desc'] = 'Keep users booked even when the limit of bookable places (maxanswers) is reduced.
+Example: A booking option has 5 spots. The limit is reduced to 3. The 5 users who have already booked will still remain booked.';
 
 $string['notificationlist'] = 'Notification list';
 $string['notificationlistdesc'] = 'When no place is available anymore, users can still register to be notified when there is an opening';
@@ -1718,7 +1318,8 @@ $string['turnoffwunderbytelogo'] = 'Do not show Wunderbyte logo und link';
 $string['turnoffwunderbytelogo_desc'] = 'If you activate this setting, the Wunderbyte logo and the link to the Wunderbyte website won\'t be shown.';
 
 $string['turnoffmodals'] = "Turn off modals";
-$string['turnoffmodals_desc'] = "Some steps during the booking process will open modals. This settings will show the information inline, no modals will open.";
+$string['turnoffmodals_desc'] = "Some steps during the booking process will open modals. This settings will show the information inline, no modals will open.
+<b>Please note:</b> If you use the Booking <b>cards view</b>, then modals will still be used. You can <b>only turn them off for list view</b>.";
 
 $string['collapseshowsettings'] = "Collapse 'show dates' with more than x dates.";
 $string['collapseshowsettings_desc'] = "To avoid a messy view with too many dates, a lower limit for collapsed dates can be defined here.";
@@ -1735,6 +1336,9 @@ $string['teachersshowemails'] = 'Always show teacher\'s email addresses to every
 $string['teachersshowemails_desc'] = 'If you activate this setting, every user can see
     the e-mail address of any teacher - even if they are not logged in. <span class="text-danger"><b>Be careful:</b> This might be
     a privacy issue. Only activate this, if you are sure it corresponds with your organization\'s privacy policy.</span>';
+$string['bookedteachersshowemails'] = 'Show teacher\'s email addresses to booked users';
+$string['bookedteachersshowemails_desc'] = 'If you activate this setting, booked users can see
+the e-mail address of their teacher.';
 $string['teachersallowmailtobookedusers'] = 'Allow teachers to send an e-mail to all booked users using their own mail client';
 $string['teachersallowmailtobookedusers_desc'] = 'If you activate this setting, teachers can click a button to send an e-mail
     to all booked users using their own mail client - the e-mail-addresses of all users will be visible.

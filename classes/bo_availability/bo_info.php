@@ -27,6 +27,7 @@ namespace mod_booking\bo_availability;
 use context_module;
 use context_system;
 use local_shopping_cart\shopping_cart;
+use mod_booking\booking;
 use mod_booking\booking_bookit;
 use mod_booking\booking_option_settings;
 use mod_booking\output\bookingoption_description;
@@ -112,9 +113,11 @@ class bo_info {
      * @param int $optionid
      * @param int $userid If set, specifies a different user ID to check availability for
      * @param bool $hardblock
+     * @param bool $noblockingpages
      * @return array [isavailable, description]
      */
-    public function is_available(int $optionid = null, int $userid = 0, bool $hardblock = false): array {
+    public function is_available(int $optionid = null, int $userid = 0, bool $hardblock = false,
+        bool $noblockingpages = false): array {
 
         if (!$optionid) {
             $optionid = $this->optionid;
@@ -134,6 +137,12 @@ class bo_info {
                 if ($id === 0 || $result['id'] > $id) {
                     if (has_capability('local/shopping_cart:cashier', context_system::instance()) &&
                         $result['button'] == MOD_BOOKING_BO_BUTTON_MYALERT) {
+                        continue;
+                    }
+                    // Pages should not block the "allow_add_item_to_cart" function if $noblockingpages is true.
+                    if ($noblockingpages &&
+                        ($result['insertpage'] == MOD_BOOKING_BO_PREPAGE_PREBOOK ||
+                        $result['insertpage'] == MOD_BOOKING_BO_PREPAGE_POSTBOOK)) {
                         continue;
                     }
                     $description = $result['description'];
@@ -971,6 +980,15 @@ class bo_info {
         $continuelabel = get_string('continue');
         $continuelink = '#';
 
+        $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
+        $viewparam = booking::get_value_of_json_by_key($settings->bookingid, 'viewparam');
+        $turnoffmodals = 0; // By default, we use modals.
+        if ($viewparam == MOD_BOOKING_VIEW_PARAM_LIST) {
+            // Only if we use list view, we can use inline modals.
+            // So only in this case, we need to check the config setting.
+            $turnoffmodals = get_config('booking', 'turnoffmodals');
+        }
+
         if ($conditions[$pagenumber]['id'] === MOD_BOOKING_BO_COND_CONFIRMATION) {
             // We need to decide if we want to show on the last page a "go to checkout" button.
             if (self::has_price_set($results)) {
@@ -987,7 +1005,7 @@ class bo_info {
                             $continuelink = $url->out();
                             $continuebutton = true;
                         } else {
-                            $continueaction = empty(get_config('booking', 'turnoffmodals')) ? 'closemodal' : 'closeinline';
+                            $continueaction = empty($turnoffmodals) ? 'closemodal' : 'closeinline';
                             $continuelabel = get_string('close', 'mod_booking');
                             $continuelink = "#checkout";
                             $continuebutton = true;
@@ -996,13 +1014,13 @@ class bo_info {
                         break;
                     default:
                         $continuebutton = true;
-                        $continueaction = empty(get_config('booking', 'turnoffmodals')) ? 'closemodal' : 'closeinline';
+                        $continueaction = empty($turnoffmodals) ? 'closemodal' : 'closeinline';
                         $continuelabel = get_string('close', 'mod_booking');
                         break;
                 }
             } else {
                 $continuebutton = true;
-                $continueaction = empty(get_config('booking', 'turnoffmodals')) ? 'closemodal' : 'closeinline';
+                $continueaction = empty($turnoffmodals) ? 'closemodal' : 'closeinline';
                 $continuelabel = get_string('close', 'mod_booking');
             }
         }

@@ -78,7 +78,7 @@ class mod_booking_generator extends testing_module_generator {
 
         $defaultsettings = [
             'assessed' => 0,
-            'showviews' => 'mybooking,myoptions,showall,showactive,myinstitution',
+            'showviews' => 'showall,showactive,mybooking,myoptions,myinstitution',
             'whichview' => 'showall',
             'optionsfields' => 'description,statusdescription,teacher,showdates,dayofweektime,
                                 location,institution,minanswers',
@@ -141,6 +141,9 @@ class mod_booking_generator extends testing_module_generator {
         $record->id = 0;
         $record->cmid = $cmb1->id;
         $record->identifier = booking_option::create_truly_unique_option_identifier();
+
+        $record->addtocalendar = !empty($record->addtocalendar) ? $record->addtocalendar : 0;
+        $record->maxanswers = !empty($record->maxanswers) ? $record->maxanswers : 0;
 
         // Process option teachers.
         if (!empty($record->teachersforoption)) {
